@@ -8,6 +8,7 @@ interface Props {
   rooms: Room[]
   reservations: Reservation[]
   onSelectReservation?: (res: Reservation) => void
+  onRefresh?: () => void
 }
 
 function groupByFloor(rooms: Room[]): Record<number, Room[]> {
@@ -58,7 +59,15 @@ const STATUS_STYLES: Record<
   },
 }
 
-export default function RoomGridView({ rooms, reservations, onSelectReservation }: Props) {
+async function patchRoomStatus(roomId: string, status: string) {
+  await fetch(`/api/rooms/${roomId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
+}
+
+export default function RoomGridView({ rooms, reservations, onSelectReservation, onRefresh }: Props) {
   const byFloor = groupByFloor(rooms)
   const floors = Object.keys(byFloor)
     .map(Number)
@@ -83,7 +92,7 @@ export default function RoomGridView({ rooms, reservations, onSelectReservation 
         {Object.entries(STATUS_STYLES).map(([status, s]) => (
           <div key={status} className="flex items-center gap-2 text-sm text-slate-600">
             <span className={`w-2.5 h-2.5 rounded-full ${s.dot}`} />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <span className="text-xs font-black text-slate-500 uppercase tracking-wider">
               {s.label}
             </span>
           </div>
@@ -111,14 +120,13 @@ export default function RoomGridView({ rooms, reservations, onSelectReservation 
               const s = STATUS_STYLES[room.status] ?? STATUS_STYLES.blocked
 
               return (
-                <button
+                <div
                   key={room.id}
                   onClick={() => {
                     if (displayRes && onSelectReservation) {
                       onSelectReservation(displayRes)
                     }
                   }}
-                  disabled={!displayRes}
                   className={`
                     relative p-3 rounded-xl border-2 text-left transition-all duration-200
                     hover:shadow-md hover:-translate-y-0.5
@@ -133,7 +141,7 @@ export default function RoomGridView({ rooms, reservations, onSelectReservation 
                   </div>
 
                   {/* Room type */}
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">
+                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider mb-1">
                     {getRoomTypeName(room.type)}
                   </p>
 
@@ -150,7 +158,7 @@ export default function RoomGridView({ rooms, reservations, onSelectReservation 
                     </p>
                   )}
 
-                  {/* Status icon overlay */}
+                  {/* Status icon overlays */}
                   {room.status === 'maintenance' && (
                     <div className="absolute top-2 right-2 text-red-400">
                       <Wrench className="w-3 h-3" />
@@ -166,7 +174,49 @@ export default function RoomGridView({ rooms, reservations, onSelectReservation 
                       <BedDouble className="w-3 h-3" />
                     </div>
                   )}
-                </button>
+
+                  {/* Mark Clean button for dirty rooms */}
+                  {room.status === 'dirty' && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        await patchRoomStatus(room.id, 'available')
+                        onRefresh?.()
+                      }}
+                      className="mt-1.5 w-full text-[9px] font-black px-2 py-1 bg-amber-500 hover:bg-emerald-600 text-white rounded-lg transition-colors uppercase tracking-wider"
+                    >
+                      ✓ Mark Clean
+                    </button>
+                  )}
+
+                  {/* Maintenance toggle for available rooms */}
+                  {room.status === 'available' && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        await patchRoomStatus(room.id, 'maintenance')
+                        onRefresh?.()
+                      }}
+                      className="mt-1.5 w-full text-[9px] font-black px-2 py-1 bg-transparent hover:bg-red-100 text-slate-300 hover:text-red-600 border border-transparent hover:border-red-200 rounded-lg transition-all uppercase tracking-wider"
+                    >
+                      OOS
+                    </button>
+                  )}
+
+                  {/* Release from maintenance */}
+                  {room.status === 'maintenance' && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        await patchRoomStatus(room.id, 'available')
+                        onRefresh?.()
+                      }}
+                      className="mt-1.5 w-full text-[9px] font-black px-2 py-1 bg-red-100 hover:bg-emerald-100 text-red-600 hover:text-emerald-700 border border-red-200 hover:border-emerald-300 rounded-lg transition-all uppercase tracking-wider"
+                    >
+                      Release
+                    </button>
+                  )}
+                </div>
               )
             })}
           </div>

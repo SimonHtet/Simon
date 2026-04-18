@@ -34,6 +34,8 @@ export interface Guest {
   city?: string | null
   country?: string | null
   hotelId?: string
+  preferenceNotes?: string | null
+  specialRequests?: string | null
 }
 
 export interface Charge {
@@ -78,6 +80,12 @@ export interface Preferences {
   smoking?: string | null
   bed?: string | null
   pillow?: string | null
+  floor?: string | null
+  view?: string | null
+  temperature?: string | null
+  allergies?: string | null
+  amenities?: string | null
+  notes?: string | null
 }
 
 export interface Reservation {

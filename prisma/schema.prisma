@@ -53,9 +53,11 @@ model Guest {
   company        String?
   city           String?
   country        String?
-  hotelId        String        @default("HOTEL-001")
-  createdAt      DateTime      @default(now())
-  reservations   Reservation[]
+  hotelId         String        @default("HOTEL-001")
+  preferenceNotes String?
+  specialRequests String?
+  createdAt       DateTime      @default(now())
+  reservations    Reservation[]
 }
 
 model Reservation {
@@ -151,4 +153,11 @@ model Preferences {
   smoking       String?
   bed           String?
   pillow        String?
+  floor         String?
+  view          String?
+  temperature   String?
+  allergies     String?
+  amenities     String?
+  notes         String?
+  updatedAt     DateTime    @updatedAt
 }

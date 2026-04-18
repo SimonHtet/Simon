@@ -114,10 +114,30 @@ export default function ReservationDetailPanel({
   })
   const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | null>(null)
   const [cancelReason, setCancelReason] = useState('')
-  const [activePackages, setActivePackages] = useState<Set<string>>(
-    () => new Set(initialRes.packages.filter((p) => p.active).map((p) => p.pkgId))
-  )
+  const [activePackages, setActivePackages] = useState<Set<string>>(() => {
+    const fromPackages = initialRes.packages.filter((p) => p.active).map((p) => p.pkgId)
+    const fromCharges = initialRes.charges
+      .filter((c) => c.category && c.amount > 0)
+      .map((c) => c.category as string)
+    return new Set(fromPackages.concat(fromCharges))
+  })
+  const [pendingPackageCharges, setPendingPackageCharges] = useState<
+    Array<{ item: string; amount: number; date: string; category: string }>
+  >([])
   const [showPackageManager, setShowPackageManager] = useState(false)
+  const [localPrefs, setLocalPrefs] = useState<Record<string, string>>(
+    () => ({
+      smoking: initialRes.preferences?.smoking ?? '',
+      bed: initialRes.preferences?.bed ?? '',
+      pillow: initialRes.preferences?.pillow ?? '',
+      floor: initialRes.preferences?.floor ?? '',
+      view: initialRes.preferences?.view ?? '',
+      temperature: initialRes.preferences?.temperature ?? '',
+      allergies: initialRes.preferences?.allergies ?? '',
+      amenities: initialRes.preferences?.amenities ?? '',
+      notes: initialRes.preferences?.notes ?? '',
+    })
+  )
 
   const room = rooms.find((r) => r.id === localRes.roomId)
   const roomTypeName = ROOM_TYPES[localRes.roomTypeId]?.name ?? localRes.roomTypeId
@@ -180,8 +200,21 @@ export default function ReservationDetailPanel({
     onUpdateReservation(localRes.id, { [field]: value })
   }
 
-  function onConfirmCheckIn() {
-    onCheckIn(localRes)
+  async function onConfirmCheckIn() {
+    await (onCheckIn(localRes) as unknown as Promise<void>)
+    // Flush any packages toggled on during check-in mode
+    if (pendingPackageCharges.length > 0) {
+      await Promise.all(
+        pendingPackageCharges.map((charge) =>
+          fetch(`/api/reservations/${localRes.id}/charges`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(charge),
+          })
+        )
+      )
+      setPendingPackageCharges([])
+    }
     setSuccessState(true)
     setCheckInTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     setTimeout(() => {
@@ -194,6 +227,8 @@ export default function ReservationDetailPanel({
     const isActive = activePackages.has(pkgId)
     if (isActive) {
       setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })
+      // Remove from pending if not yet posted
+      setPendingPackageCharges((prev) => prev.filter((c) => c.category !== pkgId))
       return
     }
     // Toggle ON
@@ -209,14 +244,31 @@ export default function ReservationDetailPanel({
       date: today,
       category: pkgId,
     }
+    // Optimistic UI update in both cases
     setLocalRes((prev) => ({
       ...prev,
       charges: [...prev.charges, { id: Date.now(), ...chargeData }],
     }))
-    await fetch(`/api/reservations/${localRes.id}/charges`, {
-      method: 'POST',
+    if (localRes.status === 'confirmed') {
+      // Pre-checkin: defer the API call until check-in is confirmed
+      setPendingPackageCharges((prev) => [...prev, chargeData])
+    } else {
+      // Already checked in: post immediately
+      await fetch(`/api/reservations/${localRes.id}/charges`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(chargeData),
+      })
+    }
+  }
+
+  async function handlePreferenceSave(field: string, value: string) {
+    const updated = { ...localPrefs, [field]: value }
+    setLocalPrefs(updated)
+    await fetch(`/api/reservations/${localRes.id}/preferences`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(chargeData),
+      body: JSON.stringify({ [field]: value }),
     })
   }
 
@@ -1041,33 +1093,57 @@ export default function ReservationDetailPanel({
 
                 {/* PREFERENCES TAB */}
                 {activeTab === 'preferences' && (
-                  <div className="grid grid-cols-4 gap-4">
-                    {[
-                      { label: 'Smoking', val: 'Non-Smoking' },
-                      { label: 'Bed Type', val: 'King' },
-                      { label: 'Pillow', val: 'Feather' },
-                      { label: 'Floor', val: 'High Floor' },
-                      { label: 'View', val: 'River View' },
-                      { label: 'Temp', val: '22°C' },
-                      { label: 'Allergies', val: 'None' },
-                    ].map((pref, i) => (
-                      <div
-                        key={i}
-                        className="p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/30 transition-all"
-                      >
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                          {pref.label}
-                        </p>
-                        <p className="text-sm font-black text-slate-700">{pref.val}</p>
-                      </div>
-                    ))}
-                    <div className="col-span-4 mt-4">
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
-                        Special Requests
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      {([
+                        { key: 'smoking',     label: 'Smoking', placeholder: 'Non-smoking' },
+                        { key: 'bed',         label: 'Bed Type', placeholder: 'King / Twin' },
+                        { key: 'pillow',      label: 'Pillow', placeholder: 'Feather / Foam' },
+                        { key: 'floor',       label: 'Floor', placeholder: 'High / Low' },
+                        { key: 'view',        label: 'View', placeholder: 'Ocean / Garden' },
+                        { key: 'temperature', label: 'Temperature', placeholder: '22°C' },
+                        { key: 'allergies',   label: 'Allergies', placeholder: 'None' },
+                        { key: 'amenities',   label: 'Amenities', placeholder: 'Extra towels' },
+                      ] as { key: string; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
+                        <div
+                          key={key}
+                          className="p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/30 transition-all"
+                        >
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            {label}
+                          </p>
+                          <input
+                            type="text"
+                            className="w-full text-[12px] font-bold text-slate-700 bg-transparent outline-none border-b border-transparent focus:border-teal-400 transition-colors placeholder:text-slate-300"
+                            value={localPrefs[key] ?? ''}
+                            placeholder={placeholder}
+                            onChange={(e) => setLocalPrefs((p) => ({ ...p, [key]: e.target.value }))}
+                            onBlur={(e) => handlePreferenceSave(key, e.target.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                        Preference Notes
                       </p>
                       <textarea
-                        className="w-full p-4 text-sm font-bold text-slate-700 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50"
+                        className="w-full p-3 text-sm font-medium text-slate-700 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 placeholder:text-slate-300"
                         rows={3}
+                        placeholder="e.g. Always requests extra pillows, allergic to feathers, prefers high floor..."
+                        value={localPrefs.notes ?? ''}
+                        onChange={(e) => setLocalPrefs((p) => ({ ...p, notes: e.target.value }))}
+                        onBlur={(e) => handlePreferenceSave('notes', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                        Special Requests (This Stay)
+                      </p>
+                      <textarea
+                        className="w-full p-3 text-sm font-medium text-slate-700 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 placeholder:text-slate-300"
+                        rows={2}
+                        placeholder="Specific requests for this reservation..."
                         defaultValue={localRes.specials || ''}
                         onBlur={(e) => handleFieldSave('specials', e.target.value)}
                       />
