@@ -1,7 +1,8 @@
 export const ROOM_TYPES: Record<string, { name: string; rate: number }> = {
-  STANDARD: { name: 'Standard Room', rate: 1200 },
-  DELUXE: { name: 'Deluxe Garden', rate: 1800 },
-  SUITE: { name: 'Ocean Suite', rate: 3500 },
+  STANDARD:   { name: 'Standard Room', rate: 1200 },
+  DELUXE:     { name: 'Deluxe Garden', rate: 1800 },
+  SUITE:      { name: 'Ocean Suite',   rate: 3500 },
+  POOL_VILLA: { name: 'Pool Villa',    rate: 6500 },
 }
 
 export const HOTEL_NAME = 'STAYWISE RESORT & SPA'

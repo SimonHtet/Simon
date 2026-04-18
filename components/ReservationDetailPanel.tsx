@@ -225,14 +225,34 @@ export default function ReservationDetailPanel({
 
   async function togglePackage(pkgId: string) {
     const isActive = activePackages.has(pkgId)
+
     if (isActive) {
+      // Toggle OFF
       setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })
-      // Remove from pending if not yet posted
+      const wasPending = pendingPackageCharges.some((c) => c.category === pkgId)
       setPendingPackageCharges((prev) => prev.filter((c) => c.category !== pkgId))
+      // Remove from local folio
+      setLocalRes((prev) => ({
+        ...prev,
+        charges: prev.charges.filter((c) => !(c.category === pkgId && c.amount > 0)),
+      }))
+      // Delete from DB only if it was already posted
+      if (!wasPending) {
+        await fetch(
+          `/api/reservations/${localRes.id}/charges/package?category=${pkgId}`,
+          { method: 'DELETE' }
+        )
+      }
       return
     }
-    // Toggle ON
+
+    // Toggle ON — skip if a positive charge for this package already exists
+    const alreadyCharged = localRes.charges.some(
+      (c) => c.category === pkgId && c.amount > 0
+    )
     setActivePackages((prev) => new Set(Array.from(prev).concat(pkgId)))
+    if (alreadyCharged) return
+
     const rate = PACKAGE_RATES[pkgId]
     if (!rate || rate.amount === 0) return
     const chargeAmount = rate.perNight ? rate.amount * nights : rate.amount
@@ -244,16 +264,14 @@ export default function ReservationDetailPanel({
       date: today,
       category: pkgId,
     }
-    // Optimistic UI update in both cases
+    // Optimistic UI update
     setLocalRes((prev) => ({
       ...prev,
       charges: [...prev.charges, { id: Date.now(), ...chargeData }],
     }))
     if (localRes.status === 'confirmed') {
-      // Pre-checkin: defer the API call until check-in is confirmed
       setPendingPackageCharges((prev) => [...prev, chargeData])
     } else {
-      // Already checked in: post immediately
       await fetch(`/api/reservations/${localRes.id}/charges`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -47,31 +47,53 @@ async function main() {
 
   // ── Rooms ──────────────────────────────────────────────────────────────────
   const rooms = [
-    // Floor 1 - Standard
+    // ── Floor 1 (10 rooms) — Standard & Deluxe ────────────────────────────────
     { id: '101', floor: 1, type: 'STANDARD', status: 'available' },
     { id: '102', floor: 1, type: 'STANDARD', status: 'occupied' },
     { id: '103', floor: 1, type: 'STANDARD', status: 'available' },
     { id: '104', floor: 1, type: 'STANDARD', status: 'dirty' },
     { id: '105', floor: 1, type: 'STANDARD', status: 'available' },
     { id: '106', floor: 1, type: 'STANDARD', status: 'maintenance' },
-    // Floor 1 - Deluxe
-    { id: '107', floor: 1, type: 'DELUXE', status: 'occupied' },
-    { id: '108', floor: 1, type: 'DELUXE', status: 'available' },
-    // Floor 2 - Standard
+    { id: '107', floor: 1, type: 'DELUXE',   status: 'occupied' },
+    { id: '108', floor: 1, type: 'DELUXE',   status: 'available' },
+    { id: '109', floor: 1, type: 'DELUXE',   status: 'available' },
+    { id: '110', floor: 1, type: 'DELUXE',   status: 'dirty' },
+
+    // ── Floor 2 (10 rooms) — Standard & Deluxe ────────────────────────────────
     { id: '201', floor: 2, type: 'STANDARD', status: 'occupied' },
     { id: '202', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '203', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '204', floor: 2, type: 'STANDARD', status: 'dirty' },
     { id: '205', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '206', floor: 2, type: 'STANDARD', status: 'available' },
-    // Floor 2 - Deluxe
-    { id: '207', floor: 2, type: 'DELUXE', status: 'occupied' },
-    { id: '208', floor: 2, type: 'DELUXE', status: 'available' },
-    // Floor 3 - Suites
-    { id: '301', floor: 3, type: 'SUITE', status: 'occupied' },
-    { id: '302', floor: 3, type: 'SUITE', status: 'available' },
-    { id: '303', floor: 3, type: 'SUITE', status: 'available' },
-    { id: '304', floor: 3, type: 'SUITE', status: 'blocked' },
+    { id: '207', floor: 2, type: 'DELUXE',   status: 'occupied' },
+    { id: '208', floor: 2, type: 'DELUXE',   status: 'available' },
+    { id: '209', floor: 2, type: 'DELUXE',   status: 'available' },
+    { id: '210', floor: 2, type: 'DELUXE',   status: 'available' },
+
+    // ── Floor 3 (10 rooms) — Deluxe & Suite ───────────────────────────────────
+    { id: '301', floor: 3, type: 'SUITE',  status: 'occupied' },
+    { id: '302', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '303', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '304', floor: 3, type: 'SUITE',  status: 'blocked' },
+    { id: '305', floor: 3, type: 'DELUXE', status: 'available' },
+    { id: '306', floor: 3, type: 'DELUXE', status: 'available' },
+    { id: '307', floor: 3, type: 'DELUXE', status: 'dirty' },
+    { id: '308', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '309', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '310', floor: 3, type: 'SUITE',  status: 'maintenance' },
+
+    // ── Floor 4 (10 rooms) — Suite & Pool Villa ───────────────────────────────
+    { id: '401', floor: 4, type: 'SUITE',      status: 'available' },
+    { id: '402', floor: 4, type: 'SUITE',      status: 'available' },
+    { id: '403', floor: 4, type: 'POOL_VILLA', status: 'occupied' },
+    { id: '404', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '405', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '406', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '407', floor: 4, type: 'POOL_VILLA', status: 'dirty' },
+    { id: '408', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '409', floor: 4, type: 'POOL_VILLA', status: 'blocked' },
+    { id: '410', floor: 4, type: 'POOL_VILLA', status: 'available' },
   ]
 
   for (const room of rooms) {
