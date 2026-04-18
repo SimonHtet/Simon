@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Room, Reservation } from '@/types'
 import { ROOM_TYPES } from '@/lib/constants'
 
@@ -48,7 +49,8 @@ const TOTAL_DAYS = DAY_BACK + DAY_FORWARD
 const CELL_WIDTH = 52 // px
 
 export default function RoomTimelineView({ rooms, reservations, onSelectReservation }: Props) {
-  const days = getDays(TOTAL_DAYS, -DAY_BACK)
+  const [dayOffset, setDayOffset] = useState(-DAY_BACK)
+  const days = getDays(TOTAL_DAYS, dayOffset)
   const today = toDateStr(new Date())
   const todayIndex = DAY_BACK
 
@@ -69,8 +71,35 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
 
   const ROW_HEIGHT = 44
 
+  const firstDay = days[0]
+  const lastDay = days[days.length - 1]
+  const dateRangeLabel = `${firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+
   return (
     <div className="p-6">
+      {/* Navigation bar */}
+      <div className="flex items-center gap-3 mb-4">
+        <button
+          onClick={() => setDayOffset(prev => prev - 7)}
+          className="px-3 py-1.5 text-sm font-semibold text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors"
+        >
+          ← Previous
+        </button>
+        <button
+          onClick={() => setDayOffset(-DAY_BACK)}
+          className="px-3 py-1.5 text-sm font-semibold text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
+        >
+          Today
+        </button>
+        <button
+          onClick={() => setDayOffset(prev => prev + 7)}
+          className="px-3 py-1.5 text-sm font-semibold text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors"
+        >
+          Next →
+        </button>
+        <span className="ml-2 text-sm font-medium text-gray-500">{dateRangeLabel}</span>
+      </div>
+
       <div className="overflow-x-auto">
         <div style={{ minWidth: 200 + CELL_WIDTH * TOTAL_DAYS }}>
           {/* Header row */}

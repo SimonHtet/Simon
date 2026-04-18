@@ -59,15 +59,26 @@ interface Props {
 }
 
 const PACKAGE_DEFS = [
-  { id: 'PARKING', label: 'Parking (Car)', Icon: Car },
-  { id: 'BREAKFAST', label: 'Daily Breakfast', Icon: Receipt },
-  { id: 'AIRPORT', label: 'Airport Transfer', Icon: MapPin },
-  { id: 'EXTRABED', label: 'Extra Bed', Icon: Plus },
-  { id: 'LATE_CO', label: 'Late Check-out', Icon: CalendarCheck },
-  { id: 'EARLY_CI', label: 'Early Check-in', Icon: CalendarCheck },
-  { id: 'LAUNDRY', label: 'Laundry Package', Icon: Sparkles },
-  { id: 'SPA', label: 'Spa & Wellness', Icon: UserCheck },
+  { id: 'PARKING',   label: 'Parking (Car)',     Icon: Car },
+  { id: 'BREAKFAST', label: 'Daily Breakfast',   Icon: Receipt },
+  { id: 'AIRPORT',   label: 'Airport Transfer',  Icon: MapPin },
+  { id: 'EXTRABED',  label: 'Extra Bed',         Icon: Plus },
+  { id: 'LATE_CO',   label: 'Late Check-out',    Icon: CalendarCheck },
+  { id: 'EARLY_CI',  label: 'Early Check-in',    Icon: CalendarCheck },
+  { id: 'LAUNDRY',   label: 'Laundry Package',   Icon: Sparkles },
+  { id: 'SPA',       label: 'Spa & Wellness',    Icon: UserCheck },
 ]
+
+const PACKAGE_RATES: Record<string, { amount: number; perNight: boolean }> = {
+  BREAKFAST: { amount: 150, perNight: true },
+  PARKING:   { amount: 200, perNight: false },
+  AIRPORT:   { amount: 500, perNight: false },
+  EXTRABED:  { amount: 300, perNight: true },
+  LATE_CO:   { amount: 500, perNight: false },
+  EARLY_CI:  { amount: 500, perNight: false },
+  LAUNDRY:   { amount: 200, perNight: true },
+  SPA:       { amount: 0,   perNight: false },
+}
 
 export default function ReservationDetailPanel({
   reservation: initialRes,
@@ -103,6 +114,10 @@ export default function ReservationDetailPanel({
   })
   const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | null>(null)
   const [cancelReason, setCancelReason] = useState('')
+  const [activePackages, setActivePackages] = useState<Set<string>>(
+    () => new Set(initialRes.packages.filter((p) => p.active).map((p) => p.pkgId))
+  )
+  const [showPackageManager, setShowPackageManager] = useState(false)
 
   const room = rooms.find((r) => r.id === localRes.roomId)
   const roomTypeName = ROOM_TYPES[localRes.roomTypeId]?.name ?? localRes.roomTypeId
@@ -175,6 +190,36 @@ export default function ReservationDetailPanel({
     }, 3000)
   }
 
+  async function togglePackage(pkgId: string) {
+    const isActive = activePackages.has(pkgId)
+    if (isActive) {
+      setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })
+      return
+    }
+    // Toggle ON
+    setActivePackages((prev) => new Set(Array.from(prev).concat(pkgId)))
+    const rate = PACKAGE_RATES[pkgId]
+    if (!rate || rate.amount === 0) return
+    const chargeAmount = rate.perNight ? rate.amount * nights : rate.amount
+    const today = new Date().toISOString().split('T')[0]
+    const def = PACKAGE_DEFS.find((p) => p.id === pkgId)
+    const chargeData = {
+      item: def?.label ?? pkgId,
+      amount: chargeAmount,
+      date: today,
+      category: pkgId,
+    }
+    setLocalRes((prev) => ({
+      ...prev,
+      charges: [...prev.charges, { id: Date.now(), ...chargeData }],
+    }))
+    await fetch(`/api/reservations/${localRes.id}/charges`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(chargeData),
+    })
+  }
+
   function EditableField({
     label,
     value,
@@ -222,8 +267,6 @@ export default function ReservationDetailPanel({
       </div>
     )
   }
-
-  const pkgActive = (pkgId: string) => localRes.packages.find((p) => p.pkgId === pkgId)?.active
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
@@ -702,39 +745,107 @@ export default function ReservationDetailPanel({
               </AnimatePresence>
 
               {/* PACKAGES */}
-              <div className="mt-6 p-4 bg-indigo-50/50 rounded-xl border border-indigo-100">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-1.5">
+              <div className="mt-6 rounded-xl border border-slate-200 overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                     <Package className="w-3.5 h-3.5" /> Packages &amp; Add-ons
                   </p>
                   <button
-                    onClick={() => onAddCharge(localRes)}
-                    className="text-[9px] font-bold text-indigo-600 uppercase hover:underline"
+                    onClick={() => setShowPackageManager((v) => !v)}
+                    className="text-[9px] font-black text-teal-600 uppercase tracking-wider hover:text-teal-700 transition-colors flex items-center gap-1"
                   >
-                    Manage
+                    {showPackageManager ? (
+                      <><X className="w-3 h-3" /> Close</>
+                    ) : (
+                      'Manage'
+                    )}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {PACKAGE_DEFS.map(({ id, label, Icon }) => {
-                    const active = pkgActive(id)
-                    return (
-                      <div
-                        key={id}
-                        className={`flex items-center justify-between p-2 rounded-lg border ${
-                          active
-                            ? 'bg-white border-indigo-200 text-indigo-700 shadow-sm'
-                            : 'bg-slate-50/50 border-slate-100 text-slate-400'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Icon className="w-3.5 h-3.5" />
-                          <span className="text-[10px] font-bold">{label}</span>
+
+                {showPackageManager ? (
+                  /* EXPANDED MANAGER */
+                  <div className="p-3 bg-white space-y-1.5">
+                    {PACKAGE_DEFS.map(({ id, label, Icon }) => {
+                      const active = activePackages.has(id)
+                      const rate = PACKAGE_RATES[id]
+                      const priceLabel = !rate
+                        ? ''
+                        : rate.amount === 0
+                        ? 'Manual charge'
+                        : rate.perNight
+                        ? `฿${rate.amount} / night`
+                        : `฿${rate.amount} / stay`
+                      return (
+                        <div
+                          key={id}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-all ${
+                            active
+                              ? 'bg-teal-50 border-teal-300'
+                              : 'bg-slate-50 border-slate-200'
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-teal-600' : 'text-slate-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[11px] font-black ${active ? 'text-teal-800' : 'text-slate-700'}`}>
+                              {label}
+                            </p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                              {priceLabel}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => togglePackage(id)}
+                            className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
+                              active
+                                ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-sm'
+                                : 'bg-white border border-slate-200 text-slate-400 hover:border-teal-300 hover:text-teal-600'
+                            }`}
+                          >
+                            {active ? 'On' : 'Off'}
+                          </button>
                         </div>
-                        {active && <CheckCircle2 className="w-3 h-3 text-indigo-500" />}
-                      </div>
-                    )
-                  })}
-                </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  /* COMPACT SUMMARY GRID */
+                  <div className="p-3 bg-white grid grid-cols-2 gap-2">
+                    {PACKAGE_DEFS.map(({ id, label, Icon }) => {
+                      const active = activePackages.has(id)
+                      const rate = PACKAGE_RATES[id]
+                      const badgeText = !rate
+                        ? ''
+                        : rate.amount === 0
+                        ? 'Manual'
+                        : rate.perNight
+                        ? `฿${rate.amount}/night`
+                        : `฿${rate.amount}/stay`
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => togglePackage(id)}
+                          className={`flex items-center justify-between p-2 rounded-lg border text-left transition-all ${
+                            active
+                              ? 'bg-teal-50 border-teal-400 text-teal-700 shadow-sm'
+                              : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300 hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon className={`w-3.5 h-3.5 ${active ? 'text-teal-600' : 'text-slate-400'}`} />
+                            <span className="text-[10px] font-bold">{label}</span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className={`text-[9px] font-bold ${active ? 'text-teal-500' : 'text-slate-300'}`}>
+                              {badgeText}
+                            </span>
+                            {active && <CheckCircle2 className="w-3 h-3 text-teal-500 ml-0.5" />}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

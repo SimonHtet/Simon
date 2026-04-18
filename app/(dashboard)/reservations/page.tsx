@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { Room, Reservation } from '@/types'
 import ReservationsView from '@/components/ReservationsView'
 import ReservationDetailPanel from '@/components/ReservationDetailPanel'
-import CheckInModal from '@/components/CheckInModal'
 import CheckOutModal from '@/components/CheckOutModal'
 import {
   NewReservationModal,
@@ -16,7 +15,6 @@ import {
 } from '@/components/Modals'
 
 type ActiveModal =
-  | 'checkin'
   | 'checkout'
   | 'newReservation'
   | 'moveRoom'
@@ -30,6 +28,7 @@ export default function ReservationsPage() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null)
+  const [checkInMode, setCheckInMode] = useState(false)
   const [activeModal, setActiveModal] = useState<ActiveModal>(null)
   const [loading, setLoading] = useState(true)
 
@@ -51,19 +50,19 @@ export default function ReservationsPage() {
     refreshData().finally(() => setLoading(false))
   }, [])
 
-  async function handleCheckIn(res: Reservation) {
+  // Called from reservations list rows — opens the panel in check-in mode
+  function handleCheckIn(res: Reservation) {
     setSelectedRes(res)
-    setActiveModal('checkin')
+    setCheckInMode(true)
   }
 
-  async function handleCheckInConfirm(data: { eta?: string; flightNumber?: string }) {
-    if (!selectedRes) return
-    await fetch(`/api/reservations/${selectedRes.id}/checkin`, {
+  // Called from the panel's "Confirm Check-In" button — makes the actual API call
+  async function handleCheckInConfirm(res: Reservation) {
+    await fetch(`/api/reservations/${res.id}/checkin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({}),
     })
-    setActiveModal(null)
     await refreshData()
   }
 
@@ -223,8 +222,9 @@ export default function ReservationsPage() {
         <ReservationDetailPanel
           reservation={selectedRes}
           rooms={rooms}
-          onClose={() => setSelectedRes(null)}
-          onCheckIn={handleCheckIn}
+          initialCheckInMode={checkInMode}
+          onClose={() => { setSelectedRes(null); setCheckInMode(false) }}
+          onCheckIn={handleCheckInConfirm}
           onCheckOut={handleCheckOut}
           onCancel={handleCancel}
           onNoShow={handleNoShow}
@@ -238,9 +238,6 @@ export default function ReservationsPage() {
         />
       )}
 
-      {activeModal === 'checkin' && selectedRes && (
-        <CheckInModal reservation={selectedRes} onConfirm={handleCheckInConfirm} onClose={() => setActiveModal(null)} />
-      )}
       {activeModal === 'checkout' && selectedRes && (
         <CheckOutModal reservation={selectedRes} onConfirm={handleCheckOutConfirm} onClose={() => setActiveModal(null)} />
       )}
