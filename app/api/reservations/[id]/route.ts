@@ -8,6 +8,7 @@ const RESERVATION_INCLUDE = {
   charges: { orderBy: { createdAt: 'asc' as const } },
   traces: { orderBy: { createdAt: 'asc' as const } },
   packages: true,
+  preferences: true,
 }
 
 export async function GET(
@@ -70,6 +71,14 @@ export async function PUT(
     bookingReference,
     adults,
     children,
+    preferredName,
+    birthday,
+    passportExpiry,
+    language,
+    memberNumber,
+    city,
+    country,
+    notes,
   } = body
 
   const reservation = await prisma.reservation.update({
@@ -90,6 +99,14 @@ export async function PUT(
       ...(bookingReference !== undefined && { bookingReference }),
       ...(adults !== undefined && { adults }),
       ...(children !== undefined && { children }),
+      ...(preferredName !== undefined && { preferredName }),
+      ...(birthday !== undefined && { birthday }),
+      ...(passportExpiry !== undefined && { passportExpiry }),
+      ...(language !== undefined && { language }),
+      ...(memberNumber !== undefined && { memberNumber }),
+      ...(city !== undefined && { city }),
+      ...(country !== undefined && { country }),
+      ...(notes !== undefined && { notes }),
     },
     include: RESERVATION_INCLUDE,
   })

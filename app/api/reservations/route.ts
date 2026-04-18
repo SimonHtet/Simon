@@ -10,6 +10,7 @@ const RESERVATION_INCLUDE = {
   charges: { orderBy: { createdAt: 'asc' as const } },
   traces: { orderBy: { createdAt: 'asc' as const } },
   packages: true,
+  preferences: true,
 }
 
 const MAX_LENGTHS: Record<string, number> = {

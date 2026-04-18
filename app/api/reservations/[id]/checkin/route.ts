@@ -52,6 +52,7 @@ export async function POST(
         charges: { orderBy: { createdAt: 'asc' } },
         traces: { orderBy: { createdAt: 'asc' } },
         packages: true,
+        preferences: true,
       },
     }),
     prisma.room.update({
