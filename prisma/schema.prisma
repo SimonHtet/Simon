@@ -1,0 +1,151 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  role      String   @default("front_desk")
+  hotelId   String   @default("HOTEL-001")
+  createdAt DateTime @default(now())
+}
+
+model Hotel {
+  id        String   @id
+  name      String
+  location  String
+  createdAt DateTime @default(now())
+}
+
+model Room {
+  id           String        @id
+  floor        Int
+  type         String
+  status       String        @default("available")
+  resId        String?
+  hotelId      String        @default("HOTEL-001")
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+}
+
+model Guest {
+  id             String        @id @default(cuid())
+  name           String
+  firstName      String?
+  lastName       String?
+  nationality    String?
+  email          String?
+  phone          String?
+  passportNumber String?
+  vipStatus      String?
+  company        String?
+  hotelId        String        @default("HOTEL-001")
+  createdAt      DateTime      @default(now())
+  reservations   Reservation[]
+}
+
+model Company {
+  id            String        @id @default(cuid())
+  name          String
+  contactName   String?
+  contactEmail  String?
+  contactPhone  String?
+  hotelId       String        @default("HOTEL-001")
+  contractRates CompanyRate[]
+  reservations  Reservation[]
+  createdAt     DateTime      @default(now())
+}
+
+model CompanyRate {
+  id           Int     @id @default(autoincrement())
+  companyId    String
+  company      Company @relation(fields: [companyId], references: [id])
+  roomType     String
+  contractRate Float
+}
+
+model Reservation {
+  id                 String    @id @default(cuid())
+  reservationNumber  String    @unique
+  hotelId            String    @default("HOTEL-001")
+  guestId            String
+  guest              Guest     @relation(fields: [guestId], references: [id])
+  guestName          String
+  nationality        String?
+  roomId             String
+  room               Room      @relation(fields: [roomId], references: [id])
+  roomTypeId         String
+  status             String    @default("confirmed")
+  checkIn            String
+  checkOut           String
+  rate               Float
+  totalNights        Int
+  totalAmount        Float
+  adults             Int       @default(1)
+  children           Int       @default(0)
+  source             String?
+  bookingReference   String?
+  vipStatus          String?
+  passportNumber     String?
+  company            String?
+  companyId          String?
+  companyAccount     Company?  @relation(fields: [companyId], references: [id])
+  specials           String?
+  eta                String?
+  flightNumber       String?
+  visaDetails        String?
+  turndown           Boolean   @default(false)
+  dnm                Boolean   @default(false)
+  actualCheckIn      DateTime?
+  actualCheckOut     DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  moveReason         String?
+  isMaster           Boolean   @default(false)
+  masterResId        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  charges            Charge[]
+  traces             Trace[]
+  packages           Package[]
+}
+
+model Charge {
+  id            Int         @id @default(autoincrement())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  item          String
+  amount        Float
+  date          String
+  category      String?
+  createdAt     DateTime    @default(now())
+}
+
+model Trace {
+  id            Int         @id @default(autoincrement())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  text          String
+  date          String
+  status        String      @default("pending")
+  department    String      @default("FRONT OFFICE")
+  createdAt     DateTime    @default(now())
+}
+
+model Package {
+  id            Int         @id @default(autoincrement())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  pkgId         String
+  active        Boolean     @default(false)
+  licensePlate  String?
+  carModel      String?
+}
