@@ -5,8 +5,8 @@ import { Room, Reservation, Company } from '@/types'
 import { ROOM_TYPES, BOOKING_SOURCES, CHARGE_CATEGORIES, PAYMENT_TYPES, DEPARTMENTS } from '@/lib/constants'
 import { calculateNights } from '@/lib/utils'
 import {
-  X, Plus, ArrowRight, Clock, Plane, Home, User, Calendar, DollarSign,
-  CreditCard, MessageSquare, BedDouble, Hotel, ChevronRight, Building2, ChevronDown,
+  X, Plus, ArrowRight, Clock, Plane, User, Calendar, DollarSign,
+  CreditCard, MessageSquare, BedDouble, ChevronRight, Building2,
 } from 'lucide-react'
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
@@ -222,21 +222,21 @@ export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservatio
   }
 
   return (
-    <ModalShell title="New Reservation" icon={Plus} iconBg="bg-sky-500" onClose={onClose}>
-      <div className="overflow-y-auto flex-1 p-6 space-y-4">
-        {/* Guest info */}
+    <ModalShell title="New Reservation" icon={Plus} iconBg="bg-teal-500" onClose={onClose}>
+      <div className="overflow-y-auto flex-1 px-6 py-5 space-y-3">
+        {/* Guest details */}
+        <FormField label="Guest Name" required>
+          <input
+            type="text"
+            placeholder="Full name"
+            value={form.guestName}
+            onChange={(e) => set('guestName', e.target.value)}
+            className={inputCls}
+            autoFocus
+          />
+        </FormField>
+
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <FormField label="Guest Name" required>
-              <input
-                type="text"
-                placeholder="Full name"
-                value={form.guestName}
-                onChange={(e) => set('guestName', e.target.value)}
-                className={inputCls}
-              />
-            </FormField>
-          </div>
           <FormField label="First Name">
             <input type="text" placeholder="First" value={form.firstName || ''} onChange={(e) => set('firstName', e.target.value)} className={inputCls} />
           </FormField>
@@ -253,80 +253,25 @@ export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservatio
             <input type="tel" placeholder="+66..." value={form.phone || ''} onChange={(e) => set('phone', e.target.value)} className={inputCls} />
           </FormField>
           <FormField label="Passport / ID">
-            <input type="text" value={form.passportNumber || ''} onChange={(e) => set('passportNumber', e.target.value)} className={inputCls} />
+            <input type="text" placeholder="Passport number" value={form.passportNumber || ''} onChange={(e) => set('passportNumber', e.target.value)} className={inputCls} />
           </FormField>
-          <div className="col-span-2">
-            <FormField label="Company / Corporate Account">
-              <div className="space-y-2">
-                <select
-                  value={form.companyId || ''}
-                  onFocus={loadCompanies}
-                  onChange={(e) => {
-                    if (e.target.value === '__new__') {
-                      setShowNewCompany(true)
-                    } else {
-                      set('companyId', e.target.value || undefined)
-                      setShowNewCompany(false)
-                    }
-                  }}
-                  className={selectCls}
-                >
-                  <option value="">No corporate account</option>
-                  {companies.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                  <option value="__new__">+ Add New Company...</option>
-                </select>
-                {contractRateApplied && (
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded-full">
-                    <Building2 className="w-3 h-3" />
-                    Contract Rate Applied
-                  </span>
-                )}
-                {showNewCompany && (
-                  <div className="flex gap-2 mt-1">
-                    <input
-                      type="text"
-                      placeholder="New company name..."
-                      value={newCompanyName}
-                      onChange={(e) => setNewCompanyName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') handleCreateCompany() }}
-                      className={`${inputCls} flex-1`}
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleCreateCompany}
-                      disabled={creatingCompany || !newCompanyName.trim()}
-                      className="px-3 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold rounded-lg disabled:opacity-60"
-                    >
-                      {creatingCompany ? '...' : 'Add'}
-                    </button>
-                    <button onClick={() => setShowNewCompany(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                      <X className="w-3.5 h-3.5 text-gray-400" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </FormField>
-          </div>
         </div>
 
-        <div className="border-t border-gray-100" />
+        <div className="border-t border-gray-100 pt-1" />
 
-        {/* Room & dates */}
+        {/* Stay details */}
+        <FormField label="Room" required>
+          <select value={form.roomId} onChange={(e) => set('roomId', e.target.value)} className={selectCls}>
+            <option value="">Select available room...</option>
+            {availableRooms.map((r) => (
+              <option key={r.id} value={r.id}>
+                Room {r.id} — {ROOM_TYPES[r.type]?.name ?? r.type}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <FormField label="Room" required>
-              <select value={form.roomId} onChange={(e) => set('roomId', e.target.value)} className={selectCls}>
-                <option value="">Select room...</option>
-                {availableRooms.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    Room {r.id} — {ROOM_TYPES[r.type]?.name ?? r.type}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-          </div>
           <FormField label="Check In" required>
             <input type="date" value={form.checkIn} min={today} onChange={(e) => set('checkIn', e.target.value)} className={inputCls} />
           </FormField>
@@ -334,52 +279,42 @@ export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservatio
             <input type="date" value={form.checkOut} min={form.checkIn || today} onChange={(e) => set('checkOut', e.target.value)} className={inputCls} />
           </FormField>
           <FormField label="Rate / Night (฿)">
-            <div className="relative">
-              <input
-                type="number"
-                value={form.rate}
-                onChange={(e) => {
-                  set('rate', parseFloat(e.target.value))
-                  setContractRateApplied(false)
-                }}
-                className={inputCls}
-              />
+            <input
+              type="number"
+              value={form.rate}
+              onChange={(e) => {
+                set('rate', parseFloat(e.target.value))
+                setContractRateApplied(false)
+              }}
+              className={inputCls}
+            />
+          </FormField>
+          <FormField label="Nights">
+            <div className={`${inputCls} bg-gray-50 text-gray-500 cursor-default`}>
+              {nights > 0 ? `${nights} nights · ฿${total.toLocaleString()}` : '—'}
             </div>
           </FormField>
-          <div>
-            <FormField label="Nights">
-              <div className={`${inputCls} bg-gray-50 text-gray-600`}>{nights} nights · ฿{total.toLocaleString()}</div>
-            </FormField>
-          </div>
           <FormField label="Adults">
             <input type="number" min={1} max={6} value={form.adults} onChange={(e) => set('adults', parseInt(e.target.value))} className={inputCls} />
           </FormField>
           <FormField label="Children">
             <input type="number" min={0} max={6} value={form.children} onChange={(e) => set('children', parseInt(e.target.value))} className={inputCls} />
           </FormField>
-          <div className="col-span-2">
-            <FormField label="Booking Source">
-              <select value={form.source || ''} onChange={(e) => set('source', e.target.value)} className={selectCls}>
-                <option value="">Select source...</option>
-                {BOOKING_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </FormField>
-          </div>
-          <div className="col-span-2">
-            <FormField label="Special Requests">
-              <textarea
-                rows={2}
-                placeholder="Any special requests or notes..."
-                value={form.specials || ''}
-                onChange={(e) => set('specials', e.target.value)}
-                className={inputCls}
-              />
-            </FormField>
-          </div>
-          <FormField label="ETA">
-            <input type="time" value={form.eta || ''} onChange={(e) => set('eta', e.target.value)} className={inputCls} />
-          </FormField>
         </div>
+
+        <FormField label="Booking Source">
+          <select value={form.source || ''} onChange={(e) => set('source', e.target.value)} className={selectCls}>
+            <option value="">Select source...</option>
+            {BOOKING_SOURCES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </FormField>
+
+        {contractRateApplied && (
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full">
+            <Building2 className="w-3 h-3" />
+            Contract Rate Applied
+          </span>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
@@ -395,7 +330,7 @@ export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservatio
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="flex-1 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
+          className="flex-1 py-2.5 bg-teal-500 hover:bg-teal-600 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
         >
           {loading ? 'Creating...' : 'Create Reservation'}
         </button>

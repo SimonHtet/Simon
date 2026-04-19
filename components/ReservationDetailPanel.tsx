@@ -92,7 +92,7 @@ function EditableField({
 
   return (
     <div className="group">
-      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+      {label && <p className="text-xs text-gray-500 mb-0.5">{label}</p>}
       {editing ? (
         <div className="flex items-center gap-1">
           <input
@@ -201,16 +201,27 @@ export default function ReservationDetailPanel({
             <h2 className="text-xl font-bold">{res.guestName}</h2>
             <p className="text-sky-300 text-sm mt-0.5">{res.reservationNumber}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors mt-1"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex flex-col items-end gap-2">
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="text-right space-y-0.5">
+              {res.createdAt && (
+                <p className="text-[10px] text-white/35 uppercase tracking-wider">
+                  Created {new Date(res.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              )}
+              {res.updatedAt && (
+                <p className="text-[10px] text-white/35 uppercase tracking-wider">
+                  Updated {new Date(res.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Quick info bar */}
-        <div className="bg-[#0F2044]/5 border-b border-gray-200 px-6 py-3 flex flex-wrap gap-4 text-sm flex-shrink-0">
+        <div className="bg-[#0F2044]/5 border-b border-gray-200 px-6 py-3 flex flex-wrap items-center gap-4 text-sm flex-shrink-0">
           <div className="flex items-center gap-1.5 text-gray-700">
             <BedDouble className="w-3.5 h-3.5 text-gray-400" />
             <span className="font-semibold">Room {res.roomId}</span>
@@ -227,8 +238,13 @@ export default function ReservationDetailPanel({
           </div>
           <div className="flex items-center gap-1.5 text-gray-700">
             <DollarSign className="w-3.5 h-3.5 text-gray-400" />
-            <span className="font-semibold">฿{formatCurrency(res.totalAmount)}</span>
+            <span className="font-semibold">฿{formatCurrency(res.rate)}/night</span>
           </div>
+          {res.source && (
+            <span className="ml-auto px-2.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
+              {res.source}
+            </span>
+          )}
         </div>
 
         {/* Action buttons */}
@@ -381,12 +397,23 @@ export default function ReservationDetailPanel({
                     onSave={(v) => handleUpdate('nationality', v)}
                     placeholder="Not provided"
                   />
-                  <EditableField
-                    label="Passport / ID"
-                    value={res.passportNumber || ''}
-                    onSave={(v) => handleUpdate('passportNumber', v)}
-                    placeholder="Not provided"
-                  />
+                  {/* Passport with teal highlight + VERIFY badge */}
+                  <div className="col-span-2">
+                    <div className="ring-2 ring-teal-400 ring-offset-2 rounded-lg p-3 bg-white">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs text-gray-500">Passport / ID</p>
+                        <span className="px-2 py-0.5 bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
+                          Verify
+                        </span>
+                      </div>
+                      <EditableField
+                        label=""
+                        value={res.passportNumber || ''}
+                        onSave={(v) => handleUpdate('passportNumber', v)}
+                        placeholder="Not provided"
+                      />
+                    </div>
+                  </div>
                   <EditableField
                     label="VIP Status"
                     value={res.vipStatus || ''}
@@ -589,7 +616,6 @@ export default function ReservationDetailPanel({
                 <div className="text-center py-10 text-gray-400">
                   <Receipt className="w-8 h-8 mx-auto mb-2 opacity-30" />
                   <p className="text-sm">No charges posted yet</p>
-                  {/* Default room charge */}
                   <div className="mt-4 bg-gray-50 rounded-xl p-4 text-left">
                     <p className="text-xs text-gray-500 mb-2">Room Charge (from rate)</p>
                     <div className="flex justify-between text-sm">
@@ -604,8 +630,9 @@ export default function ReservationDetailPanel({
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2.5 text-left text-xs text-gray-500 font-semibold uppercase">Description</th>
-                        <th className="px-4 py-2.5 text-left text-xs text-gray-500 font-semibold uppercase">Category</th>
+                        <th className="px-4 py-2.5 text-left text-xs text-gray-500 font-semibold uppercase">Cat.</th>
                         <th className="px-4 py-2.5 text-left text-xs text-gray-500 font-semibold uppercase">Date</th>
+                        <th className="px-4 py-2.5 text-center text-xs text-gray-500 font-semibold uppercase">Staff</th>
                         <th className="px-4 py-2.5 text-right text-xs text-gray-500 font-semibold uppercase">Amount</th>
                       </tr>
                     </thead>
@@ -619,6 +646,11 @@ export default function ReservationDetailPanel({
                             )}
                           </td>
                           <td className="px-4 py-2.5 text-gray-500 text-xs">{c.date}</td>
+                          <td className="px-4 py-2.5 text-center">
+                            <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-semibold uppercase tracking-wide">
+                              SYS
+                            </span>
+                          </td>
                           <td className={`px-4 py-2.5 text-right font-semibold ${c.amount < 0 ? 'text-green-700' : 'text-gray-900'}`}>
                             {c.amount < 0 ? '-' : ''}฿{formatCurrency(Math.abs(c.amount))}
                           </td>
@@ -626,6 +658,11 @@ export default function ReservationDetailPanel({
                       ))}
                     </tbody>
                   </table>
+                  {/* Folio total */}
+                  <div className="flex items-center justify-end gap-3 px-4 py-3 bg-teal-50 border-t border-teal-100">
+                    <span className="text-xs font-bold text-teal-600 uppercase tracking-widest">Folio Total</span>
+                    <span className="text-base font-bold text-teal-700">฿{formatCurrency(balance > 0 ? balance : 0)}</span>
+                  </div>
                 </div>
               )}
 
@@ -638,13 +675,15 @@ export default function ReservationDetailPanel({
                   <Plus className="w-4 h-4" />
                   Add Charge
                 </button>
-                <button
-                  onClick={() => onPostPayment(res)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-green-200 bg-green-50 hover:bg-green-100 text-green-700 text-sm font-semibold rounded-xl transition-colors"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  Post Payment
-                </button>
+                {res.status === 'checked_in' && (
+                  <button
+                    onClick={() => onPostPayment(res)}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-green-200 bg-green-50 hover:bg-green-100 text-green-700 text-sm font-semibold rounded-xl transition-colors"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Post Payment
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -715,48 +754,52 @@ export default function ReservationDetailPanel({
           )}
 
           {tab === 'packages' && (
-            <div className="p-6 space-y-3">
-              <p className="text-sm text-gray-500 mb-4">Manage add-on packages for this reservation.</p>
-              {PACKAGE_DEFS.map((pkg) => {
-                const existing = res.packages.find((p) => p.pkgId === pkg.id)
-                const Icon = pkg.icon
-                return (
-                  <div
-                    key={pkg.id}
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-colors ${
-                      existing?.active
-                        ? 'bg-sky-50 border-sky-300'
-                        : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <div className={`p-2.5 rounded-xl ${existing?.active ? 'bg-sky-100' : 'bg-gray-100'}`}>
-                      <Icon className={`w-5 h-5 ${existing?.active ? 'text-sky-600' : 'text-gray-500'}`} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900 text-sm">{pkg.label}</p>
-                      {existing?.active && pkg.id === 'PARKING' && (
-                        <div className="mt-1 text-xs text-gray-500 space-y-0.5">
-                          {existing.licensePlate && <p>Plate: {existing.licensePlate}</p>}
-                          {existing.carModel && <p>Vehicle: {existing.carModel}</p>}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {existing?.active ? (
-                        <span className="flex items-center gap-1 text-xs text-sky-600 font-medium">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          Active
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Packages & Add-ons</p>
+                <span className="text-xs text-gray-400">{res.packages.filter(p => p.active).length} active</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {PACKAGE_DEFS.map((pkg) => {
+                  const existing = res.packages.find((p) => p.pkgId === pkg.id)
+                  const Icon = pkg.icon
+                  const active = existing?.active ?? false
+                  return (
+                    <div
+                      key={pkg.id}
+                      className={`flex flex-col items-center gap-2.5 p-5 rounded-xl border-2 transition-colors ${
+                        active ? 'bg-sky-50 border-sky-300' : 'bg-white border-gray-200'
+                      }`}
+                    >
+                      <div className={`p-3 rounded-xl ${active ? 'bg-sky-100' : 'bg-gray-100'}`}>
+                        <Icon className={`w-5 h-5 ${active ? 'text-sky-600' : 'text-gray-400'}`} />
+                      </div>
+                      <p className={`text-xs font-semibold text-center ${active ? 'text-sky-700' : 'text-gray-500'}`}>
+                        {pkg.label}
+                      </p>
+                      {active ? (
+                        <span className="flex items-center gap-1 text-[10px] text-sky-600 font-semibold uppercase tracking-wide">
+                          <CheckCircle className="w-3 h-3" /> Active
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-xs text-gray-400 font-medium">
-                          <Circle className="w-3.5 h-3.5" />
-                          Not Active
-                        </span>
+                        <span className="text-[10px] text-gray-300 font-medium uppercase tracking-wide">—</span>
                       )}
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
+              {/* Parking details if active */}
+              {res.packages.find(p => p.pkgId === 'PARKING' && p.active) && (
+                <div className="bg-gray-50 rounded-xl p-4 text-sm">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Parking Details</p>
+                  {res.packages.find(p => p.pkgId === 'PARKING')?.licensePlate && (
+                    <p className="text-gray-700">Plate: <span className="font-semibold">{res.packages.find(p => p.pkgId === 'PARKING')?.licensePlate}</span></p>
+                  )}
+                  {res.packages.find(p => p.pkgId === 'PARKING')?.carModel && (
+                    <p className="text-gray-700 mt-0.5">Vehicle: <span className="font-semibold">{res.packages.find(p => p.pkgId === 'PARKING')?.carModel}</span></p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
