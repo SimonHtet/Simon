@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
     rtMap.set(rt, entry)
   }
   // ensure all room types appear
-  for (const [rt, count] of roomTypeCountMap.entries()) {
+  for (const [rt, count] of Array.from(roomTypeCountMap.entries())) {
     if (!rtMap.has(rt)) {
       rtMap.set(rt, { roomsAvailable: count * totalDays, nightsSold: 0, revenue: 0 })
     }
