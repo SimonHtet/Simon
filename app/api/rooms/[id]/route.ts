@@ -11,7 +11,8 @@ export async function PATCH(
   const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
 
-  const { status } = await req.json()
+  const body = await req.json().catch(() => ({}))
+  const { status } = body
 
   if (!VALID_STATUSES.includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
@@ -22,18 +23,23 @@ export async function PATCH(
     return NextResponse.json({ error: 'Forbidden — housekeeping can only mark rooms clean' }, { status: 403 })
   }
 
-  const room = await prisma.room.findFirst({
-    where: { id: params.id, hotelId: hotelId! },
-  })
+  try {
+    const room = await prisma.room.findFirst({
+      where: { id: params.id, hotelId: hotelId! },
+    })
 
-  if (!room) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (!room) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
+    const updated = await prisma.room.update({
+      where: { id: params.id },
+      data: { status },
+    })
+
+    return NextResponse.json(updated)
+  } catch (err) {
+    console.error('[PATCH /api/rooms/[id]] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
-
-  const updated = await prisma.room.update({
-    where: { id: params.id },
-    data: { status },
-  })
-
-  return NextResponse.json(updated)
 }

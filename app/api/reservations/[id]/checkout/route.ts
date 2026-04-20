@@ -14,43 +14,48 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
   }
 
-  const reservation = await prisma.reservation.findUnique({
-    where: { id: params.id },
-  })
-
-  if (!reservation) {
-    return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
-  }
-
-  if (reservation.hotelId !== hotelId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  if (reservation.status !== 'checked_in') {
-    return NextResponse.json({ error: 'Reservation is not checked in' }, { status: 400 })
-  }
-
-  const [updated] = await prisma.$transaction([
-    prisma.reservation.update({
+  try {
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
-      data: {
-        status: 'checked_out',
-        actualCheckOut: new Date(),
-      },
-      include: {
-        guest: true,
-        room: true,
-        charges: { orderBy: { createdAt: 'asc' } },
-        traces: { orderBy: { createdAt: 'asc' } },
-        packages: true,
-        preferences: true,
-      },
-    }),
-    prisma.room.update({
-      where: { id: reservation.roomId },
-      data: { status: 'dirty', resId: null },
-    }),
-  ])
+    })
 
-  return NextResponse.json(updated)
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
+    }
+
+    if (reservation.hotelId !== hotelId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    if (reservation.status !== 'checked_in') {
+      return NextResponse.json({ error: 'Reservation is not checked in' }, { status: 400 })
+    }
+
+    const [updated] = await prisma.$transaction([
+      prisma.reservation.update({
+        where: { id: params.id },
+        data: {
+          status: 'checked_out',
+          actualCheckOut: new Date(),
+        },
+        include: {
+          guest: true,
+          room: true,
+          charges: { orderBy: { createdAt: 'asc' } },
+          traces: { orderBy: { createdAt: 'asc' } },
+          packages: true,
+          preferences: true,
+        },
+      }),
+      prisma.room.update({
+        where: { id: reservation.roomId },
+        data: { status: 'dirty', resId: null },
+      }),
+    ])
+
+    return NextResponse.json(updated)
+  } catch (err) {
+    console.error('[POST /api/reservations/[id]/checkout] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
 }

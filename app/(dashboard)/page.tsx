@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [checkInMode, setCheckInMode] = useState(false)
   const [activeModal, setActiveModal] = useState<ActiveModal>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const refreshData = useCallback(async () => {
     const [roomsRes, resRes, statsRes] = await Promise.all([
@@ -39,24 +40,31 @@ export default function DashboardPage() {
       fetch('/api/reservations'),
       fetch('/api/dashboard'),
     ])
+
+    if (!roomsRes.ok) throw new Error(`Rooms API ${roomsRes.status}: ${await roomsRes.text()}`)
+    if (!resRes.ok) throw new Error(`Reservations API ${resRes.status}: ${await resRes.text()}`)
+    if (!statsRes.ok) throw new Error(`Dashboard API ${statsRes.status}: ${await statsRes.text()}`)
+
     const [roomsData, resData, statsData] = await Promise.all([
       roomsRes.json(),
       resRes.json(),
       statsRes.json(),
     ])
-    setRooms(roomsData)
-    setReservations(resData)
+    setRooms(Array.isArray(roomsData) ? roomsData : [])
+    setReservations(Array.isArray(resData) ? resData : [])
     setStats(statsData)
 
     // Refresh selected reservation if open
-    if (selectedRes) {
+    if (selectedRes && Array.isArray(resData)) {
       const updated = resData.find((r: Reservation) => r.id === selectedRes.id)
       if (updated) setSelectedRes(updated)
     }
   }, [selectedRes?.id])
 
   useEffect(() => {
-    refreshData().finally(() => setLoading(false))
+    refreshData()
+      .catch((err) => setLoadError(err.message))
+      .finally(() => setLoading(false))
   }, [])
 
   // Called from dashboard rows — opens the panel in check-in mode
@@ -213,6 +221,21 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-sky-500 border-t-transparent" />
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-8">
+        <p className="text-sm font-bold text-red-500 uppercase tracking-widest">Failed to load</p>
+        <p className="text-xs text-slate-500 max-w-md font-mono">{loadError}</p>
+        <button
+          onClick={() => { setLoadError(null); setLoading(true); refreshData().catch((e) => setLoadError(e.message)).finally(() => setLoading(false)) }}
+          className="px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-700"
+        >
+          Retry
+        </button>
       </div>
     )
   }

@@ -27,21 +27,26 @@ export async function GET() {
   const { hotelId, error } = await getSessionOrUnauthorized()
   if (error) return error
 
-  const reservations = await prisma.reservation.findMany({
-    where: { hotelId: hotelId! },
-    include: RESERVATION_INCLUDE,
-    orderBy: { createdAt: 'desc' },
-  })
+  try {
+    const reservations = await prisma.reservation.findMany({
+      where: { hotelId: hotelId! },
+      include: RESERVATION_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    })
 
-  const masked = reservations.map((r) => ({
-    ...r,
-    passportNumber: maskPassport(r.passportNumber),
-    guest: r.guest
-      ? { ...r.guest, passportNumber: maskPassport(r.guest.passportNumber) }
-      : null,
-  }))
+    const masked = reservations.map((r) => ({
+      ...r,
+      passportNumber: maskPassport(r.passportNumber),
+      guest: r.guest
+        ? { ...r.guest, passportNumber: maskPassport(r.guest.passportNumber) }
+        : null,
+    }))
 
-  return NextResponse.json(masked)
+    return NextResponse.json(masked)
+  } catch (err) {
+    console.error('[/api/reservations] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -52,7 +57,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
   }
 
-  const body = await req.json()
+  const body = await req.json().catch(() => ({}))
   const {
     guestName,
     firstName,
@@ -106,79 +111,84 @@ export async function POST(req: NextRequest) {
   const totalNights = calculateNights(checkIn, checkOut)
   const totalAmount = rate * totalNights
 
-  // Upsert guest scoped to this hotel
-  let guest = await prisma.guest.findFirst({
-    where: { name: guestName, hotelId: hotelId! },
-  })
+  try {
+    // Upsert guest scoped to this hotel
+    let guest = await prisma.guest.findFirst({
+      where: { name: guestName, hotelId: hotelId! },
+    })
 
-  if (!guest) {
-    guest = await prisma.guest.create({
+    if (!guest) {
+      guest = await prisma.guest.create({
+        data: {
+          name: guestName,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          nationality: nationality || null,
+          email: email || null,
+          phone: phone || null,
+          passportNumber: passportNumber || null,
+          vipStatus: vipStatus || null,
+          company: company || null,
+          hotelId: hotelId!,
+        },
+      })
+    }
+
+    // Room must belong to this hotel
+    const room = await prisma.room.findFirst({
+      where: { id: roomId, hotelId: hotelId! },
+    })
+    if (!room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    }
+
+    let reservationNumber = generateReservationNumber()
+    let existing = await prisma.reservation.findUnique({ where: { reservationNumber } })
+    while (existing) {
+      reservationNumber = generateReservationNumber()
+      existing = await prisma.reservation.findUnique({ where: { reservationNumber } })
+    }
+
+    const reservation = await prisma.reservation.create({
       data: {
-        name: guestName,
-        firstName: firstName || null,
-        lastName: lastName || null,
-        nationality: nationality || null,
-        email: email || null,
-        phone: phone || null,
-        passportNumber: passportNumber || null,
-        vipStatus: vipStatus || null,
-        company: company || null,
+        reservationNumber,
         hotelId: hotelId!,
+        guestId: guest.id,
+        guestName,
+        nationality: nationality || null,
+        roomId,
+        roomTypeId: roomTypeId || room.type,
+        status,
+        checkIn,
+        checkOut,
+        rate,
+        totalNights,
+        totalAmount,
+        adults: parsedAdults,
+        children: parsedChildren,
+        source: source || null,
+        bookingReference: bookingReference || null,
+        vipStatus: vipStatus || null,
+        passportNumber: passportNumber || null,
+        company: company || null,
+        specials: specials || null,
+        eta: eta || null,
+        flightNumber: flightNumber || null,
+        isMaster: false,
       },
+      include: RESERVATION_INCLUDE,
     })
+
+    if (status === 'checked_in') {
+      await prisma.room.update({
+        where: { id: roomId },
+        data: { status: 'occupied', resId: reservation.id },
+      })
+    }
+
+    return NextResponse.json(reservation, { status: 201 })
+  } catch (err) {
+    console.error('[POST /api/reservations] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
-
-  // Room must belong to this hotel
-  const room = await prisma.room.findFirst({
-    where: { id: roomId, hotelId: hotelId! },
-  })
-  if (!room) {
-    return NextResponse.json({ error: 'Room not found' }, { status: 404 })
-  }
-
-  let reservationNumber = generateReservationNumber()
-  let existing = await prisma.reservation.findUnique({ where: { reservationNumber } })
-  while (existing) {
-    reservationNumber = generateReservationNumber()
-    existing = await prisma.reservation.findUnique({ where: { reservationNumber } })
-  }
-
-  const reservation = await prisma.reservation.create({
-    data: {
-      reservationNumber,
-      hotelId: hotelId!,
-      guestId: guest.id,
-      guestName,
-      nationality: nationality || null,
-      roomId,
-      roomTypeId: roomTypeId || room.type,
-      status,
-      checkIn,
-      checkOut,
-      rate,
-      totalNights,
-      totalAmount,
-      adults: parsedAdults,
-      children: parsedChildren,
-      source: source || null,
-      bookingReference: bookingReference || null,
-      vipStatus: vipStatus || null,
-      passportNumber: passportNumber || null,
-      company: company || null,
-      specials: specials || null,
-      eta: eta || null,
-      flightNumber: flightNumber || null,
-      isMaster: false,
-    },
-    include: RESERVATION_INCLUDE,
-  })
-
-  if (status === 'checked_in') {
-    await prisma.room.update({
-      where: { id: roomId },
-      data: { status: 'occupied', resId: reservation.id },
-    })
-  }
-
-  return NextResponse.json(reservation, { status: 201 })
 }

@@ -14,67 +14,71 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
   }
 
-  const reservation = await prisma.reservation.findUnique({
-    where: { id: params.id },
-  })
-
-  if (!reservation) {
-    return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
-  }
-
-  if (reservation.hotelId !== hotelId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  const body = await req.json()
+  const body = await req.json().catch(() => ({}))
   const { newRoomId, reason } = body
 
   if (!newRoomId) {
     return NextResponse.json({ error: 'newRoomId is required' }, { status: 400 })
   }
 
-  // Room must belong to this hotel
-  const newRoom = await prisma.room.findFirst({
-    where: { id: newRoomId, hotelId: hotelId! },
-  })
-  if (!newRoom) {
-    return NextResponse.json({ error: 'New room not found' }, { status: 404 })
-  }
-
-  if (newRoom.status !== 'available') {
-    return NextResponse.json(
-      { error: `Room ${newRoomId} is not available (status: ${newRoom.status})` },
-      { status: 400 }
-    )
-  }
-
-  const oldRoomId = reservation.roomId
-
-  const [updated] = await prisma.$transaction([
-    prisma.reservation.update({
+  try {
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
-      data: {
-        roomId: newRoomId,
-        moveReason: reason || null,
-      },
-      include: {
-        guest: true,
-        room: true,
-        charges: { orderBy: { createdAt: 'asc' } },
-        traces: { orderBy: { createdAt: 'asc' } },
-        packages: true,
-        preferences: true,
-      },
-    }),
-    prisma.room.update({
-      where: { id: oldRoomId },
-      data: { status: 'dirty', resId: null },
-    }),
-    prisma.room.update({
-      where: { id: newRoomId },
-      data: { status: 'occupied', resId: params.id },
-    }),
-  ])
+    })
 
-  return NextResponse.json(updated)
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
+    }
+
+    if (reservation.hotelId !== hotelId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const newRoom = await prisma.room.findFirst({
+      where: { id: newRoomId, hotelId: hotelId! },
+    })
+    if (!newRoom) {
+      return NextResponse.json({ error: 'New room not found' }, { status: 404 })
+    }
+
+    if (newRoom.status !== 'available') {
+      return NextResponse.json(
+        { error: `Room ${newRoomId} is not available (status: ${newRoom.status})` },
+        { status: 400 }
+      )
+    }
+
+    const oldRoomId = reservation.roomId
+
+    const [updated] = await prisma.$transaction([
+      prisma.reservation.update({
+        where: { id: params.id },
+        data: {
+          roomId: newRoomId,
+          moveReason: reason || null,
+        },
+        include: {
+          guest: true,
+          room: true,
+          charges: { orderBy: { createdAt: 'asc' } },
+          traces: { orderBy: { createdAt: 'asc' } },
+          packages: true,
+          preferences: true,
+        },
+      }),
+      prisma.room.update({
+        where: { id: oldRoomId },
+        data: { status: 'dirty', resId: null },
+      }),
+      prisma.room.update({
+        where: { id: newRoomId },
+        data: { status: 'occupied', resId: params.id },
+      }),
+    ])
+
+    return NextResponse.json(updated)
+  } catch (err) {
+    console.error('[POST /api/reservations/[id]/move] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
 }
