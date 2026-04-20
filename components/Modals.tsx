@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { Room, Reservation } from '@/types'
+import { useState, useEffect } from 'react'
+import { Room, Reservation, Company } from '@/types'
 import { ROOM_TYPES, BOOKING_SOURCES, CHARGE_CATEGORIES, PAYMENT_TYPES, DEPARTMENTS } from '@/lib/constants'
 import { calculateNights } from '@/lib/utils'
 import {
   X, Plus, ArrowRight, Clock, Plane, Home, User, Calendar, DollarSign,
-  CreditCard, MessageSquare, BedDouble, Hotel, ChevronRight,
+  CreditCard, MessageSquare, BedDouble, Hotel, ChevronRight, AlertTriangle,
 } from 'lucide-react'
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ interface NewReservationData {
   phone?: string
   passportNumber?: string
   vipStatus?: string
-  company?: string
+  companyId?: string
   roomId: string
   roomTypeId: string
   checkIn: string
@@ -94,12 +94,17 @@ interface NewReservationData {
   source?: string
   specials?: string
   eta?: string
+  masterResId?: string
 }
 
 interface NewReservationModalProps {
   rooms: Room[]
   onConfirm: (data: NewReservationData) => Promise<void>
   onClose: () => void
+}
+
+const RACK_RATES: Record<string, number> = {
+  STANDARD: 1200, DELUXE: 1800, SUITE: 3500, POOL_VILLA: 6500,
 }
 
 export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservationModalProps) {
@@ -118,24 +123,64 @@ export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservatio
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [blackoutWarning, setBlackoutWarning] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/companies').then((r) => r.json()).then((d) => {
+      if (Array.isArray(d)) setCompanies(d.filter((c: Company) => c.active))
+    }).catch(() => {})
+  }, [])
 
   function set(field: keyof NewReservationData, value: any) {
     setForm((prev) => {
       const next = { ...prev, [field]: value }
       // Auto-update rate when room type changes
       if (field === 'roomTypeId' && ROOM_TYPES[value]) {
-        next.rate = ROOM_TYPES[value].rate
+        next.rate = applyContractRate(value, selectedCompany)
       }
       // Auto-update room type when room changes
       if (field === 'roomId') {
         const room = rooms.find((r) => r.id === value)
         if (room) {
           next.roomTypeId = room.type
-          if (ROOM_TYPES[room.type]) next.rate = ROOM_TYPES[room.type].rate
+          next.rate = applyContractRate(room.type, selectedCompany)
         }
       }
       return next
     })
+  }
+
+  function applyContractRate(roomType: string, co: Company | null): number {
+    const rack = RACK_RATES[roomType] ?? ROOM_TYPES[roomType]?.rate ?? 0
+    if (!co) return rack
+    const rates = co.contractRates as Record<string, number>
+    const disc = rates[roomType] ?? 0
+    return disc > 0 ? Math.round(rack * (1 - disc / 100)) : rack
+  }
+
+  function handleCompanyChange(companyId: string) {
+    const co = companies.find((c) => c.id === companyId) ?? null
+    setSelectedCompany(co)
+    set('companyId', companyId || undefined)
+
+    // Check blackout
+    if (co && co.blackoutStart && co.blackoutEnd) {
+      const ci = form.checkIn
+      const isBlackout = ci >= co.blackoutStart && ci <= co.blackoutEnd
+      setBlackoutWarning(isBlackout)
+    } else {
+      setBlackoutWarning(false)
+    }
+
+    // Auto-fill rate based on selected room type
+    if (co) {
+      const roomType = form.roomTypeId
+      setForm((prev) => ({ ...prev, companyId: companyId || undefined, rate: applyContractRate(roomType, co) }))
+    } else {
+      setForm((prev) => ({ ...prev, companyId: undefined, rate: RACK_RATES[prev.roomTypeId] ?? prev.rate }))
+    }
   }
 
   const availableRooms = rooms.filter((r) => r.status === 'available')
@@ -194,6 +239,37 @@ export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservatio
         </div>
 
         <div className="border-t border-gray-100" />
+
+        {/* Company / Agent */}
+        {companies.length > 0 && (
+          <div className="space-y-2">
+            <FormField label="Company / Agent">
+              <select
+                value={form.companyId || ''}
+                onChange={(e) => handleCompanyChange(e.target.value)}
+                className={selectCls}
+              >
+                <option value="">None (rack rate)</option>
+                {companies.map((co) => (
+                  <option key={co.id} value={co.id}>
+                    [{co.type}] {co.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            {blackoutWarning && (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700">
+                <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                <span>Check-in falls within this company's blackout period ({selectedCompany?.blackoutStart} – {selectedCompany?.blackoutEnd}). Contract rates may not apply.</span>
+              </div>
+            )}
+            {selectedCompany && !blackoutWarning && (
+              <div className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                Contract rate applied for {selectedCompany.name}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Room & dates */}
         <div className="grid grid-cols-2 gap-3">

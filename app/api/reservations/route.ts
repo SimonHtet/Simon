@@ -7,10 +7,12 @@ import { generateReservationNumber, calculateNights, maskPassport } from '@/lib/
 const RESERVATION_INCLUDE = {
   guest: true,
   room: true,
+  company: true,
   charges: { orderBy: { createdAt: 'asc' as const } },
   traces: { orderBy: { createdAt: 'asc' as const } },
   packages: true,
   preferences: true,
+  linkedReservations: { select: { id: true, reservationNumber: true, guestName: true, roomId: true, checkIn: true, checkOut: true, status: true } },
 }
 
 const MAX_LENGTHS: Record<string, number> = {
@@ -67,7 +69,7 @@ export async function POST(req: NextRequest) {
     phone,
     passportNumber,
     vipStatus,
-    company,
+    companyId,
     roomId,
     roomTypeId,
     checkIn,
@@ -128,7 +130,6 @@ export async function POST(req: NextRequest) {
           phone: phone || null,
           passportNumber: passportNumber || null,
           vipStatus: vipStatus || null,
-          company: company || null,
           hotelId: hotelId!,
         },
       })
@@ -170,7 +171,7 @@ export async function POST(req: NextRequest) {
         bookingReference: bookingReference || null,
         vipStatus: vipStatus || null,
         passportNumber: passportNumber || null,
-        company: company || null,
+        companyId: companyId || null,
         specials: specials || null,
         eta: eta || null,
         flightNumber: flightNumber || null,

@@ -13,6 +13,8 @@ import {
   LogOut,
   Radio,
   ChevronRight,
+  BarChart3,
+  Building2,
 } from 'lucide-react'
 import { HOTEL_NAME, LOCATION } from '@/lib/constants'
 
@@ -22,6 +24,8 @@ const NAV_ITEMS = [
   { href: '/timeline', label: 'Timeline', icon: Clock },
   { href: '/rooms', label: 'Room Grid', icon: Grid3X3 },
   { href: '/guests', label: 'Guest History', icon: Users },
+  { href: '/companies', label: 'Companies', icon: Building2 },
+  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
 ]
 
 function NightAuditClock() {

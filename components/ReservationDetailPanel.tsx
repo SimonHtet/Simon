@@ -498,7 +498,12 @@ export default function ReservationDetailPanel({
                 value={localRes.guest?.phone || ''}
                 field="phone"
               />
-              <EditableField label="Company" value={localRes.company} field="company" />
+              <div className="p-1.5">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Company</p>
+                <p className="text-[13px] font-medium text-slate-800 truncate">
+                  {localRes.company ? (localRes.company as any).name : '---'}
+                </p>
+              </div>
               <EditableField label="Nationality" value={localRes.nationality} field="nationality" />
               <EditableField label="Language" value="English" field="language" />
 
@@ -558,11 +563,18 @@ export default function ReservationDetailPanel({
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     Stay Summary
                   </p>
-                  {localRes.source && (
-                    <span className="px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-wider bg-slate-100 text-slate-600 border-slate-200">
-                      {localRes.source}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {localRes.company && (
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-wider ${(localRes.company as any).type === 'AGENT' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-sky-50 text-sky-700 border-sky-200'}`}>
+                        {(localRes.company as any).name}
+                      </span>
+                    )}
+                    {localRes.source && (
+                      <span className="px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-wider bg-slate-100 text-slate-600 border-slate-200">
+                        {localRes.source}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="space-y-1">
@@ -926,6 +938,7 @@ export default function ReservationDetailPanel({
                   { id: 'charges', label: 'Charges', Icon: Receipt },
                   { id: 'traces', label: 'Traces', Icon: AlertCircle },
                   { id: 'preferences', label: 'Preferences', Icon: Settings },
+                  { id: 'linked', label: `Linked${localRes.linkedReservations?.length ? ` (${localRes.linkedReservations.length})` : ''}`, Icon: ArrowRightLeft },
                   { id: 'notes', label: 'Notes', Icon: ClipboardList },
                   { id: 'history', label: 'History', Icon: History },
                 ].map((tab) => (
@@ -1166,6 +1179,45 @@ export default function ReservationDetailPanel({
                         onBlur={(e) => handleFieldSave('specials', e.target.value)}
                       />
                     </div>
+                  </div>
+                )}
+
+                {/* LINKED TAB */}
+                {activeTab === 'linked' && (
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      {localRes.isMaster ? 'Master Reservation — Linked Rooms' : 'Linked Reservations'}
+                    </p>
+                    {localRes.masterResId && (
+                      <div className="flex items-center gap-2 text-xs text-sky-700 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2">
+                        <ArrowRightLeft className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span>This reservation is linked under master: <span className="font-bold">{localRes.masterResId}</span></span>
+                      </div>
+                    )}
+                    {localRes.linkedReservations && localRes.linkedReservations.length > 0 ? (
+                      <div className="space-y-2">
+                        {localRes.linkedReservations.map((lr: any) => (
+                          <div key={lr.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-bold text-slate-800">{lr.guestName}</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5">{lr.reservationNumber} · Room {lr.roomId}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] text-slate-500">{lr.checkIn} → {lr.checkOut}</p>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-wider ${getResStatusBadge(lr.status)}`}>
+                                  {getResStatusLabel(lr.status)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                        No linked reservations
+                      </div>
+                    )}
                   </div>
                 )}
 

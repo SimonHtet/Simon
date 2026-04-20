@@ -112,7 +112,8 @@ export interface Reservation {
   vipStatus?: string | null
   passportNumber?: string | null
   passportExpiry?: string | null
-  company?: string | null
+  companyId?: string | null
+  company?: Company | null
   specials?: string | null
   eta?: string | null
   flightNumber?: string | null
@@ -134,10 +135,36 @@ export interface Reservation {
   moveReason?: string | null
   isMaster: boolean
   masterResId?: string | null
+  masterReservation?: Reservation | null
+  linkedReservations?: Reservation[]
   charges: Charge[]
   traces: Trace[]
   packages: Package[]
   preferences?: Preferences | null
+  createdAt?: string | Date
+  updatedAt?: string | Date
+}
+
+export interface Company {
+  id: string
+  hotelId?: string
+  name: string
+  contactName?: string | null
+  contactEmail?: string | null
+  contactPhone?: string | null
+  address?: string | null
+  taxId?: string | null
+  notes?: string | null
+  type: 'COMPANY' | 'AGENT'
+  contractRates: {
+    STANDARD?: number
+    DELUXE?: number
+    SUITE?: number
+    POOL_VILLA?: number
+  }
+  blackoutStart?: string | null
+  blackoutEnd?: string | null
+  active: boolean
   createdAt?: string | Date
   updatedAt?: string | Date
 }

@@ -152,7 +152,6 @@ async function main() {
       source: 'Direct',
       vipStatus: 'VIP1',
       passportNumber: 'US123456',
-      company: 'Tech Corp',
       isMaster: false,
       actualCheckIn: addDays(today, -2),
     },
@@ -176,7 +175,6 @@ async function main() {
       source: 'Corporate',
       vipStatus: 'VVIP',
       passportNumber: 'JA345678',
-      company: 'Global Industries',
       specials: 'Ocean view room, champagne on arrival',
       isMaster: false,
       actualCheckIn: addDays(today, -1),
@@ -320,6 +318,47 @@ async function main() {
       create: { id, ...data, hotelId: 'HOTEL-001' },
     })
   }
+
+  // ── Companies ──────────────────────────────────────────────────────────────
+  const bangkokAgency = await prisma.company.upsert({
+    where: { id: 'CO001' },
+    update: {},
+    create: {
+      id: 'CO001',
+      hotelId: 'HOTEL-001',
+      name: 'Bangkok Travel Agency',
+      type: 'AGENT',
+      contactName: 'Somchai Wongthong',
+      contactEmail: 'somchai@bkktravelagency.th',
+      contactPhone: '+66 2 456 7890',
+      contractRates: { STANDARD: 15, DELUXE: 15, SUITE: 10, POOL_VILLA: 10 },
+      active: true,
+    },
+  })
+
+  await prisma.company.upsert({
+    where: { id: 'CO002' },
+    update: {},
+    create: {
+      id: 'CO002',
+      hotelId: 'HOTEL-001',
+      name: 'Siam Corporate Group',
+      type: 'COMPANY',
+      contactName: 'Narinee Charoenpong',
+      contactEmail: 'narinee@siamcorporate.th',
+      contactPhone: '+66 2 789 0123',
+      contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 12, POOL_VILLA: 8 },
+      blackoutStart: '2025-12-20',
+      blackoutEnd: '2026-01-05',
+      active: true,
+    },
+  })
+
+  // Link R004 to Bangkok Travel Agency
+  await prisma.reservation.update({
+    where: { id: 'R004' },
+    data: { companyId: bangkokAgency.id },
+  })
 
   // Update room resId for occupied rooms
   const occupiedRooms: Record<string, string> = {

@@ -5,10 +5,12 @@ import { getSessionOrUnauthorized } from '@/lib/session'
 const RESERVATION_INCLUDE = {
   guest: true,
   room: true,
+  company: true,
   charges: { orderBy: { createdAt: 'asc' as const } },
   traces: { orderBy: { createdAt: 'asc' as const } },
   packages: true,
   preferences: true,
+  linkedReservations: { select: { id: true, reservationNumber: true, guestName: true, roomId: true, checkIn: true, checkOut: true, status: true } },
 }
 
 export async function GET(
