@@ -337,6 +337,11 @@ async function main() {
     })
   }
 
+  // ── Charges ────────────────────────────────────────────────────────────────
+  // Delete before recreating so re-runs don't duplicate rows
+  await prisma.charge.deleteMany({ where: { reservationId: 'R001' } })
+  await prisma.charge.deleteMany({ where: { reservationId: 'R002' } })
+
   // ── Charges for R001 (James Anderson) ──────────────────────────────────────
   const r001Charges = [
     { reservationId: 'R001', item: 'Room Charge (1N)', amount: 1200, date: fmt(addDays(today, -2)), category: 'ROOM' },
@@ -358,6 +363,9 @@ async function main() {
   for (const charge of r002Charges) {
     await prisma.charge.create({ data: charge })
   }
+
+  await prisma.trace.deleteMany({ where: { reservationId: { in: ['R001', 'R002', 'R004'] } } })
+  await prisma.package.deleteMany({ where: { reservationId: { in: ['R001', 'R002'] } } })
 
   // ── Traces for R002 (Hiroshi Tanaka) ──────────────────────────────────────
   const r002Traces = [

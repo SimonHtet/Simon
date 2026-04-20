@@ -24,12 +24,11 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const [loading, setLoading] = useState(false)
 
   const nights = calculateNights(res.checkIn, res.checkOut)
-  const roomTotal = res.rate * nights
   const positiveCharges = res.charges.filter((c) => c.amount > 0)
   const payments = res.charges.filter((c) => c.amount < 0)
-  const extraTotal = positiveCharges.reduce((s, c) => s + c.amount, 0)
+  const chargesTotal = positiveCharges.reduce((s, c) => s + c.amount, 0)
   const paymentTotal = Math.abs(payments.reduce((s, c) => s + c.amount, 0))
-  const balance = roomTotal + extraTotal - paymentTotal
+  const balance = chargesTotal - paymentTotal
 
   async function handleConfirm() {
     setLoading(true)
@@ -90,24 +89,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                 </tr>
               </thead>
               <tbody>
-                {/* Room charge */}
-                <tr className="border-b border-slate-100">
-                  <td className="py-2 pr-3 text-[11px] text-slate-500 font-medium whitespace-nowrap">
-                    {formatDate(res.checkIn)}
-                  </td>
-                  <td className="py-2 pr-3 text-[12px] font-bold text-slate-800">
-                    Room Charge — {res.roomId}
-                    <span className="ml-2 text-[10px] font-medium text-slate-400">
-                      ({nights}N × ฿{formatCurrency(res.rate)})
-                    </span>
-                  </td>
-                  <td className="py-2 text-center text-[10px] text-slate-400">ROOM</td>
-                  <td className="py-2 text-right text-[12px] font-black text-slate-900">
-                    ฿{formatCurrency(roomTotal)}
-                  </td>
-                </tr>
-
-                {/* Extra charges */}
+                {/* All charges — purely from DB */}
                 {positiveCharges.map((c) => (
                   <tr key={c.id} className="border-b border-slate-100">
                     <td className="py-2 pr-3 text-[11px] text-slate-500 font-medium whitespace-nowrap">
@@ -129,7 +111,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                     Sub-total
                   </td>
                   <td className="pt-3 pb-2 text-right text-[12px] font-black text-slate-800">
-                    ฿{formatCurrency(roomTotal + extraTotal)}
+                    ฿{formatCurrency(chargesTotal)}
                   </td>
                 </tr>
 
