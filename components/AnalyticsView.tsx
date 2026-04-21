@@ -85,6 +85,11 @@ function BarChart({ data, valueKey, labelKey, colorClass = 'bg-sky-500' }: {
   )
 }
 
+const VB_W = 600
+const VB_H = 120
+const VB_PAD = 10
+const TOOLTIP_W = 168
+
 function RevenueLineChart({
   data,
   compareData,
@@ -94,29 +99,31 @@ function RevenueLineChart({
   compareData?: DailyRevenue[]
   showCompare: boolean
 }) {
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; d: DailyRevenue } | null>(null)
+  // Only store the nearest data-point index — no raw pixel coords in state
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
   if (data.length < 2) return (
     <div className="h-40 flex items-center justify-center text-sm text-gray-400">Not enough data</div>
   )
 
-  const W = 600
-  const H = 120
-  const pad = 10
-  const maxRev = Math.max(...data.map((d) => d.roomRevenue + d.extraCharges), ...(compareData || []).map((d) => d.roomRevenue + d.extraCharges), 1)
+  const maxRev = Math.max(
+    ...data.map((d) => d.roomRevenue + d.extraCharges),
+    ...(compareData || []).map((d) => d.roomRevenue + d.extraCharges),
+    1
+  )
 
   function makePoints(arr: DailyRevenue[]) {
     return arr.map((d, i) => {
-      const x = pad + (i / (arr.length - 1)) * (W - 2 * pad)
-      const y = H - pad - (((d.roomRevenue + d.extraCharges) / maxRev) * (H - 2 * pad))
+      const x = VB_PAD + (i / (arr.length - 1)) * (VB_W - 2 * VB_PAD)
+      const y = VB_H - VB_PAD - (((d.roomRevenue + d.extraCharges) / maxRev) * (VB_H - 2 * VB_PAD))
       return { x, y, d }
     })
   }
 
   const pts = makePoints(data)
   const pathD = `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')}`
-  const areaD = `M ${pts[0].x},${pts[0].y} L ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} L ${W - pad},${H - pad} L ${pad},${H - pad} Z`
+  const areaD = `M ${pts[0].x},${pts[0].y} L ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} L ${VB_W - VB_PAD},${VB_H - VB_PAD} L ${VB_PAD},${VB_H - VB_PAD} Z`
 
   let cmpPathD = ''
   if (showCompare && compareData && compareData.length >= 2) {
@@ -124,23 +131,22 @@ function RevenueLineChart({
     cmpPathD = `M ${cpts.map((p) => `${p.x},${p.y}`).join(' L ')}`
   }
 
-  const TOOLTIP_W = 168
-
   function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
     const svg = svgRef.current
     if (!svg) return
     const rect = svg.getBoundingClientRect()
-    // Pixel position within the rendered SVG element
-    const relX = e.clientX - rect.left
-    const relY = e.clientY - rect.top
-    // Map to data index using ratio of rendered width (not viewBox width)
-    const ratio = Math.max(0, Math.min(1, relX / rect.width))
-    const idx = Math.round(ratio * (data.length - 1))
-    setTooltip({ x: relX, y: relY, d: data[idx] })
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    setHoveredIdx(Math.round(ratio * (data.length - 1)))
   }
 
-  // Active point in SVG-viewBox space for the dot
-  const activePt = tooltip ? pts.find((p) => p.d.date === tooltip.d.date) : null
+  // Active point lives in SVG viewBox coordinates — SVG handles all scaling
+  const activePt = hoveredIdx !== null ? pts[hoveredIdx] : null
+
+  // Convert viewBox x → rendered pixels only when positioning the HTML tooltip
+  const renderedX = activePt && svgRef.current
+    ? activePt.x * (svgRef.current.getBoundingClientRect().width / VB_W)
+    : null
+  const svgW = svgRef.current?.getBoundingClientRect().width ?? 600
 
   return (
     <div className="relative w-full">
@@ -153,11 +159,11 @@ function RevenueLineChart({
       <div className="relative">
         <svg
           ref={svgRef}
-          viewBox={`0 0 ${W} ${H}`}
+          viewBox={`0 0 ${VB_W} ${VB_H}`}
           className="w-full cursor-crosshair"
           style={{ height: 140 }}
           onMouseMove={handleMouseMove}
-          onMouseLeave={() => setTooltip(null)}
+          onMouseLeave={() => setHoveredIdx(null)}
         >
           <defs>
             <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -165,42 +171,51 @@ function RevenueLineChart({
               <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
             </linearGradient>
           </defs>
-          {/* Invisible full-area overlay to ensure mouse events fire everywhere */}
+          {/* Full-area overlay so mouse events fire everywhere in the SVG */}
           <rect x="0" y="0" width="100%" height="100%" fill="transparent" pointerEvents="all" />
           <path d={areaD} fill="url(#areaGrad)" />
           {cmpPathD && (
             <path d={cmpPathD} stroke="#94a3b8" strokeWidth="1.5" fill="none" strokeDasharray="4 3" strokeLinejoin="round" />
           )}
           <path d={pathD} stroke="#0ea5e9" strokeWidth="2" fill="none" strokeLinejoin="round" />
+          {/* Vertical dashed hairline + dot — both in viewBox space, SVG scales them */}
           {activePt && (
-            <circle cx={activePt.x} cy={activePt.y} r="4" fill="#0ea5e9" stroke="white" strokeWidth="2" />
+            <>
+              <line
+                x1={activePt.x} y1={VB_PAD}
+                x2={activePt.x} y2={VB_H - VB_PAD}
+                stroke="#0ea5e9" strokeWidth="1" strokeDasharray="3 2" opacity="0.45"
+              />
+              <circle cx={activePt.x} cy={activePt.y} r="4" fill="#0ea5e9" stroke="white" strokeWidth="2" />
+            </>
           )}
         </svg>
 
-        {/* Tooltip — positioned relative to SVG bounding rect */}
-        {tooltip && (() => {
-          const svgW = svgRef.current?.getBoundingClientRect().width ?? 600
-          const flipLeft = tooltip.x > svgW * 0.6
-          const left = Math.max(0, Math.min(
-            flipLeft ? tooltip.x - TOOLTIP_W - 12 : tooltip.x + 12,
-            svgW - TOOLTIP_W
-          ))
-          const top = Math.max(0, tooltip.y - 20)
-          return (
-            <div
-              className="absolute pointer-events-none z-10 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 text-xs"
-              style={{ left, top, width: TOOLTIP_W }}
-            >
-              <p className="font-bold text-gray-800 mb-1.5">{tooltip.d.date}</p>
-              <div className="space-y-1">
-                <div className="flex justify-between gap-4"><span className="text-gray-500">Room Rev</span><span className="font-semibold">฿{tooltip.d.roomRevenue.toLocaleString()}</span></div>
-                <div className="flex justify-between gap-4"><span className="text-gray-500">Extras</span><span className="font-semibold text-emerald-600">+฿{tooltip.d.extraCharges.toLocaleString()}</span></div>
-                <div className="flex justify-between gap-4"><span className="text-gray-500">Payments</span><span className="font-semibold text-teal-600">-฿{tooltip.d.payments.toLocaleString()}</span></div>
-                <div className="flex justify-between gap-4 border-t border-gray-100 pt-1 mt-1"><span className="text-gray-700 font-bold">Net</span><span className={`font-bold ${tooltip.d.netTotal < 0 ? 'text-rose-600' : 'text-gray-900'}`}>฿{tooltip.d.netTotal.toLocaleString()}</span></div>
+        {/* Tooltip — left computed from viewBox x converted to rendered pixels */}
+        {activePt && renderedX !== null && (
+          (() => {
+            const flipLeft = renderedX > svgW * 0.6
+            const left = Math.max(0, Math.min(
+              flipLeft ? renderedX - TOOLTIP_W - 12 : renderedX + 12,
+              svgW - TOOLTIP_W
+            ))
+            const d = activePt.d
+            return (
+              <div
+                className="absolute pointer-events-none z-10 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 text-xs"
+                style={{ left, top: 8, width: TOOLTIP_W }}
+              >
+                <p className="font-bold text-gray-800 mb-1.5">{d.date}</p>
+                <div className="space-y-1">
+                  <div className="flex justify-between gap-4"><span className="text-gray-500">Room Rev</span><span className="font-semibold">฿{d.roomRevenue.toLocaleString()}</span></div>
+                  <div className="flex justify-between gap-4"><span className="text-gray-500">Extras</span><span className="font-semibold text-emerald-600">+฿{d.extraCharges.toLocaleString()}</span></div>
+                  <div className="flex justify-between gap-4"><span className="text-gray-500">Payments</span><span className="font-semibold text-teal-600">-฿{d.payments.toLocaleString()}</span></div>
+                  <div className="flex justify-between gap-4 border-t border-gray-100 pt-1 mt-1"><span className="text-gray-700 font-bold">Net</span><span className={`font-bold ${d.netTotal < 0 ? 'text-rose-600' : 'text-gray-900'}`}>฿{d.netTotal.toLocaleString()}</span></div>
+                </div>
               </div>
-            </div>
-          )
-        })()}
+            )
+          })()
+        )}
       </div>
       <div className="flex justify-between text-[10px] text-gray-400 mt-1 px-2">
         <span>{data[0]?.date?.slice(5)}</span>
