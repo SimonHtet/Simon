@@ -2,6 +2,59 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 
+type DailyMapReservation = {
+  checkIn: string; checkOut: string; rate: number; totalNights: number; totalAmount: number
+  roomTypeId: string; source: string | null; companyId: string | null
+  company: { id: string; name: string; type: string } | null
+  charges: { date: string; amount: number }[]
+}
+
+function buildDailyMap(rangeFrom: string, rangeTo: string, rsvs: DailyMapReservation[]) {
+  const days: Record<string, {
+    date: string; roomRevenue: number; extraCharges: number; payments: number; netTotal: number
+    occupied: number; arrivals: number; departures: number
+  }> = {}
+  const cur = new Date(rangeFrom)
+  const end = new Date(rangeTo)
+  while (cur <= end) {
+    const d = cur.toISOString().split('T')[0]
+    days[d] = { date: d, roomRevenue: 0, extraCharges: 0, payments: 0, netTotal: 0, occupied: 0, arrivals: 0, departures: 0 }
+    cur.setDate(cur.getDate() + 1)
+  }
+
+  for (const res of rsvs) {
+    const ciDate = new Date(res.checkIn)
+    const coDate = new Date(res.checkOut)
+    if (days[res.checkIn]) days[res.checkIn].arrivals++
+    if (days[res.checkOut]) days[res.checkOut].departures++
+
+    const nightStart = ciDate < new Date(rangeFrom) ? new Date(rangeFrom) : ciDate
+    const nightEnd = coDate > new Date(rangeTo) ? new Date(rangeTo) : coDate
+    let nc = new Date(nightStart)
+    while (nc < nightEnd) {
+      const dk = nc.toISOString().split('T')[0]
+      if (days[dk]) {
+        days[dk].roomRevenue += res.rate
+        days[dk].occupied++
+      }
+      nc.setDate(nc.getDate() + 1)
+    }
+
+    // Extra charges and payments by date
+    for (const charge of res.charges) {
+      if (days[charge.date]) {
+        if (charge.amount > 0) days[charge.date].extraCharges += charge.amount
+        else days[charge.date].payments += Math.abs(charge.amount)
+      }
+    }
+  }
+
+  for (const d of Object.values(days)) {
+    d.netTotal = d.roomRevenue + d.extraCharges - d.payments
+  }
+  return days
+}
+
 export async function GET(req: NextRequest) {
   const { hotelId, error } = await getSessionOrUnauthorized()
   if (error) return error
@@ -27,52 +80,6 @@ export async function GET(req: NextRequest) {
 
     const rooms = await prisma.room.findMany({ where: { hotelId: hotelId! } })
     const totalRooms = rooms.length
-
-    function buildDailyMap(rangeFrom: string, rangeTo: string, rsvs: typeof reservations) {
-      const days: Record<string, {
-        date: string; roomRevenue: number; extraCharges: number; payments: number; netTotal: number
-        occupied: number; arrivals: number; departures: number
-      }> = {}
-      const cur = new Date(rangeFrom)
-      const end = new Date(rangeTo)
-      while (cur <= end) {
-        const d = cur.toISOString().split('T')[0]
-        days[d] = { date: d, roomRevenue: 0, extraCharges: 0, payments: 0, netTotal: 0, occupied: 0, arrivals: 0, departures: 0 }
-        cur.setDate(cur.getDate() + 1)
-      }
-
-      for (const res of rsvs) {
-        const ciDate = new Date(res.checkIn)
-        const coDate = new Date(res.checkOut)
-        if (days[res.checkIn]) days[res.checkIn].arrivals++
-        if (days[res.checkOut]) days[res.checkOut].departures++
-
-        const nightStart = ciDate < new Date(rangeFrom) ? new Date(rangeFrom) : ciDate
-        const nightEnd = coDate > new Date(rangeTo) ? new Date(rangeTo) : coDate
-        let nc = new Date(nightStart)
-        while (nc < nightEnd) {
-          const dk = nc.toISOString().split('T')[0]
-          if (days[dk]) {
-            days[dk].roomRevenue += res.rate
-            days[dk].occupied++
-          }
-          nc.setDate(nc.getDate() + 1)
-        }
-
-        // Extra charges and payments by date
-        for (const charge of res.charges) {
-          if (days[charge.date]) {
-            if (charge.amount > 0) days[charge.date].extraCharges += charge.amount
-            else days[charge.date].payments += Math.abs(charge.amount)
-          }
-        }
-      }
-
-      for (const d of Object.values(days)) {
-        d.netTotal = d.roomRevenue + d.extraCharges - d.payments
-      }
-      return days
-    }
 
     const days = buildDailyMap(from, to, reservations)
 
