@@ -72,5 +72,4 @@ export const PACKAGE_TYPES = [
   { id: 'LATE_CHECKOUT', label: 'Late Check-out' },
   { id: 'EARLY_CHECKIN', label: 'Early Check-in' },
   { id: 'LAUNDRY',       label: 'Laundry Package' },
-  { id: 'SPA',           label: 'Spa & Wellness' },
 ]

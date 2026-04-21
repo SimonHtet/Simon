@@ -66,7 +66,6 @@ const PACKAGE_DEFS = [
   { id: 'LATE_CO',   label: 'Late Check-out',    Icon: CalendarCheck },
   { id: 'EARLY_CI',  label: 'Early Check-in',    Icon: CalendarCheck },
   { id: 'LAUNDRY',   label: 'Laundry Package',   Icon: Sparkles },
-  { id: 'SPA',       label: 'Spa & Wellness',    Icon: UserCheck },
 ]
 
 const PACKAGE_RATES: Record<string, { amount: number; perNight: boolean }> = {
@@ -77,7 +76,6 @@ const PACKAGE_RATES: Record<string, { amount: number; perNight: boolean }> = {
   LATE_CO:   { amount: 500, perNight: false },
   EARLY_CI:  { amount: 500, perNight: false },
   LAUNDRY:   { amount: 200, perNight: true },
-  SPA:       { amount: 0,   perNight: false },
 }
 
 export default function ReservationDetailPanel({

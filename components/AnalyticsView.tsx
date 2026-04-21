@@ -96,6 +96,7 @@ function RevenueLineChart({
 }) {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; d: DailyRevenue } | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   if (data.length < 2) return (
     <div className="h-40 flex items-center justify-center text-sm text-gray-400">Not enough data</div>
@@ -126,14 +127,22 @@ function RevenueLineChart({
 
   function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
     const svg = svgRef.current
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    const relX = ((e.clientX - rect.left) / rect.width) * W
+    const container = containerRef.current
+    if (!svg || !container) return
+    const svgRect = svg.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+    // Find nearest data point using SVG-space X
+    const relX = ((e.clientX - svgRect.left) / svgRect.width) * W
     const idx = Math.round(((relX - pad) / (W - 2 * pad)) * (pts.length - 1))
     const clamped = Math.max(0, Math.min(pts.length - 1, idx))
     const pt = pts[clamped]
-    setTooltip({ x: (pt.x / W) * 100, y: (pt.y / H) * 100, d: pt.d })
+    // Store actual pixel position relative to the container div for rendering
+    const mouseX = e.clientX - containerRect.left
+    const mouseY = e.clientY - containerRect.top
+    setTooltip({ x: mouseX, y: mouseY, d: pt.d })
   }
+
+  const TOOLTIP_W = 168
 
   return (
     <div className="relative w-full">
@@ -143,7 +152,7 @@ function RevenueLineChart({
           <span className="flex items-center gap-1.5"><span className="w-6 h-0 border-t-2 border-dashed border-slate-400 inline-block" /> Previous year</span>
         </div>
       )}
-      <div className="relative">
+      <div className="relative" ref={containerRef}>
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
@@ -172,24 +181,27 @@ function RevenueLineChart({
           )}
         </svg>
 
-        {/* Tooltip */}
-        {tooltip && (
-          <div
-            className="absolute pointer-events-none z-10 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 text-xs min-w-[160px]"
-            style={{
-              left: `clamp(0px, calc(${tooltip.x}% - 80px), calc(100% - 160px))`,
-              top: `${Math.min(tooltip.y, 60)}%`,
-            }}
-          >
-            <p className="font-bold text-gray-800 mb-1.5">{tooltip.d.date}</p>
-            <div className="space-y-1">
-              <div className="flex justify-between gap-4"><span className="text-gray-500">Room Rev</span><span className="font-semibold">฿{tooltip.d.roomRevenue.toLocaleString()}</span></div>
-              <div className="flex justify-between gap-4"><span className="text-gray-500">Extras</span><span className="font-semibold text-emerald-600">+฿{tooltip.d.extraCharges.toLocaleString()}</span></div>
-              <div className="flex justify-between gap-4"><span className="text-gray-500">Payments</span><span className="font-semibold text-teal-600">-฿{tooltip.d.payments.toLocaleString()}</span></div>
-              <div className="flex justify-between gap-4 border-t border-gray-100 pt-1 mt-1"><span className="text-gray-700 font-bold">Net</span><span className={`font-bold ${tooltip.d.netTotal < 0 ? 'text-rose-600' : 'text-gray-900'}`}>฿{tooltip.d.netTotal.toLocaleString()}</span></div>
+        {/* Tooltip — follows actual mouse position */}
+        {tooltip && (() => {
+          const containerW = containerRef.current?.offsetWidth ?? 600
+          const flipLeft = tooltip.x + TOOLTIP_W + 14 > containerW
+          const left = flipLeft ? tooltip.x - TOOLTIP_W - 4 : tooltip.x + 12
+          const top = Math.max(0, tooltip.y - 20)
+          return (
+            <div
+              className="absolute pointer-events-none z-10 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 text-xs"
+              style={{ left, top, width: TOOLTIP_W }}
+            >
+              <p className="font-bold text-gray-800 mb-1.5">{tooltip.d.date}</p>
+              <div className="space-y-1">
+                <div className="flex justify-between gap-4"><span className="text-gray-500">Room Rev</span><span className="font-semibold">฿{tooltip.d.roomRevenue.toLocaleString()}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-gray-500">Extras</span><span className="font-semibold text-emerald-600">+฿{tooltip.d.extraCharges.toLocaleString()}</span></div>
+                <div className="flex justify-between gap-4"><span className="text-gray-500">Payments</span><span className="font-semibold text-teal-600">-฿{tooltip.d.payments.toLocaleString()}</span></div>
+                <div className="flex justify-between gap-4 border-t border-gray-100 pt-1 mt-1"><span className="text-gray-700 font-bold">Net</span><span className={`font-bold ${tooltip.d.netTotal < 0 ? 'text-rose-600' : 'text-gray-900'}`}>฿{tooltip.d.netTotal.toLocaleString()}</span></div>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
       </div>
       <div className="flex justify-between text-[10px] text-gray-400 mt-1 px-2">
         <span>{data[0]?.date?.slice(5)}</span>
@@ -304,12 +316,12 @@ export default function AnalyticsView() {
   const [error, setError] = useState('')
   const [compareYear, setCompareYear] = useState(false)
 
-  async function load(cmp = compareYear) {
+  async function load(fromVal = from, toVal = to, cmp = compareYear) {
     setLoading(true)
     setError('')
     try {
-      const cy = cmp ? `&compareYear=${new Date(from).getFullYear() - 1}` : ''
-      const res = await fetch(`/api/analytics?from=${from}&to=${to}${cy}`)
+      const cy = cmp ? `&compareYear=${new Date(fromVal).getFullYear() - 1}` : ''
+      const res = await fetch(`/api/analytics?from=${fromVal}&to=${toVal}${cy}`)
       if (!res.ok) throw new Error('Failed to load analytics')
       const json = await res.json()
       setData(json)
@@ -320,7 +332,7 @@ export default function AnalyticsView() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(from, to) }, [])
 
   const presets = [
     { label: '7D', days: 7 },
@@ -332,12 +344,13 @@ export default function AnalyticsView() {
     const f = new Date(Date.now() - days * 86400000).toISOString().split('T')[0]
     setFrom(f)
     setTo(today)
+    load(f, today)
   }
 
   function handleToggleCompare() {
     const next = !compareYear
     setCompareYear(next)
-    load(next)
+    load(from, to, next)
   }
 
   return (
@@ -364,7 +377,7 @@ export default function AnalyticsView() {
           <input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500" />
           <button
-            onClick={() => load()}
+            onClick={() => load(from, to)}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-semibold"
           >
             <RefreshCw className="w-3.5 h-3.5" />

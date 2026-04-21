@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Room, Reservation } from '@/types'
 import { ROOM_TYPES } from '@/lib/constants'
+import { GripVertical } from 'lucide-react'
 
 interface Props {
   rooms: Room[]
@@ -52,14 +53,17 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
   const [dayOffset, setDayOffset] = useState(-DAY_BACK)
   const days = getDays(TOTAL_DAYS, dayOffset)
   const today = toDateStr(new Date())
-  const todayIndex = DAY_BACK
+
+  // Drag state
+  const [dragResId, setDragResId] = useState<string | null>(null)
+  const [dragOverRoomId, setDragOverRoomId] = useState<string | null>(null)
+  const [dropError, setDropError] = useState<string | null>(null)
 
   const sortedRooms = [...rooms].sort((a, b) => {
     if (a.floor !== b.floor) return a.floor - b.floor
     return a.id.localeCompare(b.id)
   })
 
-  // Map each reservation to its timeline span within our visible window
   function getSpan(res: Reservation) {
     const startStr = res.checkIn > toDateStr(days[0]) ? res.checkIn : toDateStr(days[0])
     const endStr = res.checkOut < toDateStr(days[days.length - 1]) ? res.checkOut : toDateStr(days[days.length - 1])
@@ -67,6 +71,61 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
     const endIdx = days.findIndex((d) => toDateStr(d) === endStr)
     if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) return null
     return { startIdx, endIdx, span: endIdx - startIdx }
+  }
+
+  // Whether dropping draggedRes onto targetRoomId would conflict with another reservation
+  const hasConflict = useCallback((targetRoomId: string, draggedRes: Reservation): boolean => {
+    return reservations.some(
+      (r) =>
+        r.id !== draggedRes.id &&
+        r.roomId === targetRoomId &&
+        r.status !== 'cancelled' &&
+        r.status !== 'checked_out' &&
+        r.checkIn < draggedRes.checkOut &&
+        r.checkOut > draggedRes.checkIn
+    )
+  }, [reservations])
+
+  function isValidDropTarget(targetRoomId: string, draggedRes: Reservation): boolean {
+    if (targetRoomId === draggedRes.roomId) return true
+    return !hasConflict(targetRoomId, draggedRes)
+  }
+
+  function getDropTargetStyle(roomId: string): string {
+    if (!dragResId || dragOverRoomId !== roomId) return ''
+    const draggedRes = reservations.find((r) => r.id === dragResId)
+    if (!draggedRes) return ''
+    return isValidDropTarget(roomId, draggedRes)
+      ? 'ring-2 ring-inset ring-teal-400 bg-teal-50/60'
+      : 'ring-2 ring-inset ring-rose-400 bg-rose-50/60'
+  }
+
+  async function handleDrop(targetRoomId: string) {
+    if (!dragResId) return
+    const draggedRes = reservations.find((r) => r.id === dragResId)
+    setDragResId(null)
+    setDragOverRoomId(null)
+    if (!draggedRes) return
+    if (targetRoomId === draggedRes.roomId) return
+    if (!isValidDropTarget(targetRoomId, draggedRes)) return
+
+    try {
+      const res = await fetch(`/api/reservations/${dragResId}/move`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId: targetRoomId }),
+      })
+      if (!res.ok) {
+        setDropError(dragResId)
+        setTimeout(() => setDropError(null), 2000)
+        return
+      }
+      // Refresh by re-selecting or triggering parent update
+      onSelectReservation?.(draggedRes)
+    } catch {
+      setDropError(dragResId)
+      setTimeout(() => setDropError(null), 2000)
+    }
   }
 
   const ROW_HEIGHT = 44
@@ -104,20 +163,16 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
         <div style={{ minWidth: 200 + CELL_WIDTH * TOTAL_DAYS }}>
           {/* Header row */}
           <div className="flex sticky top-0 z-10 bg-white border-b border-gray-200">
-            {/* Room label column */}
             <div className="flex-shrink-0 w-[140px] px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide border-r border-gray-200">
               Room
             </div>
-            {/* Day columns */}
             {days.map((day, idx) => {
               const isToday = toDateStr(day) === today
               return (
                 <div
                   key={idx}
                   style={{ width: CELL_WIDTH }}
-                  className={`flex-shrink-0 text-center py-2 border-r border-gray-100 ${
-                    isToday ? 'bg-sky-50' : ''
-                  }`}
+                  className={`flex-shrink-0 text-center py-2 border-r border-gray-100 ${isToday ? 'bg-sky-50' : ''}`}
                 >
                   <p className={`text-xs font-semibold ${isToday ? 'text-sky-600' : 'text-gray-500'}`}>
                     {day.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -143,11 +198,27 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
                 r.checkOut > toDateStr(days[0])
             )
 
+            const dropStyle = getDropTargetStyle(room.id)
+
             return (
               <div
                 key={room.id}
-                className="flex border-b border-gray-100 hover:bg-gray-50 relative"
+                className={`flex border-b border-gray-100 hover:bg-gray-50 relative transition-colors ${dropStyle}`}
                 style={{ height: ROW_HEIGHT }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setDragOverRoomId(room.id)
+                }}
+                onDragLeave={(e) => {
+                  // Only clear if leaving the row entirely (not entering a child)
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDragOverRoomId(null)
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  handleDrop(room.id)
+                }}
               >
                 {/* Room label */}
                 <div className="flex-shrink-0 w-[140px] flex items-center px-3 border-r border-gray-200">
@@ -167,9 +238,7 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
                       <div
                         key={idx}
                         style={{ width: CELL_WIDTH }}
-                        className={`flex-shrink-0 h-full border-r border-gray-100 ${
-                          isToday ? 'bg-sky-50/50' : ''
-                        }`}
+                        className={`flex-shrink-0 h-full border-r border-gray-100 ${isToday ? 'bg-sky-50/50' : ''}`}
                       />
                     )
                   })}
@@ -178,22 +247,44 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
                   {roomRes.map((res) => {
                     const span = getSpan(res)
                     if (!span) return null
+                    const canDrag = res.status === 'confirmed' || res.status === 'checked_in'
+                    const isError = dropError === res.id
                     return (
-                      <button
+                      <div
                         key={res.id}
-                        onClick={() => onSelectReservation?.(res)}
+                        draggable={canDrag}
+                        onDragStart={(e) => {
+                          if (!canDrag) { e.preventDefault(); return }
+                          setDragResId(res.id)
+                          e.dataTransfer.effectAllowed = 'move'
+                        }}
+                        onDragEnd={() => {
+                          setDragResId(null)
+                          setDragOverRoomId(null)
+                        }}
                         style={{
                           position: 'absolute',
                           left: span.startIdx * CELL_WIDTH + 2,
                           width: span.span * CELL_WIDTH - 4,
                           top: 4,
                           height: ROW_HEIGHT - 8,
+                          opacity: dragResId === res.id ? 0.5 : 1,
                         }}
-                        className={`rounded-md text-xs font-medium px-2 truncate flex items-center shadow-sm hover:opacity-80 transition-opacity ${getResStatusColor(res.status)}`}
+                        className={`rounded-md text-xs font-medium px-1.5 flex items-center gap-1 shadow-sm transition-opacity select-none
+                          ${isError ? 'ring-2 ring-rose-500 ring-offset-1' : ''}
+                          ${getResStatusColor(res.status)}
+                          ${canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
+                        `}
                         title={`${res.guestName} · ${res.checkIn} → ${res.checkOut}`}
+                        onClick={() => onSelectReservation?.(res)}
                       >
-                        {span.span > 1 ? res.guestName : res.guestName.charAt(0)}
-                      </button>
+                        {canDrag && (
+                          <GripVertical className="w-3 h-3 opacity-60 flex-shrink-0" />
+                        )}
+                        <span className="truncate">
+                          {span.span > 1 ? res.guestName : res.guestName.charAt(0)}
+                        </span>
+                      </div>
                     )
                   })}
                 </div>
@@ -216,6 +307,9 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
             {label}
           </div>
         ))}
+        <div className="flex items-center gap-2 text-xs text-gray-400 ml-auto">
+          <GripVertical className="w-3 h-3" /> Drag to move room
+        </div>
       </div>
     </div>
   )

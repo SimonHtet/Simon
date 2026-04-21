@@ -101,23 +101,27 @@ interface NewReservationModalProps {
   rooms: Room[]
   onConfirm: (data: NewReservationData) => Promise<void>
   onClose: () => void
+  initialRoomId?: string
 }
 
 const RACK_RATES: Record<string, number> = {
   STANDARD: 1200, DELUXE: 1800, SUITE: 3500, POOL_VILLA: 6500,
 }
 
-export function NewReservationModal({ rooms, onConfirm, onClose }: NewReservationModalProps) {
+export function NewReservationModal({ rooms, onConfirm, onClose, initialRoomId }: NewReservationModalProps) {
   const today = new Date().toISOString().split('T')[0]
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]
 
+  const initialRoom = initialRoomId ? rooms.find((r) => r.id === initialRoomId) : undefined
+  const initialRoomType = initialRoom?.type ?? 'STANDARD'
+
   const [form, setForm] = useState<NewReservationData>({
     guestName: '',
-    roomId: '',
-    roomTypeId: 'STANDARD',
+    roomId: initialRoomId ?? '',
+    roomTypeId: initialRoomType,
     checkIn: today,
     checkOut: tomorrow,
-    rate: ROOM_TYPES.STANDARD.rate,
+    rate: ROOM_TYPES[initialRoomType]?.rate ?? ROOM_TYPES.STANDARD.rate,
     adults: 1,
     children: 0,
   })

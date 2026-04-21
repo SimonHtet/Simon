@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { Room, Reservation } from '@/types'
 import RoomGridView from '@/components/RoomGridView'
 import ReservationDetailPanel from '@/components/ReservationDetailPanel'
+import { NewReservationModal } from '@/components/Modals'
 
 export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null)
   const [loading, setLoading] = useState(true)
+  const [newResRoomId, setNewResRoomId] = useState<string | null>(null)
 
   const refreshData = useCallback(async () => {
     const [roomsRes, resRes] = await Promise.all([
@@ -47,6 +49,20 @@ export default function RoomsPage() {
     await refreshData()
   }
 
+  async function handleNewReservation(data: any) {
+    const res = await fetch('/api/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to create reservation')
+    }
+    setNewResRoomId(null)
+    await refreshData()
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -62,7 +78,17 @@ export default function RoomsPage() {
         reservations={reservations}
         onSelectReservation={setSelectedRes}
         onRefresh={refreshData}
+        onNewReservation={(roomId) => setNewResRoomId(roomId)}
       />
+
+      {newResRoomId && (
+        <NewReservationModal
+          rooms={rooms}
+          initialRoomId={newResRoomId}
+          onConfirm={handleNewReservation}
+          onClose={() => setNewResRoomId(null)}
+        />
+      )}
 
       {selectedRes && (
         <ReservationDetailPanel

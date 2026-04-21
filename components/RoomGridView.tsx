@@ -9,6 +9,7 @@ interface Props {
   reservations: Reservation[]
   onSelectReservation?: (res: Reservation) => void
   onRefresh?: () => void
+  onNewReservation?: (roomId: string) => void
 }
 
 function groupByFloor(rooms: Room[]): Record<number, Room[]> {
@@ -67,7 +68,7 @@ async function patchRoomStatus(roomId: string, status: string) {
   })
 }
 
-export default function RoomGridView({ rooms, reservations, onSelectReservation, onRefresh }: Props) {
+export default function RoomGridView({ rooms, reservations, onSelectReservation, onRefresh, onNewReservation }: Props) {
   const byFloor = groupByFloor(rooms)
   const floors = Object.keys(byFloor)
     .map(Number)
@@ -119,19 +120,22 @@ export default function RoomGridView({ rooms, reservations, onSelectReservation,
               const displayRes = activeRes || confirmedRes
               const s = STATUS_STYLES[room.status] ?? STATUS_STYLES.blocked
 
+              const isClickable = !!displayRes || room.status === 'available'
               return (
                 <div
                   key={room.id}
                   onClick={() => {
                     if (displayRes && onSelectReservation) {
                       onSelectReservation(displayRes)
+                    } else if (room.status === 'available') {
+                      onNewReservation?.(room.id)
                     }
                   }}
                   className={`
                     relative p-3 rounded-xl border-2 text-left transition-all duration-200
                     hover:shadow-md hover:-translate-y-0.5
                     ${s.card}
-                    ${displayRes ? 'cursor-pointer' : 'cursor-default'}
+                    ${isClickable ? 'cursor-pointer' : 'cursor-default'}
                   `}
                 >
                   {/* Room number + dot */}
