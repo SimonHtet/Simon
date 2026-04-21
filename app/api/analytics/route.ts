@@ -139,7 +139,7 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.revenue - a.revenue)
 
     // Compare year support
-    let lastYearDaily: typeof Object.values(days) | null = null
+    let lastYearDaily: Array<{ date: string; roomRevenue: number; extraCharges: number; payments: number; netTotal: number }> | null = null
     if (compareYear) {
       const yearDiff = new Date(from).getFullYear() - parseInt(compareYear)
       const lyFrom = new Date(from)
