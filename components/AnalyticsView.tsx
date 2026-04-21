@@ -132,12 +132,25 @@ function RevenueLineChart({
   }
 
   function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
-    const svg = svgRef.current
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    setHoveredIdx(Math.round(ratio * (data.length - 1)))
-  }
+  const svg = svgRef.current
+  if (!svg) return
+
+  const rect = svg.getBoundingClientRect()
+
+  // Convert mouse X → SVG viewBox X
+  const scaleX = VB_W / rect.width
+  const mouseX = (e.clientX - rect.left) * scaleX
+
+  // Clamp inside drawable area (respect padding)
+  const clampedX = Math.max(VB_PAD, Math.min(VB_W - VB_PAD, mouseX))
+
+  // Normalize inside drawable width
+  const ratio = (clampedX - VB_PAD) / (VB_W - 2 * VB_PAD)
+
+  const idx = Math.round(ratio * (data.length - 1))
+  setHoveredIdx(idx)
+}
+
 
   // Active point lives in SVG viewBox coordinates — SVG handles all scaling
   const activePt = hoveredIdx !== null ? pts[hoveredIdx] : null
