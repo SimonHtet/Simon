@@ -36,6 +36,23 @@ export interface Guest {
   hotelId?: string
   preferenceNotes?: string | null
   specialRequests?: string | null
+  smokingPref?: string | null
+  bedPref?: string | null
+  pillowPref?: string | null
+  floorPref?: string | null
+  viewPref?: string | null
+  temperaturePref?: string | null
+  allergiesPref?: string | null
+}
+
+export interface ChargeCode {
+  id: number
+  code: string
+  category: string
+  description: string
+  price: number
+  active: boolean
+  hotelId?: string
 }
 
 export interface Charge {

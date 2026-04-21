@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Room, Reservation, Company } from '@/types'
+import { Room, Reservation, Company, ChargeCode } from '@/types'
 import { ROOM_TYPES, BOOKING_SOURCES, CHARGE_CATEGORIES, PAYMENT_TYPES, DEPARTMENTS } from '@/lib/constants'
 import { calculateNights } from '@/lib/utils'
 import {
@@ -516,12 +516,46 @@ interface AddChargeModalProps {
 
 export function AddChargeModal({ reservation: res, onConfirm, onClose }: AddChargeModalProps) {
   const today = new Date().toISOString().split('T')[0]
+  const [query, setQuery] = useState('')
   const [item, setItem] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(today)
   const [category, setCategory] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [chargeCodes, setChargeCodes] = useState<ChargeCode[]>([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [codeSelected, setCodeSelected] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/charge-codes').then((r) => r.json()).then((d) => {
+      if (Array.isArray(d)) setChargeCodes(d)
+    }).catch(() => {})
+  }, [])
+
+  const filtered = query.trim()
+    ? chargeCodes.filter((c) =>
+        c.code.startsWith(query) ||
+        c.description.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 8)
+    : []
+
+  function selectCode(code: ChargeCode) {
+    setItem(code.description)
+    setAmount(String(code.price))
+    setCategory(code.category)
+    setQuery(`${code.code} — ${code.description}`)
+    setShowDropdown(false)
+    setCodeSelected(true)
+  }
+
+  function clearCode() {
+    setCodeSelected(false)
+    setQuery('')
+    setItem('')
+    setAmount('')
+    setCategory('')
+  }
 
   async function handleConfirm() {
     if (!item.trim()) { setError('Item description is required'); return }
@@ -540,9 +574,63 @@ export function AddChargeModal({ reservation: res, onConfirm, onClose }: AddChar
   return (
     <ModalShell title="Add Charge" subtitle={res.guestName} icon={DollarSign} iconBg="bg-orange-500" onClose={onClose}>
       <div className="p-6 space-y-4">
+        {/* Code lookup */}
+        <div className="relative">
+          <FormField label="Charge Code / Description" required>
+            <input
+              type="text"
+              placeholder="Type code (e.g. 102) or keyword (e.g. beer)..."
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value)
+                setShowDropdown(true)
+                setCodeSelected(false)
+                if (!e.target.value) { setItem(''); setAmount(''); setCategory('') }
+              }}
+              onFocus={() => query && setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+              className={inputCls}
+            />
+          </FormField>
+          {showDropdown && filtered.length > 0 && (
+            <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+              {filtered.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onMouseDown={() => selectCode(c)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-orange-50 text-left transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-black text-orange-600 w-8">{c.code}</span>
+                    <span className="text-xs text-gray-500">{c.category}</span>
+                    <span className="text-sm font-medium text-gray-800">{c.description}</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">฿{c.price.toLocaleString()}</span>
+                </button>
+              ))}
+              <button
+                type="button"
+                onMouseDown={() => { setShowDropdown(false); setCodeSelected(false) }}
+                className="w-full px-4 py-2 text-xs text-gray-400 hover:bg-gray-50 text-left border-t border-gray-100"
+              >
+                Manual entry
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Description (editable) */}
         <FormField label="Description" required>
-          <input type="text" placeholder="e.g. Mini Bar, Room Service..." value={item} onChange={(e) => setItem(e.target.value)} className={inputCls} />
+          <input
+            type="text"
+            placeholder="Item description..."
+            value={item}
+            onChange={(e) => setItem(e.target.value)}
+            className={inputCls}
+          />
         </FormField>
+
         <div className="grid grid-cols-2 gap-3">
           <FormField label="Amount (฿)" required>
             <input type="number" min={0} step={0.01} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} />
@@ -551,12 +639,19 @@ export function AddChargeModal({ reservation: res, onConfirm, onClose }: AddChar
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
           </FormField>
         </div>
+
+        {/* Category — auto-filled when code selected, otherwise readonly display */}
         <FormField label="Category">
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectCls}>
-            <option value="">Select category...</option>
-            {CHARGE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          {codeSelected ? (
+            <div className={`${inputCls} bg-gray-50 text-gray-600`}>{category}</div>
+          ) : (
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectCls}>
+              <option value="">Select category...</option>
+              {CHARGE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
         </FormField>
+
         {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">{error}</p>}
       </div>
       <div className="px-6 pb-6 flex gap-3 border-t border-gray-100 pt-4">

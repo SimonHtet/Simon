@@ -465,6 +465,160 @@ async function main() {
     },
   })
 
+  // ── Additional Companies & Agents ─────────────────────────────────────────
+  const additionalCompanies = [
+    {
+      id: 'CO003',
+      name: 'Siam Business Group',
+      type: 'COMPANY' as const,
+      contactName: 'Wichai Boonmee',
+      contactEmail: 'wichai@siambusiness.th',
+      contactPhone: '+66 2 234 5678',
+      contractRates: { STANDARD: 18, DELUXE: 16, SUITE: 12, POOL_VILLA: 8 },
+      active: true,
+    },
+    {
+      id: 'CO004',
+      name: 'Bangkok Hospital Group',
+      type: 'COMPANY' as const,
+      contactName: 'Dr. Panida Srisuk',
+      contactEmail: 'panida@bangkokhospital.th',
+      contactPhone: '+66 2 345 6789',
+      contractRates: { STANDARD: 15, DELUXE: 12, SUITE: 10, POOL_VILLA: 8 },
+      active: true,
+    },
+    {
+      id: 'CO005',
+      name: 'PTT Public Company',
+      type: 'COMPANY' as const,
+      contactName: 'Krit Tangcharoen',
+      contactEmail: 'krit.t@ptt.th',
+      contactPhone: '+66 2 537 2000',
+      contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 15, POOL_VILLA: 10 },
+      active: true,
+    },
+    {
+      id: 'CO006',
+      name: 'Central Group',
+      type: 'COMPANY' as const,
+      contactName: 'Supaporn Chirathivat',
+      contactEmail: 'supaporn@centralgroup.th',
+      contactPhone: '+66 2 101 1111',
+      contractRates: { STANDARD: 22, DELUXE: 20, SUITE: 15, POOL_VILLA: 12 },
+      active: true,
+    },
+    {
+      id: 'CO007',
+      name: 'Minor Hotels Corporate',
+      type: 'COMPANY' as const,
+      contactName: 'James Davidson',
+      contactEmail: 'jdavidson@minorhotels.com',
+      contactPhone: '+66 2 365 6000',
+      contractRates: { STANDARD: 25, DELUXE: 22, SUITE: 18, POOL_VILLA: 15 },
+      active: true,
+    },
+    {
+      id: 'CO008',
+      name: 'Asia Pacific Tours',
+      type: 'AGENT' as const,
+      contactName: 'Linh Nguyen',
+      contactEmail: 'linh@asiapacifictours.com',
+      contactPhone: '+66 2 456 7891',
+      contractRates: { STANDARD: 12, DELUXE: 12, SUITE: 8, POOL_VILLA: 8 },
+      active: true,
+    },
+    {
+      id: 'CO009',
+      name: 'Japan Travel Bureau',
+      type: 'AGENT' as const,
+      contactName: 'Kenji Yamamoto',
+      contactEmail: 'k.yamamoto@jtb.co.jp',
+      contactPhone: '+81 3 3276 7777',
+      contractRates: { STANDARD: 15, DELUXE: 12, SUITE: 10, POOL_VILLA: 8 },
+      active: true,
+    },
+    {
+      id: 'CO010',
+      name: 'Kuoni Travel Thailand',
+      type: 'AGENT' as const,
+      contactName: 'Sarah Mitchell',
+      contactEmail: 's.mitchell@kuoni.th',
+      contactPhone: '+66 2 632 0800',
+      contractRates: { STANDARD: 18, DELUXE: 15, SUITE: 12, POOL_VILLA: 10 },
+      active: true,
+    },
+    {
+      id: 'CO011',
+      name: 'TUI Thailand',
+      type: 'AGENT' as const,
+      contactName: 'Hans Müller',
+      contactEmail: 'h.muller@tui.th',
+      contactPhone: '+66 2 636 9000',
+      contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 12, POOL_VILLA: 10 },
+      active: true,
+    },
+    {
+      id: 'CO012',
+      name: 'Thomas Cook Asia',
+      type: 'AGENT' as const,
+      contactName: 'Priya Sharma',
+      contactEmail: 'p.sharma@thomascook.asia',
+      contactPhone: '+66 2 252 4050',
+      contractRates: { STANDARD: 15, DELUXE: 14, SUITE: 10, POOL_VILLA: 8 },
+      active: true,
+    },
+  ]
+
+  for (const co of additionalCompanies) {
+    await prisma.company.upsert({
+      where: { id: co.id },
+      update: {},
+      create: { ...co, hotelId: 'HOTEL-001' },
+    })
+  }
+
+  // ── Charge Codes ──────────────────────────────────────────────────────────
+  const chargeCodes = [
+    // F&B (1xx)
+    { code: '101', category: 'F&B', description: 'Breakfast', price: 350 },
+    { code: '102', category: 'F&B', description: 'Lunch', price: 450 },
+    { code: '103', category: 'F&B', description: 'Dinner', price: 650 },
+    { code: '104', category: 'F&B', description: 'Room Service', price: 500 },
+    { code: '105', category: 'F&B', description: 'Beverages', price: 200 },
+    // Housekeeping (3xx)
+    { code: '301', category: 'Housekeeping', description: 'Laundry Service', price: 300 },
+    { code: '302', category: 'Housekeeping', description: 'Dry Cleaning', price: 500 },
+    { code: '303', category: 'Housekeeping', description: 'Extra Towels', price: 150 },
+    { code: '304', category: 'Housekeeping', description: 'Turndown Service', price: 200 },
+    { code: '305', category: 'Housekeeping', description: 'Extra Amenities', price: 100 },
+    // Spa (5xx)
+    { code: '501', category: 'Spa', description: 'Thai Massage (60 min)', price: 1200 },
+    { code: '502', category: 'Spa', description: 'Swedish Massage (90 min)', price: 1800 },
+    { code: '503', category: 'Spa', description: 'Facial Treatment', price: 1500 },
+    { code: '504', category: 'Spa', description: 'Aromatherapy', price: 2000 },
+    { code: '505', category: 'Spa', description: 'Body Scrub', price: 1600 },
+    // Transport (6xx)
+    { code: '601', category: 'Transport', description: 'Airport Transfer (1-way)', price: 800 },
+    { code: '602', category: 'Transport', description: 'Airport Transfer (return)', price: 1500 },
+    { code: '603', category: 'Transport', description: 'Taxi Booking', price: 300 },
+    { code: '604', category: 'Transport', description: 'Car Rental (per day)', price: 1200 },
+    // Minibar (7xx)
+    { code: '701', category: 'Minibar', description: 'Minibar Consumption', price: 450 },
+    { code: '702', category: 'Minibar', description: 'Premium Spirits', price: 800 },
+    { code: '703', category: 'Minibar', description: 'Soft Drinks & Snacks', price: 250 },
+    // Misc (9xx)
+    { code: '901', category: 'Misc', description: 'Parking (per day)', price: 200 },
+    { code: '902', category: 'Misc', description: 'Business Center', price: 150 },
+  ]
+
+  for (const cc of chargeCodes) {
+    await prisma.chargeCode.upsert({
+      where: { code: cc.code },
+      update: {},
+      create: { ...cc, active: true, hotelId: 'HOTEL-001' },
+    })
+  }
+
   console.log('✅ Database seeded successfully!')
   console.log('   Admin: admin@staywise.com / admin1234')
   console.log('   Staff: frontdesk@staywise.com / front1234')

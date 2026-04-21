@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 
+const PREF_FIELDS = ['smokingPref', 'bedPref', 'pillowPref', 'floorPref', 'viewPref', 'temperaturePref', 'allergiesPref']
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -10,7 +12,6 @@ export async function PATCH(
   if (error) return error
 
   const body = await req.json().catch(() => ({}))
-  const { preferenceNotes, specialRequests } = body
 
   try {
     const guest = await prisma.guest.findFirst({
@@ -22,8 +23,10 @@ export async function PATCH(
     }
 
     const data: Record<string, string | null> = {}
-    if (preferenceNotes !== undefined) data.preferenceNotes = preferenceNotes || null
-    if (specialRequests !== undefined) data.specialRequests = specialRequests || null
+    const allowedFields = ['preferenceNotes', 'specialRequests', ...PREF_FIELDS]
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) data[field] = body[field] || null
+    }
 
     const updated = await prisma.guest.update({
       where: { id: params.id },

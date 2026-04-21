@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Reservation, Guest } from '@/types'
 import { getResStatusBadge, getResStatusLabel, formatDate } from '@/lib/utils'
-import { Search, Star, User, Phone, Mail, Globe, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Star, User, Phone, Mail, Globe, ChevronDown, ChevronUp, BedDouble, History } from 'lucide-react'
 
 interface Props {
   reservations: Reservation[]
@@ -51,13 +51,129 @@ function deriveGuests(reservations: Reservation[]): GuestSummary[] {
   return Array.from(map.values()).sort((a, b) => b.totalStays - a.totalStays)
 }
 
-function mostCommon(values: (string | null | undefined)[]): string | null {
-  const counts: Record<string, number> = {}
-  for (const v of values) {
-    if (v) counts[v] = (counts[v] ?? 0) + 1
+
+const PREF_FIELDS = [
+  { key: 'smokingPref', label: 'Smoking' },
+  { key: 'bedPref', label: 'Bed Type' },
+  { key: 'pillowPref', label: 'Pillow' },
+  { key: 'floorPref', label: 'Floor' },
+  { key: 'viewPref', label: 'View' },
+  { key: 'temperaturePref', label: 'Temperature' },
+  { key: 'allergiesPref', label: 'Allergies' },
+] as const
+
+type PrefKey = typeof PREF_FIELDS[number]['key']
+
+function EditablePrefField({
+  label,
+  fieldKey,
+  guestId,
+  initial,
+}: {
+  label: string
+  fieldKey: PrefKey
+  guestId: string
+  initial: string | null | undefined
+}) {
+  const [value, setValue] = useState(initial ?? '')
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setEditing(false)
+    if (value === (initial ?? '')) return
+    setSaving(true)
+    await fetch(`/api/guests/${guestId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [fieldKey]: value || null }),
+    })
+    setSaving(false)
   }
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1])
-  return sorted[0]?.[0] ?? null
+
+  return (
+    <div className="p-2 bg-slate-50 rounded-lg border border-slate-100 group">
+      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+      {editing ? (
+        <input
+          autoFocus
+          className="w-full text-[11px] font-semibold text-slate-700 bg-white border border-teal-300 rounded px-1 py-0.5 outline-none"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setValue(initial ?? ''); setEditing(false) } }}
+        />
+      ) : (
+        <button
+          className="w-full text-left"
+          onClick={() => setEditing(true)}
+        >
+          {saving ? (
+            <span className="text-[10px] text-teal-500 font-bold">Saving…</span>
+          ) : value ? (
+            <span className="text-[11px] font-bold text-slate-700">{value}</span>
+          ) : (
+            <span className="text-[11px] text-slate-300 italic">—</span>
+          )}
+        </button>
+      )}
+    </div>
+  )
+}
+
+function RoomHistorySection({ reservations }: { reservations: Reservation[] }) {
+  const sorted = [...reservations].sort((a, b) => (b.checkIn > a.checkIn ? 1 : -1))
+
+  // Find most frequent room type
+  const typeCounts: Record<string, number> = {}
+  for (const res of reservations) {
+    if (res.roomTypeId) typeCounts[res.roomTypeId] = (typeCounts[res.roomTypeId] ?? 0) + 1
+  }
+  const topType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+
+  return (
+    <div className="mt-4">
+      <div className="flex items-center gap-2 mb-3">
+        <History className="w-3.5 h-3.5 text-slate-400" />
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Room History</p>
+        {topType && (
+          <span className="ml-auto text-[9px] font-black text-teal-600 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5 uppercase">
+            Prefers {topType.replace('_', ' ')}
+          </span>
+        )}
+      </div>
+      <div className="space-y-1.5">
+        {sorted.map((res) => {
+          const isTopType = res.roomTypeId === topType
+          return (
+            <div
+              key={res.id}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg border text-xs ${
+                isTopType
+                  ? 'bg-teal-50 border-teal-200'
+                  : 'bg-white border-slate-100'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 shrink-0">
+                <BedDouble className={`w-3.5 h-3.5 ${isTopType ? 'text-teal-500' : 'text-slate-300'}`} />
+                <span className="font-black text-slate-800">Rm {res.roomId}</span>
+              </div>
+              <span className="text-slate-400">·</span>
+              <span className="text-slate-500">{res.roomTypeId?.replace('_', ' ')}</span>
+              {res.room?.floor && <><span className="text-slate-400">·</span><span className="text-slate-400">Fl {res.room.floor}</span></>}
+              <span className="text-slate-400">·</span>
+              <span className="text-slate-500">{formatDate(res.checkIn)} → {formatDate(res.checkOut)}</span>
+              <span className="text-slate-400">·</span>
+              <span className="font-semibold text-slate-700">฿{res.rate.toLocaleString()}/n</span>
+              <span className={`ml-auto px-1.5 py-0.5 rounded-full text-[9px] font-black ${getResStatusBadge(res.status)}`}>
+                {getResStatusLabel(res.status)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 function GuestProfileSection({
@@ -69,21 +185,6 @@ function GuestProfileSection({
   const [prefNotes, setPrefNotes] = useState(g.preferenceNotes ?? '')
   const [saving, setSaving] = useState(false)
 
-  // Aggregate preferences from all stays
-  const allPrefs = entry.reservations.map((r) => r.preferences)
-  const aggPref = {
-    smoking: mostCommon(allPrefs.map((p) => p?.smoking)),
-    bed: mostCommon(allPrefs.map((p) => p?.bed)),
-    pillow: mostCommon(allPrefs.map((p) => p?.pillow)),
-    floor: mostCommon(allPrefs.map((p) => p?.floor)),
-    view: mostCommon(allPrefs.map((p) => p?.view)),
-    temperature: mostCommon(allPrefs.map((p) => p?.temperature)),
-    allergies: mostCommon(allPrefs.map((p) => p?.allergies)),
-  }
-
-  const hasAnyPref = Object.values(aggPref).some(Boolean)
-
-  // Unique non-empty specials across stays
   const uniqueSpecials = Array.from(
     new Set(
       entry.reservations
@@ -108,34 +209,23 @@ function GuestProfileSection({
         Guest Profile
       </p>
 
-      {/* Aggregated preferences */}
-      {hasAnyPref && (
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">
-            Typical Preferences (from past stays)
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {([
-              { key: 'smoking', label: 'Smoking' },
-              { key: 'bed', label: 'Bed' },
-              { key: 'pillow', label: 'Pillow' },
-              { key: 'floor', label: 'Floor' },
-              { key: 'view', label: 'View' },
-              { key: 'temperature', label: 'Temp' },
-              { key: 'allergies', label: 'Allergies' },
-            ] as { key: keyof typeof aggPref; label: string }[])
-              .filter(({ key }) => aggPref[key])
-              .map(({ key, label }) => (
-                <div key={key} className="p-2 bg-slate-50 rounded-lg border border-slate-100">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
-                    {label}
-                  </p>
-                  <p className="text-[11px] font-bold text-slate-700">{aggPref[key]}</p>
-                </div>
-              ))}
-          </div>
+      {/* Editable guest-level preferences */}
+      <div>
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">
+          Preferences <span className="font-normal normal-case text-slate-300">(click to edit)</span>
+        </p>
+        <div className="grid grid-cols-4 gap-2">
+          {PREF_FIELDS.map(({ key, label }) => (
+            <EditablePrefField
+              key={key}
+              label={label}
+              fieldKey={key}
+              guestId={g.id}
+              initial={(g as any)[key]}
+            />
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Preference notes (editable) */}
       <div>
@@ -173,6 +263,11 @@ function GuestProfileSection({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Room History */}
+      {entry.reservations.length > 0 && (
+        <RoomHistorySection reservations={entry.reservations} />
       )}
     </div>
   )

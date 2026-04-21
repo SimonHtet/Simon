@@ -37,28 +37,47 @@ model Room {
 }
 
 model Guest {
-  id             String        @id @default(cuid())
-  name           String
-  firstName      String?
-  lastName       String?
-  preferredName  String?
-  birthday       String?
-  nationality    String?
-  email          String?
-  phone          String?
-  passportNumber String?
-  passportExpiry String?
-  language       String?
-  memberNumber   String?
-  vipStatus      String?
-  company        String?
-  city           String?
-  country        String?
+  id              String        @id @default(cuid())
+  name            String
+  firstName       String?
+  lastName        String?
+  preferredName   String?
+  birthday        String?
+  nationality     String?
+  email           String?
+  phone           String?
+  passportNumber  String?
+  passportExpiry  String?
+  language        String?
+  memberNumber    String?
+  vipStatus       String?
+  company         String?
+  city            String?
+  country         String?
   hotelId         String        @default("HOTEL-001")
   preferenceNotes String?
   specialRequests String?
+  smokingPref     String?
+  bedPref         String?
+  pillowPref      String?
+  floorPref       String?
+  viewPref        String?
+  temperaturePref String?
+  allergiesPref   String?
   createdAt       DateTime      @default(now())
   reservations    Reservation[]
+}
+
+model ChargeCode {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  category    String
+  description String
+  price       Float
+  active      Boolean  @default(true)
+  hotelId     String   @default("HOTEL-001")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Company {
