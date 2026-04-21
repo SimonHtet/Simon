@@ -61,6 +61,7 @@ export default function TimelinePage() {
         rooms={rooms}
         reservations={reservations}
         onSelectReservation={setSelectedRes}
+        onRefresh={refreshData}
       />
 
       {selectedRes && (

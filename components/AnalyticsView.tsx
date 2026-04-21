@@ -96,7 +96,6 @@ function RevenueLineChart({
 }) {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; d: DailyRevenue } | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
 
   if (data.length < 2) return (
     <div className="h-40 flex items-center justify-center text-sm text-gray-400">Not enough data</div>
@@ -125,24 +124,23 @@ function RevenueLineChart({
     cmpPathD = `M ${cpts.map((p) => `${p.x},${p.y}`).join(' L ')}`
   }
 
+  const TOOLTIP_W = 168
+
   function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
     const svg = svgRef.current
-    const container = containerRef.current
-    if (!svg || !container) return
-    const svgRect = svg.getBoundingClientRect()
-    const containerRect = container.getBoundingClientRect()
-    // Find nearest data point using SVG-space X
-    const relX = ((e.clientX - svgRect.left) / svgRect.width) * W
-    const idx = Math.round(((relX - pad) / (W - 2 * pad)) * (pts.length - 1))
-    const clamped = Math.max(0, Math.min(pts.length - 1, idx))
-    const pt = pts[clamped]
-    // Store actual pixel position relative to the container div for rendering
-    const mouseX = e.clientX - containerRect.left
-    const mouseY = e.clientY - containerRect.top
-    setTooltip({ x: mouseX, y: mouseY, d: pt.d })
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    // Pixel position within the rendered SVG element
+    const relX = e.clientX - rect.left
+    const relY = e.clientY - rect.top
+    // Map to data index using ratio of rendered width (not viewBox width)
+    const ratio = Math.max(0, Math.min(1, relX / rect.width))
+    const idx = Math.round(ratio * (data.length - 1))
+    setTooltip({ x: relX, y: relY, d: data[idx] })
   }
 
-  const TOOLTIP_W = 168
+  // Active point in SVG-viewBox space for the dot
+  const activePt = tooltip ? pts.find((p) => p.d.date === tooltip.d.date) : null
 
   return (
     <div className="relative w-full">
@@ -152,7 +150,7 @@ function RevenueLineChart({
           <span className="flex items-center gap-1.5"><span className="w-6 h-0 border-t-2 border-dashed border-slate-400 inline-block" /> Previous year</span>
         </div>
       )}
-      <div className="relative" ref={containerRef}>
+      <div className="relative">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
@@ -167,25 +165,26 @@ function RevenueLineChart({
               <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
             </linearGradient>
           </defs>
+          {/* Invisible full-area overlay to ensure mouse events fire everywhere */}
+          <rect x="0" y="0" width="100%" height="100%" fill="transparent" pointerEvents="all" />
           <path d={areaD} fill="url(#areaGrad)" />
           {cmpPathD && (
             <path d={cmpPathD} stroke="#94a3b8" strokeWidth="1.5" fill="none" strokeDasharray="4 3" strokeLinejoin="round" />
           )}
           <path d={pathD} stroke="#0ea5e9" strokeWidth="2" fill="none" strokeLinejoin="round" />
-          {tooltip && (
-            <circle
-              cx={pts.find((p) => p.d.date === tooltip.d.date)?.x ?? 0}
-              cy={pts.find((p) => p.d.date === tooltip.d.date)?.y ?? 0}
-              r="4" fill="#0ea5e9" stroke="white" strokeWidth="2"
-            />
+          {activePt && (
+            <circle cx={activePt.x} cy={activePt.y} r="4" fill="#0ea5e9" stroke="white" strokeWidth="2" />
           )}
         </svg>
 
-        {/* Tooltip — follows actual mouse position */}
+        {/* Tooltip — positioned relative to SVG bounding rect */}
         {tooltip && (() => {
-          const containerW = containerRef.current?.offsetWidth ?? 600
-          const flipLeft = tooltip.x + TOOLTIP_W + 14 > containerW
-          const left = flipLeft ? tooltip.x - TOOLTIP_W - 4 : tooltip.x + 12
+          const svgW = svgRef.current?.getBoundingClientRect().width ?? 600
+          const flipLeft = tooltip.x > svgW * 0.6
+          const left = Math.max(0, Math.min(
+            flipLeft ? tooltip.x - TOOLTIP_W - 12 : tooltip.x + 12,
+            svgW - TOOLTIP_W
+          ))
           const top = Math.max(0, tooltip.y - 20)
           return (
             <div
