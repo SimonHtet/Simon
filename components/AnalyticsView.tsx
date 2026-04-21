@@ -136,19 +136,22 @@ function RevenueLineChart({
   if (!svg) return
 
   const rect = svg.getBoundingClientRect()
-
-  // Convert mouse X → SVG viewBox X
   const scaleX = VB_W / rect.width
   const mouseX = (e.clientX - rect.left) * scaleX
 
-  // Clamp inside drawable area (respect padding)
-  const clampedX = Math.max(VB_PAD, Math.min(VB_W - VB_PAD, mouseX))
+  // Find closest actual point
+  let closestIdx = 0
+  let minDist = Infinity
 
-  // Normalize inside drawable width
-  const ratio = (clampedX - VB_PAD) / (VB_W - 2 * VB_PAD)
+  pts.forEach((p, i) => {
+    const dist = Math.abs(p.x - mouseX)
+    if (dist < minDist) {
+      minDist = dist
+      closestIdx = i
+    }
+  })
 
-  const idx = Math.round(ratio * (data.length - 1))
-  setHoveredIdx(idx)
+  setHoveredIdx(closestIdx)
 }
 
 
