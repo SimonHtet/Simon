@@ -93,11 +93,17 @@ export async function POST(
       }),
       prisma.room.update({
         where: { id: oldRoomId },
-        data: { status: 'dirty', resId: null },
+        data: {
+          status: reservation.status === 'checked_in' ? 'dirty' : 'available',
+          resId: null,
+        },
       }),
       prisma.room.update({
         where: { id: newRoomId },
-        data: { status: 'occupied', resId: params.id },
+        data: {
+          status: reservation.status === 'checked_in' ? 'occupied' : 'available',
+          resId: reservation.status === 'checked_in' ? params.id : null,
+        },
       }),
     ])
 
