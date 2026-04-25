@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { TrendingUp, Hotel, DollarSign, BarChart3, Users, Building2, RefreshCw, Search } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { TrendingUp, Hotel, DollarSign, BarChart3, Users, Search, RefreshCw } from 'lucide-react'
 
 interface DailyRevenue {
   date: string
@@ -33,13 +33,16 @@ interface AnalyticsData {
     avgRate: number
     revPar: number
     totalRoomNights: number
+    totalRooms?: number
   }
   daily: DailyRevenue[]
   bySource: { source: string; count: number }[]
+  bySourceRevenue: { source: string; count: number; revenue: number }[]
   byCompany: { name: string; type: string; revenue: number; nights: number }[]
   byRoomType: { type: string; revenue: number; nights: number }[]
   companiesRevenue: CompanyRevenue[]
   agentsRevenue: CompanyRevenue[]
+  losDistribution: { nights: string; count: number }[]
   lastYearDaily?: DailyRevenue[]
 }
 
@@ -57,26 +60,26 @@ function KpiCard({ label, value, sub, icon: Icon, color }: { label: string; valu
 }
 
 function BarChart({ data, valueKey, labelKey, colorClass = 'bg-sky-500' }: {
-  data: any[]
+  data: Record<string, unknown>[]
   valueKey: string
   labelKey: string
   colorClass?: string
 }) {
-  const max = Math.max(...data.map((d) => d[valueKey]), 1)
+  const max = Math.max(...data.map((d) => d[valueKey] as number), 1)
   return (
     <div className="space-y-2">
       {data.slice(0, 8).map((item, i) => (
         <div key={i} className="flex items-center gap-3">
-          <div className="w-24 text-xs text-gray-600 truncate text-right">{item[labelKey]}</div>
+          <div className="w-24 text-xs text-gray-600 truncate text-right">{item[labelKey] as string}</div>
           <div className="flex-1 bg-gray-100 rounded-full h-5 relative overflow-hidden">
             <div
               className={`absolute left-0 top-0 h-full rounded-full ${colorClass} transition-all duration-500`}
-              style={{ width: `${(item[valueKey] / max) * 100}%` }}
+              style={{ width: `${((item[valueKey] as number) / max) * 100}%` }}
             />
             <span className="absolute right-2 top-0 h-full flex items-center text-xs font-medium text-gray-700">
-              {typeof item[valueKey] === 'number' && item[valueKey] > 999
-                ? `฿${(item[valueKey] / 1000).toFixed(0)}k`
-                : item[valueKey]}
+              {typeof item[valueKey] === 'number' && (item[valueKey] as number) > 999
+                ? `฿${((item[valueKey] as number) / 1000).toFixed(0)}k`
+                : item[valueKey] as string}
             </span>
           </div>
         </div>
@@ -85,12 +88,7 @@ function BarChart({ data, valueKey, labelKey, colorClass = 'bg-sky-500' }: {
   )
 }
 
-const VB_W = 600
-const VB_H = 120
-const VB_PAD = 10
-const TOOLTIP_W = 168
-
-function RevenueLineChart({
+function ColumnChart({
   data,
   compareData,
   showCompare,
@@ -99,129 +97,229 @@ function RevenueLineChart({
   compareData?: DailyRevenue[]
   showCompare: boolean
 }) {
-  // Only store the nearest data-point index — no raw pixel coords in state
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
-  const svgRef = useRef<SVGSVGElement>(null)
 
-  if (data.length < 2) return (
-    <div className="h-40 flex items-center justify-center text-sm text-gray-400">Not enough data</div>
-  )
+  if (!data.length) return <div className="h-40 flex items-center justify-center text-sm text-gray-400">No data</div>
 
-  const maxRev = Math.max(
+  const maxVal = Math.max(
     ...data.map((d) => d.roomRevenue + d.extraCharges),
     ...(compareData || []).map((d) => d.roomRevenue + d.extraCharges),
     1
   )
 
-  function makePoints(arr: DailyRevenue[]) {
-    return arr.map((d, i) => {
-      const x = VB_PAD + (i / (arr.length - 1)) * (VB_W - 2 * VB_PAD)
-      const y = VB_H - VB_PAD - (((d.roomRevenue + d.extraCharges) / maxRev) * (VB_H - 2 * VB_PAD))
-      return { x, y, d }
-    })
-  }
-
-  const pts = makePoints(data)
-  const pathD = `M ${pts.map((p) => `${p.x},${p.y}`).join(' L ')}`
-  const areaD = `M ${pts[0].x},${pts[0].y} L ${pts.map((p) => `${p.x},${p.y}`).join(' L ')} L ${VB_W - VB_PAD},${VB_H - VB_PAD} L ${VB_PAD},${VB_H - VB_PAD} Z`
-
-  let cmpPathD = ''
-  if (showCompare && compareData && compareData.length >= 2) {
-    const cpts = makePoints(compareData)
-    cmpPathD = `M ${cpts.map((p) => `${p.x},${p.y}`).join(' L ')}`
-  }
-
-  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
-    const svg = svgRef.current
-    if (!svg) return
-    const rect = svg.getBoundingClientRect()
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
-    setHoveredIdx(Math.round(ratio * (data.length - 1)))
-  }
-
-  // Active point lives in SVG viewBox coordinates — SVG handles all scaling
-  const activePt = hoveredIdx !== null ? pts[hoveredIdx] : null
-
-  // Convert viewBox x → rendered pixels only when positioning the HTML tooltip
-  const renderedX = activePt && svgRef.current
-    ? activePt.x * (svgRef.current.getBoundingClientRect().width / VB_W)
-    : null
-  const svgW = svgRef.current?.getBoundingClientRect().width ?? 600
+  const step = Math.ceil(data.length / 60)
+  const sampled = data.filter((_, i) => i % step === 0)
+  const sampledCmp = compareData ? compareData.filter((_, i) => i % step === 0) : []
 
   return (
-    <div className="relative w-full">
+    <div className="space-y-2">
       {showCompare && (
-        <div className="flex items-center gap-4 mb-2 text-xs text-gray-500">
-          <span className="flex items-center gap-1.5"><span className="w-6 h-0.5 bg-sky-500 inline-block" /> Current period</span>
-          <span className="flex items-center gap-1.5"><span className="w-6 h-0 border-t-2 border-dashed border-slate-400 inline-block" /> Previous year</span>
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-teal-500 inline-block" /> Current</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-slate-300 inline-block" /> Last Year</span>
         </div>
       )}
-      <div className="relative">
-        <svg
-          ref={svgRef}
-          viewBox={`0 0 ${VB_W} ${VB_H}`}
-          className="w-full cursor-crosshair"
-          style={{ height: 140 }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setHoveredIdx(null)}
-        >
-          <defs>
-            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {/* Full-area overlay so mouse events fire everywhere in the SVG */}
-          <rect x="0" y="0" width="100%" height="100%" fill="transparent" pointerEvents="all" />
-          <path d={areaD} fill="url(#areaGrad)" />
-          {cmpPathD && (
-            <path d={cmpPathD} stroke="#94a3b8" strokeWidth="1.5" fill="none" strokeDasharray="4 3" strokeLinejoin="round" />
-          )}
-          <path d={pathD} stroke="#0ea5e9" strokeWidth="2" fill="none" strokeLinejoin="round" />
-          {/* Vertical dashed hairline + dot — both in viewBox space, SVG scales them */}
-          {activePt && (
-            <>
-              <line
-                x1={activePt.x} y1={VB_PAD}
-                x2={activePt.x} y2={VB_H - VB_PAD}
-                stroke="#0ea5e9" strokeWidth="1" strokeDasharray="3 2" opacity="0.45"
-              />
-              <circle cx={activePt.x} cy={activePt.y} r="4" fill="#0ea5e9" stroke="white" strokeWidth="2" />
-            </>
-          )}
-        </svg>
-
-        {/* Tooltip — left computed from viewBox x converted to rendered pixels */}
-        {activePt && renderedX !== null && (
-          (() => {
-            const flipLeft = renderedX > svgW * 0.6
-            const left = Math.max(0, Math.min(
-              flipLeft ? renderedX - TOOLTIP_W - 12 : renderedX + 12,
-              svgW - TOOLTIP_W
-            ))
-            const d = activePt.d
-            return (
+      <div className="flex items-end gap-0.5 h-48 relative">
+        {sampled.map((d, i) => {
+          const val = d.roomRevenue + d.extraCharges
+          const cmpVal = sampledCmp[i] ? sampledCmp[i].roomRevenue + sampledCmp[i].extraCharges : 0
+          const heightPct = (val / maxVal) * 100
+          const cmpHeightPct = (cmpVal / maxVal) * 100
+          const isHovered = hoveredIdx === i
+          return (
+            <div
+              key={d.date}
+              className="flex-1 flex items-end gap-px relative group"
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              {showCompare && sampledCmp[i] && (
+                <div
+                  className="flex-1 bg-slate-300 rounded-t-sm transition-all"
+                  style={{ height: `${cmpHeightPct}%`, minHeight: cmpVal > 0 ? 2 : 0 }}
+                />
+              )}
               <div
-                className="absolute pointer-events-none z-10 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2.5 text-xs"
-                style={{ left, top: 8, width: TOOLTIP_W }}
-              >
-                <p className="font-bold text-gray-800 mb-1.5">{d.date}</p>
-                <div className="space-y-1">
-                  <div className="flex justify-between gap-4"><span className="text-gray-500">Room Rev</span><span className="font-semibold">฿{d.roomRevenue.toLocaleString()}</span></div>
-                  <div className="flex justify-between gap-4"><span className="text-gray-500">Extras</span><span className="font-semibold text-emerald-600">+฿{d.extraCharges.toLocaleString()}</span></div>
-                  <div className="flex justify-between gap-4"><span className="text-gray-500">Payments</span><span className="font-semibold text-teal-600">-฿{d.payments.toLocaleString()}</span></div>
-                  <div className="flex justify-between gap-4 border-t border-gray-100 pt-1 mt-1"><span className="text-gray-700 font-bold">Net</span><span className={`font-bold ${d.netTotal < 0 ? 'text-rose-600' : 'text-gray-900'}`}>฿{d.netTotal.toLocaleString()}</span></div>
+                className={`flex-1 rounded-t-sm transition-all ${isHovered ? 'bg-teal-400' : 'bg-teal-500'}`}
+                style={{ height: `${heightPct}%`, minHeight: val > 0 ? 2 : 0 }}
+              />
+              {isHovered && (
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 z-20 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2 text-xs whitespace-nowrap pointer-events-none">
+                  <p className="font-bold text-gray-800 mb-1">{d.date}</p>
+                  <div className="space-y-0.5">
+                    <div className="flex justify-between gap-4"><span className="text-gray-500">Room</span><span className="font-semibold">฿{d.roomRevenue.toLocaleString()}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-gray-500">Extras</span><span className="font-semibold text-emerald-600">+฿{d.extraCharges.toLocaleString()}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-gray-500">Payments</span><span className="font-semibold text-teal-600">-฿{d.payments.toLocaleString()}</span></div>
+                    <div className="flex justify-between gap-4 border-t border-gray-100 pt-1"><span className="font-bold text-gray-700">Net</span><span className={`font-bold ${d.netTotal < 0 ? 'text-rose-600' : 'text-gray-900'}`}>฿{d.netTotal.toLocaleString()}</span></div>
+                    {showCompare && sampledCmp[i] && (
+                      <div className="flex justify-between gap-4 border-t border-gray-100 pt-1"><span className="text-slate-400">Last Year</span><span className="text-slate-500">฿{(sampledCmp[i].roomRevenue + sampledCmp[i].extraCharges).toLocaleString()}</span></div>
+                    )}
+                  </div>
                 </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex items-start gap-0.5 mt-1">
+        {sampled.map((d, i) => {
+          const showLabel = sampled.length <= 14
+            ? true
+            : sampled.length <= 31
+            ? i % 2 === 0
+            : sampled.length <= 60
+            ? i % 5 === 0
+            : i % 10 === 0
+          return (
+            <div key={d.date} className="flex-1 flex flex-col items-center">
+              {showLabel ? (
+                <span
+                  className="text-[9px] text-gray-400 leading-none"
+                  style={{
+                    writingMode: sampled.length > 20 ? 'vertical-rl' : 'horizontal-tb',
+                    transform: sampled.length > 20 ? 'rotate(180deg)' : 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {d.date.slice(5)}
+                </span>
+              ) : (
+                <span className="text-[9px] text-transparent leading-none">·</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function OccupancyChart({ data, totalRooms }: { data: DailyRevenue[]; totalRooms: number }) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const step = Math.ceil(data.length / 60)
+  const sampled = data.filter((_, i) => i % step === 0)
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+      <h3 className="font-semibold text-gray-800 text-sm mb-4">Daily Occupancy %</h3>
+      <div className="flex items-end gap-0.5 h-24">
+        {sampled.map((d, i) => {
+          const pct = totalRooms > 0 ? Math.min((d.occupied / totalRooms) * 100, 100) : 0
+          const isHovered = hoveredIdx === i
+          const color = pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-sky-400' : 'bg-amber-400'
+          return (
+            <div
+              key={d.date}
+              className="flex-1 flex items-end relative group"
+              onMouseEnter={() => setHoveredIdx(i)}
+              onMouseLeave={() => setHoveredIdx(null)}
+            >
+              <div
+                className={`w-full rounded-t-sm transition-all ${isHovered ? 'opacity-80' : ''} ${color}`}
+                style={{ height: `${Math.max(pct, pct > 0 ? 3 : 0)}%` }}
+              />
+              {isHovered && (
+                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 z-20 bg-white border border-gray-200 rounded-xl shadow-lg px-3 py-2 text-xs whitespace-nowrap pointer-events-none">
+                  <p className="font-bold text-gray-800">{d.date}</p>
+                  <p className="text-gray-600">{d.occupied} / {totalRooms} rooms · <span className="font-bold text-sky-600">{Math.round(pct)}%</span></p>
+                  <p className="text-gray-500">Arrivals: {d.arrivals} · Departures: {d.departures}</p>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex items-start gap-0.5 mt-1">
+        {sampled.map((d, i) => {
+          const showLabel = sampled.length <= 14
+            ? true
+            : sampled.length <= 31
+            ? i % 2 === 0
+            : sampled.length <= 60
+            ? i % 5 === 0
+            : i % 10 === 0
+          return (
+            <div key={d.date} className="flex-1 flex flex-col items-center">
+              {showLabel ? (
+                <span
+                  className="text-[9px] text-gray-400 leading-none"
+                  style={{
+                    writingMode: sampled.length > 20 ? 'vertical-rl' : 'horizontal-tb',
+                    transform: sampled.length > 20 ? 'rotate(180deg)' : 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {d.date.slice(5)}
+                </span>
+              ) : (
+                <span className="text-[9px] text-transparent leading-none">·</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex items-center gap-4 mt-2 text-[10px] text-gray-500">
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" /> ≥80%</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-sky-400 inline-block" /> 50–79%</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-amber-400 inline-block" /> &lt;50%</span>
+      </div>
+    </div>
+  )
+}
+
+function TopDays({ data }: { data: DailyRevenue[] }) {
+  const top5 = [...data].sort((a, b) => b.netTotal - a.netTotal).slice(0, 5)
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 p-5">
+      <h3 className="font-semibold text-gray-800 text-sm mb-4">🏆 Top 5 Revenue Days</h3>
+      <div className="space-y-2">
+        {top5.map((d, i) => {
+          const maxNet = top5[0].netTotal || 1
+          return (
+            <div key={d.date} className="flex items-center gap-3">
+              <span className={`text-xs font-black w-5 ${i === 0 ? 'text-amber-500' : 'text-gray-400'}`}>#{i + 1}</span>
+              <span className="text-xs text-gray-600 w-16 shrink-0">{d.date.slice(5)}</span>
+              <div className="flex-1 bg-gray-100 rounded-full h-4 relative overflow-hidden">
+                <div
+                  className="absolute left-0 top-0 h-full bg-teal-500 rounded-full"
+                  style={{ width: `${(d.netTotal / maxNet) * 100}%` }}
+                />
+                <span className="absolute right-2 top-0 h-full flex items-center text-[10px] font-bold text-gray-700">
+                  ฿{d.netTotal.toLocaleString()}
+                </span>
               </div>
-            )
-          })()
-        )}
+              <div className="text-right text-[10px] text-gray-400 w-20 shrink-0">
+                <div>Rm: ฿{d.roomRevenue.toLocaleString()}</div>
+                <div className="text-emerald-600">+฿{d.extraCharges.toLocaleString()}</div>
+              </div>
+            </div>
+          )
+        })}
       </div>
-      <div className="flex justify-between text-[10px] text-gray-400 mt-1 px-2">
-        <span>{data[0]?.date?.slice(5)}</span>
-        <span>{data[Math.floor(data.length / 2)]?.date?.slice(5)}</span>
-        <span>{data[data.length - 1]?.date?.slice(5)}</span>
-      </div>
+    </div>
+  )
+}
+
+function SourceRevenueChart({ data }: { data: { source: string; count: number; revenue: number }[] }) {
+  const maxRev = Math.max(...data.map((d) => d.revenue), 1)
+  return (
+    <div className="space-y-2">
+      {data.slice(0, 8).map((item, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="w-24 text-xs text-gray-600 truncate text-right">{item.source}</div>
+          <div className="flex-1 bg-gray-100 rounded-full h-5 relative overflow-hidden">
+            <div
+              className="absolute left-0 top-0 h-full rounded-full bg-sky-400 transition-all duration-500"
+              style={{ width: `${(item.revenue / maxRev) * 100}%` }}
+            />
+            <span className="absolute right-2 top-0 h-full flex items-center text-xs font-medium text-gray-700">
+              ฿{(item.revenue / 1000).toFixed(0)}k
+            </span>
+          </div>
+          <div className="text-[10px] text-gray-400 w-16 text-right shrink-0">{item.count} stays</div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -339,8 +437,8 @@ export default function AnalyticsView() {
       if (!res.ok) throw new Error('Failed to load analytics')
       const json = await res.json()
       setData(json)
-    } catch (e: any) {
-      setError(e.message || 'Failed to load analytics')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to load analytics')
     } finally {
       setLoading(false)
     }
@@ -416,7 +514,7 @@ export default function AnalyticsView() {
             <KpiCard label="RevPAR" value={`฿${data.summary.revPar.toLocaleString()}`} sub="revenue per available room" icon={BarChart3} color="bg-purple-500" />
           </div>
 
-          {/* Revenue chart + daily table */}
+          {/* Revenue column chart + daily table */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h3 className="font-semibold text-gray-800 text-sm">Daily Revenue</h3>
@@ -433,7 +531,7 @@ export default function AnalyticsView() {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <RevenueLineChart
+                <ColumnChart
                   data={data.daily}
                   compareData={data.lastYearDaily}
                   showCompare={compareYear && !!data.lastYearDaily}
@@ -445,30 +543,44 @@ export default function AnalyticsView() {
             </div>
           </div>
 
-          {/* Companies and Agents tables */}
-          <div className="flex gap-4 flex-wrap">
-            <AccountTable rows={data.companiesRevenue} title="Companies" />
-            <AccountTable rows={data.agentsRevenue} title="Travel Agents" />
-          </div>
+          {/* Occupancy % chart */}
+          <OccupancyChart data={data.daily} totalRooms={data.summary.totalRooms ?? 40} />
 
-          {/* Charts row */}
+          {/* Top 5 days + Source revenue — 2 col grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <TopDays data={data.daily} />
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-semibold text-gray-800 mb-4 text-sm flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-400" /> Bookings by Source
+                <Users className="w-4 h-4 text-gray-400" /> Revenue by Source
               </h3>
-              {data.bySource.length > 0 ? (
-                <BarChart data={data.bySource} valueKey="count" labelKey="source" colorClass="bg-sky-400" />
+              {data.bySourceRevenue?.length > 0 ? (
+                <SourceRevenueChart data={data.bySourceRevenue} />
               ) : <p className="text-sm text-gray-400">No data</p>}
             </div>
+          </div>
+
+          {/* Room type revenue + Length of Stay — 2 col grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
               <h3 className="font-semibold text-gray-800 mb-4 text-sm flex items-center gap-2">
                 <Hotel className="w-4 h-4 text-gray-400" /> Revenue by Room Type
               </h3>
               {data.byRoomType.length > 0 ? (
-                <BarChart data={data.byRoomType} valueKey="revenue" labelKey="type" colorClass="bg-indigo-400" />
+                <BarChart data={data.byRoomType as Record<string, unknown>[]} valueKey="revenue" labelKey="type" colorClass="bg-indigo-400" />
               ) : <p className="text-sm text-gray-400">No data</p>}
             </div>
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <h3 className="font-semibold text-gray-800 mb-4 text-sm">Length of Stay</h3>
+              {data.losDistribution?.length > 0 ? (
+                <BarChart data={data.losDistribution as Record<string, unknown>[]} valueKey="count" labelKey="nights" colorClass="bg-purple-400" />
+              ) : <p className="text-sm text-gray-400">No data</p>}
+            </div>
+          </div>
+
+          {/* Companies and Agents tables */}
+          <div className="flex gap-4 flex-wrap">
+            <AccountTable rows={data.companiesRevenue} title="Companies" />
+            <AccountTable rows={data.agentsRevenue} title="Travel Agents" />
           </div>
         </>
       ) : null}

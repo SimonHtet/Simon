@@ -130,6 +130,20 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const sourceRevMap: Record<string, { count: number; revenue: number }> = {}
+    const losMap: Record<string, number> = {}
+
+    for (const res of reservations) {
+      const resSource = res.source ?? 'Direct'
+      sourceRevMap[resSource] = sourceRevMap[resSource] ?? { count: 0, revenue: 0 }
+      sourceRevMap[resSource].count++
+      sourceRevMap[resSource].revenue += res.totalAmount
+
+      const los = res.totalNights
+      const bucket = los >= 7 ? '7+' : los >= 5 ? '5-6' : String(los)
+      losMap[bucket] = (losMap[bucket] ?? 0) + 1
+    }
+
     const dayCount = Object.keys(days).length || 1
     const avgOccupancy = totalRoomNights / (totalRooms * dayCount)
     const avgRate = totalRoomNights > 0 ? totalRevenue / totalRoomNights : 0
@@ -170,6 +184,8 @@ export async function GET(req: NextRequest) {
       lastYearDaily = Object.values(lyDays)
     }
 
+    const losOrder = ['1', '2', '3', '4', '5-6', '7+']
+
     return NextResponse.json({
       summary: {
         totalRevenue,
@@ -178,13 +194,20 @@ export async function GET(req: NextRequest) {
         avgRate: Math.round(avgRate),
         revPar: Math.round(revPar),
         totalRoomNights,
+        totalRooms,
       },
       daily: Object.values(days),
       bySource: Object.entries(sourceMap).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count),
+      bySourceRevenue: Object.entries(sourceRevMap)
+        .map(([source, v]) => ({ source, ...v }))
+        .sort((a, b) => b.revenue - a.revenue),
       byCompany: allCompanies.sort((a, b) => b.revenue - a.revenue),
       byRoomType: Object.entries(roomTypeMap).map(([type, v]) => ({ type, ...v })).sort((a, b) => b.revenue - a.revenue),
       companiesRevenue,
       agentsRevenue,
+      losDistribution: Object.entries(losMap)
+        .map(([nights, count]) => ({ nights, count }))
+        .sort((a, b) => losOrder.indexOf(a.nights) - losOrder.indexOf(b.nights)),
       ...(lastYearDaily !== null ? { lastYearDaily } : {}),
     })
   } catch (err) {
