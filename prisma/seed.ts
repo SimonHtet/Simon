@@ -60,13 +60,13 @@ async function main() {
     { id: '110', floor: 1, type: 'DELUXE',   status: 'dirty' },
 
     // ── Floor 2 (10 rooms) — Standard & Deluxe ────────────────────────────────
-    { id: '201', floor: 2, type: 'STANDARD', status: 'occupied' },
+    { id: '201', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '202', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '203', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '204', floor: 2, type: 'STANDARD', status: 'dirty' },
     { id: '205', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '206', floor: 2, type: 'STANDARD', status: 'available' },
-    { id: '207', floor: 2, type: 'DELUXE',   status: 'occupied' },
+    { id: '207', floor: 2, type: 'DELUXE',   status: 'available' },
     { id: '208', floor: 2, type: 'DELUXE',   status: 'available' },
     { id: '209', floor: 2, type: 'DELUXE',   status: 'available' },
     { id: '210', floor: 2, type: 'DELUXE',   status: 'available' },
@@ -86,7 +86,7 @@ async function main() {
     // ── Floor 4 (10 rooms) — Suite & Pool Villa ───────────────────────────────
     { id: '401', floor: 4, type: 'SUITE',      status: 'available' },
     { id: '402', floor: 4, type: 'SUITE',      status: 'available' },
-    { id: '403', floor: 4, type: 'POOL_VILLA', status: 'occupied' },
+    { id: '403', floor: 4, type: 'POOL_VILLA', status: 'available' },
     { id: '404', floor: 4, type: 'POOL_VILLA', status: 'available' },
     { id: '405', floor: 4, type: 'POOL_VILLA', status: 'available' },
     { id: '406', floor: 4, type: 'POOL_VILLA', status: 'available' },
@@ -364,8 +364,6 @@ async function main() {
   const occupiedRooms: Record<string, string> = {
     '102': 'R001',
     '107': 'R003',
-    '201': 'R005',
-    '207': 'R004',
     '301': 'R002',
   }
 

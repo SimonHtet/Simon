@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
+import { calculateNights } from '@/lib/utils'
 
 export async function POST(
   req: NextRequest,
@@ -15,7 +16,7 @@ export async function POST(
   }
 
   const body = await req.json().catch(() => ({}))
-  const { newRoomId, reason } = body
+  const { newRoomId, reason, newCheckIn, newCheckOut } = body
 
   if (!newRoomId) {
     return NextResponse.json({ error: 'newRoomId is required' }, { status: 400 })
@@ -41,11 +42,29 @@ export async function POST(
       return NextResponse.json({ error: 'New room not found' }, { status: 404 })
     }
 
-    if (newRoom.status !== 'available') {
+    if (!['available', 'dirty'].includes(newRoom.status)) {
       return NextResponse.json(
         { error: `Room ${newRoomId} is not available (status: ${newRoom.status})` },
         { status: 400 }
       )
+    }
+
+    if (newCheckIn && newCheckOut) {
+      const conflict = await prisma.reservation.findFirst({
+        where: {
+          roomId: newRoomId,
+          id: { not: params.id },
+          status: { in: ['confirmed', 'checked_in'] },
+          checkIn: { lt: newCheckOut },
+          checkOut: { gt: newCheckIn },
+        },
+      })
+      if (conflict) {
+        return NextResponse.json(
+          { error: 'Room has a conflicting reservation on those dates' },
+          { status: 400 }
+        )
+      }
     }
 
     const oldRoomId = reservation.roomId
@@ -56,6 +75,12 @@ export async function POST(
         data: {
           roomId: newRoomId,
           moveReason: reason || null,
+          ...(newCheckIn && { checkIn: newCheckIn }),
+          ...(newCheckOut && { checkOut: newCheckOut }),
+          ...(newCheckIn && newCheckOut && {
+            totalNights: calculateNights(newCheckIn, newCheckOut),
+            totalAmount: reservation.rate * calculateNights(newCheckIn, newCheckOut),
+          }),
         },
         include: {
           guest: true,
