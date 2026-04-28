@@ -2,13 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const { hotelId, error } = await getSessionOrUnauthorized()
   if (error) return error
 
+  const { searchParams } = new URL(req.url)
+  const all = searchParams.get('all') === '1'
+
   try {
     const codes = await prisma.chargeCode.findMany({
-      where: { hotelId: hotelId!, active: true },
+      where: all ? { hotelId: hotelId! } : { hotelId: hotelId!, active: true },
       orderBy: { code: 'asc' },
     })
     return NextResponse.json(codes)
@@ -24,10 +27,19 @@ export async function POST(req: NextRequest) {
   if (role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json().catch(() => ({}))
-  const { code, category, description, price, active = true } = body
+  const { code, category, description, price, active = true, parentCode } = body
 
   if (!code?.trim() || !category?.trim() || !description?.trim() || price == null) {
     return NextResponse.json({ error: 'code, category, description, price are required' }, { status: 400 })
+  }
+
+  if (parentCode) {
+    const parent = await prisma.chargeCode.findFirst({
+      where: { code: parentCode, hotelId: hotelId! },
+    })
+    if (!parent) {
+      return NextResponse.json({ error: 'Parent charge code not found' }, { status: 400 })
+    }
   }
 
   try {
@@ -39,11 +51,12 @@ export async function POST(req: NextRequest) {
         price: parseFloat(price),
         active,
         hotelId: hotelId!,
+        parentCode: parentCode || null,
       },
     })
     return NextResponse.json(chargeCode, { status: 201 })
-  } catch (err: any) {
-    if (err?.code === 'P2002') return NextResponse.json({ error: 'Charge code already exists' }, { status: 409 })
+  } catch (err: unknown) {
+    if ((err as { code?: string })?.code === 'P2002') return NextResponse.json({ error: 'Charge code already exists' }, { status: 409 })
     console.error('[POST /api/charge-codes] DB error:', err)
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }

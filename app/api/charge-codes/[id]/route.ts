@@ -25,6 +25,7 @@ export async function PUT(
         description: body.description ?? existing.description,
         price: body.price != null ? parseFloat(body.price) : existing.price,
         active: body.active !== undefined ? body.active : existing.active,
+        ...(body.parentCode !== undefined && { parentCode: body.parentCode || null }),
       },
     })
     return NextResponse.json(updated)

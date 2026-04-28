@@ -105,12 +105,12 @@ export default function RoomsPage() {
     setActiveModal('moveRoom')
   }
 
-  async function handleMoveRoomConfirm(newRoomId: string, reason: string) {
+  async function handleMoveRoomConfirm(newRoomId: string, reason: string, pricingAction: string) {
     if (!selectedRes) return
     await fetch(`/api/reservations/${selectedRes.id}/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newRoomId, reason }),
+      body: JSON.stringify({ newRoomId, reason, pricingAction }),
     })
     setActiveModal(null)
     await refreshData()

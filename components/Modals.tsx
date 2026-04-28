@@ -361,26 +361,37 @@ export function NewReservationModal({ rooms, onConfirm, onClose, initialRoomId }
 interface MoveRoomModalProps {
   reservation: Reservation
   rooms: Room[]
-  onConfirm: (newRoomId: string, reason: string) => Promise<void>
+  onConfirm: (newRoomId: string, reason: string, pricingAction: string) => Promise<void>
   onClose: () => void
 }
 
 export function MoveRoomModal({ reservation: res, rooms, onConfirm, onClose }: MoveRoomModalProps) {
   const [selectedRoom, setSelectedRoom] = useState('')
   const [reason, setReason] = useState('')
+  const [pricingAction, setPricingAction] = useState('no_change')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const availableRooms = rooms.filter((r) => r.status === 'available' && r.id !== res.roomId)
+
+  const selectedRoomObj = rooms.find((r) => r.id === selectedRoom)
+  const newRate = selectedRoomObj ? (ROOM_TYPES[selectedRoomObj.type]?.rate ?? res.rate) : res.rate
+  const diff = newRate - res.rate
+
+  useEffect(() => {
+    if (diff > 0) setPricingAction('charge_diff')
+    else if (diff < 0) setPricingAction('keep_rate')
+    else setPricingAction('no_change')
+  }, [selectedRoom, diff])
 
   async function handleConfirm() {
     if (!selectedRoom) { setError('Please select a room'); return }
     setError('')
     setLoading(true)
     try {
-      await onConfirm(selectedRoom, reason)
-    } catch (e: any) {
-      setError(e.message || 'Failed to move room')
+      await onConfirm(selectedRoom, reason, pricingAction)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to move room')
     } finally {
       setLoading(false)
     }
@@ -413,6 +424,37 @@ export function MoveRoomModal({ reservation: res, rooms, onConfirm, onClose }: M
         </FormField>
         {availableRooms.length === 0 && (
           <p className="text-sm text-amber-600 bg-amber-50 rounded-lg p-3">No available rooms at this time.</p>
+        )}
+
+        {selectedRoom && diff !== 0 && (
+          <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              {diff > 0 ? `Upgrade — ฿${diff} more/night` : `Downgrade — ฿${Math.abs(diff)} less/night`}
+            </p>
+            {diff > 0 ? (
+              <>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="radio" name="pricingAction" value="charge_diff" checked={pricingAction === 'charge_diff'} onChange={() => setPricingAction('charge_diff')} />
+                  Charge difference (฿{(diff * res.totalNights).toLocaleString()} total)
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="radio" name="pricingAction" value="complimentary" checked={pricingAction === 'complimentary'} onChange={() => setPricingAction('complimentary')} />
+                  Complimentary upgrade
+                </label>
+              </>
+            ) : (
+              <>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="radio" name="pricingAction" value="keep_rate" checked={pricingAction === 'keep_rate'} onChange={() => setPricingAction('keep_rate')} />
+                  Keep current rate
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="radio" name="pricingAction" value="credit_diff" checked={pricingAction === 'credit_diff'} onChange={() => setPricingAction('credit_diff')} />
+                  Credit difference (฿{(Math.abs(diff) * res.totalNights).toLocaleString()} total)
+                </label>
+              </>
+            )}
+          </div>
         )}
 
         <FormField label="Reason for Move">
@@ -538,10 +580,19 @@ export function AddChargeModal({ reservation: res, onConfirm, onClose }: AddChar
   }, [])
 
   const filtered = query.trim()
-    ? chargeCodes.filter((c) =>
-        c.code.startsWith(query) ||
-        c.description.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 8)
+    ? (() => {
+        const directMatches = chargeCodes.filter((c) =>
+          c.code.startsWith(query) ||
+          c.description.toLowerCase().includes(query.toLowerCase())
+        )
+        const matchedParentCodes = new Set(
+          directMatches.filter((c) => c.parentCode == null).map((c) => c.code)
+        )
+        const children = chargeCodes.filter(
+          (c) => c.parentCode != null && matchedParentCodes.has(c.parentCode) && !directMatches.includes(c)
+        )
+        return [...directMatches, ...children].slice(0, 10)
+      })()
     : []
 
   function selectCode(code: ChargeCode) {
@@ -606,9 +657,9 @@ export function AddChargeModal({ reservation: res, onConfirm, onClose }: AddChar
                   className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-orange-50 text-left transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-black text-orange-600 w-8">{c.code}</span>
+                    <span className="text-xs font-black text-orange-600 w-10">{c.parentCode ? `└${c.code}` : c.code}</span>
                     <span className="text-xs text-gray-500">{c.category}</span>
-                    <span className="text-sm font-medium text-gray-800">{c.description}</span>
+                    <span className={`text-sm font-medium ${c.parentCode ? 'text-gray-500 pl-2' : 'text-gray-800'}`}>{c.description}</span>
                   </div>
                   <span className="text-sm font-bold text-gray-900">฿{c.price.toLocaleString()}</span>
                 </button>

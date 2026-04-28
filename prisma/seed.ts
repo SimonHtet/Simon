@@ -612,7 +612,39 @@ async function main() {
   for (const cc of chargeCodes) {
     await prisma.chargeCode.upsert({
       where: { code: cc.code },
-      update: {},
+      update: { category: cc.category, description: cc.description, price: cc.price },
+      create: { ...cc, active: true, hotelId: 'HOTEL-001' },
+    })
+  }
+
+  // ── Sub-Charge Codes ───────────────────────────────────────────────────────
+  const subChargeCodes = [
+    // Parent 101 — Breakfast
+    { code: '1011', category: 'F&B', description: 'Continental Set', price: 250, parentCode: '101' },
+    { code: '1012', category: 'F&B', description: 'Full English', price: 350, parentCode: '101' },
+    { code: '1013', category: 'F&B', description: 'Fruit & Yoghurt', price: 180, parentCode: '101' },
+    // Parent 102 — Lunch
+    { code: '1021', category: 'F&B', description: 'Fried Rice', price: 180, parentCode: '102' },
+    { code: '1022', category: 'F&B', description: 'Pad Thai', price: 160, parentCode: '102' },
+    { code: '1023', category: 'F&B', description: 'Green Curry', price: 200, parentCode: '102' },
+    { code: '1024', category: 'F&B', description: 'Som Tum Salad', price: 140, parentCode: '102' },
+    // Parent 103 — Dinner
+    { code: '1031', category: 'F&B', description: 'Grilled Salmon', price: 650, parentCode: '103' },
+    { code: '1032', category: 'F&B', description: 'Wagyu Beef', price: 1200, parentCode: '103' },
+    { code: '1033', category: 'F&B', description: 'Seafood Platter', price: 980, parentCode: '103' },
+    // Parent 501 — Thai Massage 60min
+    { code: '5011', category: 'Spa', description: 'Foot Massage', price: 800, parentCode: '501' },
+    { code: '5012', category: 'Spa', description: 'Head & Shoulder', price: 600, parentCode: '501' },
+    // Parent 701 — Minibar Consumption
+    { code: '7011', category: 'Minibar', description: 'Beer Chang', price: 120, parentCode: '701' },
+    { code: '7012', category: 'Minibar', description: 'Wine (glass)', price: 350, parentCode: '701' },
+    { code: '7013', category: 'Minibar', description: 'Soft Drink', price: 80, parentCode: '701' },
+  ]
+
+  for (const cc of subChargeCodes) {
+    await prisma.chargeCode.upsert({
+      where: { code: cc.code },
+      update: { category: cc.category, description: cc.description, price: cc.price, parentCode: cc.parentCode },
       create: { ...cc, active: true, hotelId: 'HOTEL-001' },
     })
   }

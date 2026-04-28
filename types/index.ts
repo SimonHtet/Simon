@@ -53,6 +53,7 @@ export interface ChargeCode {
   price: number
   active: boolean
   hotelId?: string
+  parentCode?: string | null
 }
 
 export interface Charge {

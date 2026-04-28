@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { calculateNights } from '@/lib/utils'
+import { ROOM_TYPES } from '@/lib/constants'
 
 export async function POST(
   req: NextRequest,
@@ -16,7 +17,7 @@ export async function POST(
   }
 
   const body = await req.json().catch(() => ({}))
-  const { newRoomId, reason, newCheckIn, newCheckOut } = body
+  const { newRoomId, reason, newCheckIn, newCheckOut, pricingAction = 'no_change' } = body
 
   if (!newRoomId) {
     return NextResponse.json({ error: 'newRoomId is required' }, { status: 400 })
@@ -106,6 +107,47 @@ export async function POST(
         },
       }),
     ])
+
+    // Apply pricing action when room type changes
+    if (newRoom.type !== reservation.roomTypeId) {
+      const newRate = ROOM_TYPES[newRoom.type]?.rate ?? reservation.rate
+      const today = new Date().toISOString().split('T')[0]
+
+      if (pricingAction === 'charge_diff') {
+        await Promise.all([
+          prisma.reservation.update({
+            where: { id: params.id },
+            data: { rate: newRate },
+          }),
+          prisma.charge.create({
+            data: {
+              reservationId: params.id,
+              item: 'Room upgrade supplement',
+              amount: (newRate - reservation.rate) * reservation.totalNights,
+              date: today,
+              category: 'ROOM',
+            },
+          }),
+        ])
+      } else if (pricingAction === 'credit_diff') {
+        await Promise.all([
+          prisma.reservation.update({
+            where: { id: params.id },
+            data: { rate: newRate },
+          }),
+          prisma.charge.create({
+            data: {
+              reservationId: params.id,
+              item: 'Room downgrade credit',
+              amount: -((reservation.rate - newRate) * reservation.totalNights),
+              date: today,
+              category: 'ROOM',
+            },
+          }),
+        ])
+      }
+      // 'complimentary' and 'keep_rate': no rate or charge changes
+    }
 
     return NextResponse.json(updated)
   } catch (err) {

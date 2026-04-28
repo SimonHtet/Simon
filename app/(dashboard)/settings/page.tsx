@@ -11,7 +11,7 @@ const CATEGORIES = ['F&B', 'Housekeeping', 'Spa', 'Transport', 'Minibar', 'Misc'
 
 export default function SettingsPage() {
   const { data: session } = useSession()
-  const role = (session?.user as any)?.role
+  const role = (session?.user as { role?: string })?.role
   const isAdmin = role === 'admin'
 
   const [codes, setCodes] = useState<ChargeCode[]>([])
@@ -21,22 +21,29 @@ export default function SettingsPage() {
   const [saveError, setSaveError] = useState('')
 
   const [editForm, setEditForm] = useState<Partial<ChargeCode>>({})
-  const [addForm, setAddForm] = useState({ code: '', category: '', description: '', price: '' })
+  const [addForm, setAddForm] = useState({ code: '', category: '', description: '', price: '', parentCode: '' })
 
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/charge-codes')
+      const res = await fetch('/api/charge-codes?all=1')
       const data = await res.json()
-      // Fetch all (including inactive) for admin view
-      const allRes = await fetch('/api/charge-codes?all=1')
-      // Use the active-only list for now (api returns active only)
       setCodes(Array.isArray(data) ? data : [])
     } catch { }
     setLoading(false)
   }
 
   useEffect(() => { load() }, [])
+
+  // Sort: sub-codes appear directly after their parent
+  const sorted = [...codes].sort((a, b) => {
+    const aKey = (a.parentCode ?? a.code) + a.code
+    const bKey = (b.parentCode ?? b.code) + b.code
+    return aKey.localeCompare(bKey)
+  })
+
+  // Top-level codes for parent selector
+  const topLevelCodes = codes.filter((c) => c.parentCode == null)
 
   async function handleAdd() {
     if (!addForm.code.trim() || !addForm.category || !addForm.description.trim() || !addForm.price) {
@@ -46,10 +53,14 @@ export default function SettingsPage() {
     const res = await fetch('/api/charge-codes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...addForm, price: parseFloat(addForm.price) }),
+      body: JSON.stringify({
+        ...addForm,
+        price: parseFloat(addForm.price),
+        parentCode: addForm.parentCode || null,
+      }),
     })
     if (!res.ok) { const d = await res.json(); setSaveError(d.error || 'Failed'); return }
-    setAddForm({ code: '', category: '', description: '', price: '' })
+    setAddForm({ code: '', category: '', description: '', price: '', parentCode: '' })
     setShowAdd(false)
     load()
   }
@@ -72,8 +83,8 @@ export default function SettingsPage() {
     load()
   }
 
-  // Group by category
-  const byCategory = codes.reduce<Record<string, ChargeCode[]>>((acc, c) => {
+  // Group sorted codes by category
+  const byCategory = sorted.reduce<Record<string, ChargeCode[]>>((acc, c) => {
     if (!acc[c.category]) acc[c.category] = []
     acc[c.category].push(c)
     return acc
@@ -113,11 +124,15 @@ export default function SettingsPage() {
             {showAdd && (
               <div className="px-6 py-4 bg-teal-50 border-b border-teal-100">
                 <p className="text-xs font-bold text-teal-700 uppercase tracking-wide mb-3">New Charge Code</p>
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-6 gap-3">
                   <input placeholder="Code (e.g. 102)" value={addForm.code} onChange={(e) => setAddForm(p => ({ ...p, code: e.target.value }))} className={inputCls} />
                   <select value={addForm.category} onChange={(e) => setAddForm(p => ({ ...p, category: e.target.value }))} className={`${inputCls} bg-white`}>
                     <option value="">Category...</option>
                     {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <select value={addForm.parentCode} onChange={(e) => setAddForm(p => ({ ...p, parentCode: e.target.value }))} className={`${inputCls} bg-white`}>
+                    <option value="">None (top-level)</option>
+                    {topLevelCodes.map((c) => <option key={c.id} value={c.code}>{c.code} — {c.description}</option>)}
                   </select>
                   <input placeholder="Description" value={addForm.description} onChange={(e) => setAddForm(p => ({ ...p, description: e.target.value }))} className={`${inputCls} col-span-2`} />
                   <input type="number" placeholder="Price (฿)" value={addForm.price} onChange={(e) => setAddForm(p => ({ ...p, price: e.target.value }))} className={inputCls} />
@@ -162,7 +177,12 @@ export default function SettingsPage() {
                             </td>
                             <td className="px-3 py-2"><input value={editForm.description ?? ''} onChange={(e) => setEditForm(p => ({ ...p, description: e.target.value }))} className={`${inputCls} w-full`} /></td>
                             <td className="px-3 py-2"><input type="number" value={editForm.price ?? ''} onChange={(e) => setEditForm(p => ({ ...p, price: parseFloat(e.target.value) }))} className={`${inputCls} w-20 text-right`} /></td>
-                            <td />
+                            <td className="px-3 py-2">
+                              <select value={editForm.parentCode ?? ''} onChange={(e) => setEditForm(p => ({ ...p, parentCode: e.target.value || null }))} className={`${inputCls} bg-white w-full`}>
+                                <option value="">None (top-level)</option>
+                                {topLevelCodes.filter((c) => c.id !== code.id).map((c) => <option key={c.id} value={c.code}>{c.code} — {c.description}</option>)}
+                              </select>
+                            </td>
                             <td className="px-6 py-2">
                               <div className="flex items-center gap-1">
                                 <button onClick={() => handleEdit(code.id)} className="p-1 text-teal-600 hover:bg-teal-50 rounded"><Check className="w-4 h-4" /></button>
@@ -172,7 +192,11 @@ export default function SettingsPage() {
                           </>
                         ) : (
                           <>
-                            <td className="px-6 py-3 font-mono font-bold text-orange-600">{code.code}</td>
+                            <td className="px-6 py-3 font-mono font-bold">
+                              <span className={code.parentCode ? 'text-gray-400' : 'text-orange-600'}>
+                                {code.parentCode ? `└${code.code}` : code.code}
+                              </span>
+                            </td>
                             <td className="px-3 py-3 text-gray-500">{code.category}</td>
                             <td className="px-3 py-3 text-gray-800">{code.description}</td>
                             <td className="px-3 py-3 text-right font-semibold text-gray-900">฿{code.price.toLocaleString()}</td>
@@ -184,7 +208,7 @@ export default function SettingsPage() {
                             {isAdmin && (
                               <td className="px-6 py-3">
                                 <div className="flex items-center gap-1">
-                                  <button onClick={() => { setEditingId(code.id); setEditForm({ code: code.code, category: code.category, description: code.description, price: code.price }) }} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                                  <button onClick={() => { setEditingId(code.id); setEditForm({ code: code.code, category: code.category, description: code.description, price: code.price, parentCode: code.parentCode }) }} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
                                     <Pencil className="w-3.5 h-3.5 text-gray-400" />
                                   </button>
                                   <button onClick={() => handleToggle(code)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title={code.active ? 'Deactivate' : 'Activate'}>
