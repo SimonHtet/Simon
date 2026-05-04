@@ -21,8 +21,12 @@ const PAYMENT_METHODS = [
   { id: 'company_credit', label: 'Company Credit' },
 ]
 
-function folioBalance(folio: Folio) {
-  return folio.charges.reduce((s, fc) => s + fc.charge.amount, 0)
+function folioBalance(folio: Folio, res: Reservation): number {
+  const chargesSum = folio.charges.reduce((s, fc) => s + fc.charge.amount, 0)
+  if (folio.name.toLowerCase() === 'main') {
+    return chargesSum + res.rate * calculateNights(res.checkIn, res.checkOut)
+  }
+  return chargesSum
 }
 
 const inputCls = 'w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500'
@@ -115,7 +119,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const unassignedCharges = res.charges.filter((c) => !assignedChargeIds.has(c.id))
 
   const activePm = activeFolio ? (paymentMethods[activeFolio.id] ?? 'credit_card') : 'credit_card'
-  const activeBalance = activeFolio ? folioBalance(activeFolio) : 0
+  const activeBalance = activeFolio ? folioBalance(activeFolio, res) : 0
   const cashChange = cashTendered.trim() ? Math.max(0, parseFloat(cashTendered) - activeBalance) : 0
 
   async function handleAssignCharge(chargeId: number, toFolioId: number) {
@@ -138,7 +142,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
       const pm = paymentMethods[folioId] ?? 'credit_card'
 
       if (pm === 'company_credit' && res.companyId && !managerOverride) {
-        const balance = folioBalance(folio)
+        const balance = folioBalance(folio, res)
         if (balance > 0) {
           const creditRes = await fetch(`/api/companies/${res.companyId}/credit`, {
             method: 'POST',
@@ -206,7 +210,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   }
 
   const allSettled = folios.length > 0 && folios.every((f) => f.status === 'settled')
-  const totalBalance = folios.reduce((s, f) => s + folioBalance(f), 0)
+  const totalBalance = folios.reduce((s, f) => s + folioBalance(f, res), 0)
   const settleDisabled = settling || (activePm === 'company_credit' && canCompanyCredit && creditExceeded && !managerOverride)
 
   return (
@@ -241,7 +245,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                 ))}
                 <tr className="font-bold border-t border-gray-400">
                   <td colSpan={2} className="pt-2">Total</td>
-                  <td className="pt-2 text-right">฿{formatCurrency(folioBalance(folio))}</td>
+                  <td className="pt-2 text-right">฿{formatCurrency(folioBalance(folio, res))}</td>
                 </tr>
               </tbody>
             </table>
@@ -413,7 +417,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                                 Total
                               </td>
                               <td className="pt-3 text-right text-sm font-black text-slate-900">
-                                ฿{formatCurrency(folioBalance(activeFolio))}
+                                ฿{formatCurrency(folioBalance(activeFolio, res))}
                               </td>
                               {folios.length > 1 && activeFolio.status !== 'settled' && <td />}
                             </tr>
@@ -698,7 +702,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                               <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[9px] font-bold">Open</span>
                             )}
                           </span>
-                          <span className="font-bold text-slate-800">฿{formatCurrency(folioBalance(f))}</span>
+                          <span className="font-bold text-slate-800">฿{formatCurrency(folioBalance(f, res))}</span>
                         </div>
                       ))}
                       <div className="flex justify-between text-xs font-black text-slate-900 border-t border-slate-200 mt-2 pt-2">
