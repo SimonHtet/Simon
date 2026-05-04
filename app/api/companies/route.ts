@@ -36,6 +36,8 @@ export async function POST(req: NextRequest) {
     blackoutStart,
     blackoutEnd,
     active = true,
+    creditLimit = 0,
+    creditResetDay = 1,
   } = body
 
   if (!name?.trim()) {
@@ -61,6 +63,8 @@ export async function POST(req: NextRequest) {
         blackoutStart: blackoutStart || null,
         blackoutEnd: blackoutEnd || null,
         active,
+        creditLimit: creditLimit ?? 0,
+        creditResetDay: creditResetDay ?? 1,
       },
     })
     return NextResponse.json(company, { status: 201 })

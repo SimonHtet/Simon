@@ -1,15 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Company } from '@/types'
+import { Company, CreditTransaction } from '@/types'
 import CompanyForm from './CompanyForm'
 import {
   Building2, Plus, Search, Edit2, Trash2, Check, X,
   Phone, Mail, MapPin, BadgeDollarSign, AlertTriangle,
+  ChevronDown, ChevronUp, CreditCard,
 } from 'lucide-react'
 
 const RACK_RATES: Record<string, number> = {
   STANDARD: 1200, DELUXE: 1800, SUITE: 3500, POOL_VILLA: 6500,
+}
+
+interface CreditSummary {
+  creditLimit: number
+  creditUsed: number
+  creditAvailable: number
+  transactions: CreditTransaction[]
 }
 
 export default function CompaniesView() {
@@ -21,6 +29,10 @@ export default function CompaniesView() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Company | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [creditData, setCreditData] = useState<Record<string, CreditSummary>>({})
+  const [creditLoading, setCreditLoading] = useState<Record<string, boolean>>({})
+  const [showPaid, setShowPaid] = useState<Record<string, boolean>>({})
 
   async function load() {
     setLoading(true)
@@ -36,6 +48,31 @@ export default function CompaniesView() {
   }
 
   useEffect(() => { load() }, [])
+
+  async function loadCredit(id: string) {
+    setCreditLoading((prev) => ({ ...prev, [id]: true }))
+    try {
+      const res = await fetch(`/api/companies/${id}/credit`)
+      const data = await res.json()
+      setCreditData((prev) => ({ ...prev, [id]: data }))
+    } finally {
+      setCreditLoading((prev) => ({ ...prev, [id]: false }))
+    }
+  }
+
+  function toggleExpand(id: string) {
+    if (expandedId === id) {
+      setExpandedId(null)
+    } else {
+      setExpandedId(id)
+      if (!creditData[id]) loadCredit(id)
+    }
+  }
+
+  async function handleMarkPaid(companyId: string, txId: number) {
+    await fetch(`/api/companies/${companyId}/credit/${txId}`, { method: 'PUT' })
+    await loadCredit(companyId)
+  }
 
   async function handleSave(data: Partial<Company>) {
     if (editing) {
@@ -60,7 +97,6 @@ export default function CompaniesView() {
     const res = await fetch(`/api/companies/${id}`, { method: 'DELETE' })
     const data = await res.json()
     if (data.deactivated) {
-      // Soft deleted — show message
       setCompanies((prev) => prev.map((c) => c.id === id ? { ...c, active: false } : c))
     } else {
       setCompanies((prev) => prev.filter((c) => c.id !== id))
@@ -143,6 +179,9 @@ export default function CompaniesView() {
             const hasBlackout = co.blackoutStart && co.blackoutEnd
             const today = new Date().toISOString().split('T')[0]
             const inBlackout = hasBlackout && today >= co.blackoutStart! && today <= co.blackoutEnd!
+            const isExpanded = expandedId === co.id
+            const credit = creditData[co.id]
+            const loadingCredit = creditLoading[co.id]
             return (
               <div key={co.id} className={`bg-white border rounded-2xl p-5 transition-shadow hover:shadow-md ${!co.active ? 'opacity-50' : ''}`}>
                 <div className="flex items-start justify-between gap-4">
@@ -190,6 +229,38 @@ export default function CompaniesView() {
                           Blackout: {co.blackoutStart} → {co.blackoutEnd}
                         </p>
                       )}
+
+                      {/* Credit expand button */}
+                      {co.creditLimit > 0 && (
+                        <button
+                          onClick={() => toggleExpand(co.id)}
+                          className="flex items-center gap-1.5 mt-3 text-xs font-medium text-sky-600 hover:text-sky-700 transition-colors"
+                        >
+                          <CreditCard className="w-3.5 h-3.5" />
+                          Credit Account
+                          {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                        </button>
+                      )}
+
+                      {/* Credit section */}
+                      {isExpanded && co.creditLimit > 0 && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          {loadingCredit ? (
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                              <div className="w-3.5 h-3.5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                              Loading credit data…
+                            </div>
+                          ) : credit ? (
+                            <CreditSection
+                              credit={credit}
+                              companyId={co.id}
+                              showPaid={showPaid[co.id] ?? false}
+                              onTogglePaid={() => setShowPaid((p) => ({ ...p, [co.id]: !p[co.id] }))}
+                              onMarkPaid={(txId) => handleMarkPaid(co.id, txId)}
+                            />
+                          ) : null}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -227,6 +298,105 @@ export default function CompaniesView() {
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditing(null) }}
         />
+      )}
+    </div>
+  )
+}
+
+interface CreditSectionProps {
+  credit: {
+    creditLimit: number
+    creditUsed: number
+    creditAvailable: number
+    transactions: CreditTransaction[]
+  }
+  companyId: string
+  showPaid: boolean
+  onTogglePaid: () => void
+  onMarkPaid: (txId: number) => void
+}
+
+function CreditSection({ credit, showPaid, onTogglePaid, onMarkPaid }: CreditSectionProps) {
+  const pct = credit.creditLimit > 0 ? Math.min(100, Math.round((credit.creditUsed / credit.creditLimit) * 100)) : 0
+  const unpaid = credit.transactions.filter((t) => t.status === 'unpaid')
+  const paid = credit.transactions.filter((t) => t.status === 'paid')
+
+  return (
+    <div>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Credit Account</p>
+
+      {/* Usage bar */}
+      <div className="mb-3">
+        <div className="flex justify-between text-xs mb-1">
+          <span className="text-gray-500">
+            Used: <span className="font-semibold text-gray-700">฿{credit.creditUsed.toLocaleString()}</span>
+          </span>
+          <span className="text-gray-500">
+            Limit: <span className="font-semibold text-gray-700">฿{credit.creditLimit.toLocaleString()}</span>
+          </span>
+        </div>
+        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${pct >= 90 ? 'bg-red-400' : pct >= 70 ? 'bg-amber-400' : 'bg-sky-400'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-[10px] mt-1">
+          <span className={`font-bold ${pct >= 90 ? 'text-red-500' : 'text-gray-500'}`}>{pct}% used</span>
+          <span className="text-emerald-600 font-semibold">฿{credit.creditAvailable.toLocaleString()} available</span>
+        </div>
+      </div>
+
+      {/* Unpaid transactions */}
+      {unpaid.length > 0 && (
+        <div className="space-y-1.5 mb-2">
+          {unpaid.map((tx) => (
+            <div key={tx.id} className="flex items-center gap-2 text-xs bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-800 truncate">{tx.description}</p>
+                <p className="text-gray-400">{typeof tx.createdAt === 'string' ? tx.createdAt.split('T')[0] : ''}</p>
+              </div>
+              <span className="font-bold text-gray-900 flex-shrink-0">฿{tx.amount.toLocaleString()}</span>
+              <button
+                onClick={() => onMarkPaid(tx.id)}
+                className="flex-shrink-0 px-2 py-1 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Mark Paid
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {unpaid.length === 0 && (
+        <p className="text-xs text-gray-400 mb-2">No unpaid transactions</p>
+      )}
+
+      {/* Paid transactions toggle */}
+      {paid.length > 0 && (
+        <div>
+          <button
+            onClick={onTogglePaid}
+            className="flex items-center gap-1 text-[10px] font-semibold text-gray-400 hover:text-gray-600 transition-colors mb-1.5"
+          >
+            {showPaid ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {showPaid ? 'Hide' : 'Show'} {paid.length} paid transaction{paid.length !== 1 ? 's' : ''}
+          </button>
+          {showPaid && (
+            <div className="space-y-1">
+              {paid.map((tx) => (
+                <div key={tx.id} className="flex items-center gap-2 text-xs bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 opacity-60">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-700 truncate">{tx.description}</p>
+                    <p className="text-gray-400">{typeof tx.createdAt === 'string' ? tx.createdAt.split('T')[0] : ''}</p>
+                  </div>
+                  <span className="font-bold text-gray-600 flex-shrink-0">฿{tx.amount.toLocaleString()}</span>
+                  <span className="flex-shrink-0 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold">Paid</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   )

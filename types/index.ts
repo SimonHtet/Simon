@@ -63,6 +63,25 @@ export interface Charge {
   amount: number
   date: string
   category?: string | null
+  folioCharge?: { folioId: number } | null
+}
+
+export interface FolioCharge {
+  id: number
+  folioId: number
+  chargeId: number
+  charge: Charge
+}
+
+export interface Folio {
+  id: number
+  reservationId: string
+  name: string
+  paymentMethod?: string | null
+  status: string
+  settledAt?: string | Date | null
+  createdAt?: string | Date
+  charges: FolioCharge[]
 }
 
 export type TraceStatus = 'pending' | 'resolved'
@@ -159,8 +178,22 @@ export interface Reservation {
   traces: Trace[]
   packages: Package[]
   preferences?: Preferences | null
+  folios?: Folio[]
   createdAt?: string | Date
   updatedAt?: string | Date
+}
+
+export interface CreditTransaction {
+  id: number
+  companyId: string
+  hotelId?: string
+  reservationId?: string | null
+  folioId?: number | null
+  amount: number
+  description: string
+  status: string
+  paidAt?: string | Date | null
+  createdAt?: string | Date
 }
 
 export interface Company {
@@ -183,6 +216,11 @@ export interface Company {
   blackoutStart?: string | null
   blackoutEnd?: string | null
   active: boolean
+  creditLimit: number
+  creditUsed: number
+  creditResetDay: number
+  lastCreditReset?: string | null
+  creditTransactions?: CreditTransaction[]
   createdAt?: string | Date
   updatedAt?: string | Date
 }

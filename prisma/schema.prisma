@@ -95,10 +95,15 @@ model Company {
   contractRates  Json          @default("{}")
   blackoutStart  String?
   blackoutEnd    String?
-  active         Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  reservations   Reservation[]
+  active              Boolean       @default(true)
+  creditLimit         Float         @default(0)
+  creditUsed          Float         @default(0)
+  creditResetDay      Int           @default(1)
+  lastCreditReset     String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  reservations        Reservation[]
+  creditTransactions  CreditTransaction[]
 }
 
 model Reservation {
@@ -156,17 +161,39 @@ model Reservation {
   traces             Trace[]
   packages           Package[]
   preferences        Preferences?
+  folios             Folio[]
 }
 
 model Charge {
-  id            Int         @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   reservationId String
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservation   Reservation  @relation(fields: [reservationId], references: [id])
   item          String
   amount        Float
   date          String
   category      String?
+  createdAt     DateTime     @default(now())
+  folioCharge   FolioCharge?
+}
+
+model Folio {
+  id            Int         @id @default(autoincrement())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  name          String
+  paymentMethod String?
+  status        String      @default("open")
+  settledAt     DateTime?
   createdAt     DateTime    @default(now())
+  charges       FolioCharge[]
+}
+
+model FolioCharge {
+  id       Int    @id @default(autoincrement())
+  folioId  Int
+  folio    Folio  @relation(fields: [folioId], references: [id])
+  chargeId Int    @unique
+  charge   Charge @relation(fields: [chargeId], references: [id])
 }
 
 model Trace {
@@ -188,6 +215,20 @@ model Package {
   active        Boolean     @default(false)
   licensePlate  String?
   carModel      String?
+}
+
+model CreditTransaction {
+  id            Int       @id @default(autoincrement())
+  companyId     String
+  company       Company   @relation(fields: [companyId], references: [id])
+  hotelId       String    @default("HOTEL-001")
+  reservationId String?
+  folioId       Int?
+  amount        Float
+  description   String
+  status        String    @default("unpaid")
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
 }
 
 model Preferences {

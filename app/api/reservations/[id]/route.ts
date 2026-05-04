@@ -10,6 +10,7 @@ const RESERVATION_INCLUDE = {
   traces: { orderBy: { createdAt: 'asc' as const } },
   packages: true,
   preferences: true,
+  folios: { include: { charges: { include: { charge: true } } } },
   linkedReservations: { select: { id: true, reservationNumber: true, guestName: true, roomId: true, checkIn: true, checkOut: true, status: true } },
 }
 

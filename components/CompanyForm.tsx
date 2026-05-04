@@ -52,6 +52,8 @@ export default function CompanyForm({ initial, onSave, onClose }: Props) {
     blackoutStart: initial?.blackoutStart ?? '',
     blackoutEnd: initial?.blackoutEnd ?? '',
     active: initial?.active !== false,
+    creditLimit: initial?.creditLimit ?? 0,
+    creditResetDay: initial?.creditResetDay ?? 1,
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -85,6 +87,8 @@ export default function CompanyForm({ initial, onSave, onClose }: Props) {
         blackoutStart: form.blackoutEnabled ? form.blackoutStart || null : null,
         blackoutEnd: form.blackoutEnabled ? form.blackoutEnd || null : null,
         active: form.active,
+        creditLimit: form.creditLimit,
+        creditResetDay: form.creditResetDay,
       })
       onClose()
     } catch (e: any) {
@@ -214,6 +218,37 @@ export default function CompanyForm({ initial, onSave, onClose }: Props) {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Credit Account */}
+          <div className="border border-gray-200 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Credit Account</p>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Credit Limit (฿)">
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.creditLimit}
+                    onChange={(e) => set('creditLimit', parseFloat(e.target.value) || 0)}
+                    className={inputCls}
+                    placeholder="0"
+                  />
+                </Field>
+                <Field label="Reset on day ___ of each month">
+                  <input
+                    type="number"
+                    min={1}
+                    max={28}
+                    value={form.creditResetDay}
+                    onChange={(e) => set('creditResetDay', Math.min(28, Math.max(1, parseInt(e.target.value) || 1)))}
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+            </div>
           </div>
 
           {/* Notes */}

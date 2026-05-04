@@ -50,6 +50,8 @@ export async function PUT(
         blackoutStart: body.blackoutStart !== undefined ? body.blackoutStart : existing.blackoutStart,
         blackoutEnd: body.blackoutEnd !== undefined ? body.blackoutEnd : existing.blackoutEnd,
         active: body.active !== undefined ? body.active : existing.active,
+        creditLimit: body.creditLimit !== undefined ? body.creditLimit : existing.creditLimit,
+        creditResetDay: body.creditResetDay !== undefined ? body.creditResetDay : existing.creditResetDay,
       },
     })
     return NextResponse.json(updated)
