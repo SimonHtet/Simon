@@ -231,6 +231,18 @@ model CreditTransaction {
   createdAt     DateTime  @default(now())
 }
 
+model NightAudit {
+  id             Int      @id @default(autoincrement())
+  hotelId        String
+  businessDate   String
+  chargesPosted  Int
+  totalAmount    Float
+  runBy          String
+  createdAt      DateTime @default(now())
+
+  @@unique([hotelId, businessDate])
+}
+
 model Preferences {
   id            Int         @id @default(autoincrement())
   reservationId String      @unique

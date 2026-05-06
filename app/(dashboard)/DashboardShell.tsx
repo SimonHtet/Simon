@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
@@ -16,7 +16,12 @@ import {
   BarChart3,
   Building2,
   Settings2,
+  Play,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react'
+import { hasPermission } from '@/lib/rbac'
 import { HOTEL_NAME, LOCATION } from '@/lib/constants'
 
 const NAV_ITEMS = [
@@ -30,9 +35,13 @@ const NAV_ITEMS = [
   { href: '/settings', label: 'Settings', icon: Settings2 },
 ]
 
-function NightAuditClock() {
+function NightAuditClock({ canRun }: { canRun: boolean }) {
   const [timeLeft, setTimeLeft] = useState('')
   const [currentTime, setCurrentTime] = useState('')
+  const [auditRan, setAuditRan] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [running, setRunning] = useState(false)
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
   useEffect(() => {
     function tick() {
@@ -40,23 +49,45 @@ function NightAuditClock() {
       const midnight = new Date(now)
       midnight.setHours(24, 0, 0, 0)
       const diff = midnight.getTime() - now.getTime()
-
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
-
-      setTimeLeft(
-        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-      )
-      setCurrentTime(
-        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
-      )
+      setTimeLeft(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
+      setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }))
     }
-
     tick()
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [])
+
+  const checkAuditStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/night-audit')
+      const data = await res.json()
+      setAuditRan(data.ran)
+    } catch { }
+  }, [])
+
+  useEffect(() => { checkAuditStatus() }, [checkAuditStatus])
+
+  async function runAudit() {
+    setRunning(true)
+    setConfirming(false)
+    setResult(null)
+    try {
+      const res = await fetch('/api/night-audit', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setAuditRan(true)
+        setResult({ ok: true, msg: `${data.chargesPosted} charge${data.chargesPosted !== 1 ? 's' : ''} posted · ฿${data.totalAmount.toLocaleString()}` })
+      } else {
+        setResult({ ok: false, msg: data.error ?? 'Failed' })
+      }
+    } catch {
+      setResult({ ok: false, msg: 'Network error' })
+    }
+    setRunning(false)
+  }
 
   return (
     <div className="px-4 py-3 mx-2 mb-2 rounded-xl bg-white/5 border border-white/10">
@@ -65,6 +96,56 @@ function NightAuditClock() {
       </p>
       <p className="text-lg font-mono font-bold text-white">{timeLeft}</p>
       <p className="text-xs text-white/40 mt-0.5">{currentTime}</p>
+
+      {canRun && (
+        <div className="mt-2">
+          {auditRan ? (
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <CheckCircle className="w-3 h-3" />
+              <span className="text-[10px] font-semibold">Audit complete</span>
+            </div>
+          ) : confirming ? (
+            <div className="space-y-1.5">
+              <p className="text-[10px] text-amber-300 font-semibold">Post room charges for all in-house guests?</p>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={runAudit}
+                  className="flex-1 py-1 bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black rounded transition-colors"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setConfirming(false)}
+                  className="flex-1 py-1 bg-white/10 hover:bg-white/20 text-white/70 text-[10px] font-bold rounded transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : running ? (
+            <div className="flex items-center gap-1.5 text-white/50">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span className="text-[10px]">Running...</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirming(true)}
+              className="flex items-center gap-1.5 text-[10px] font-bold text-sky-300 hover:text-sky-200 transition-colors"
+            >
+              <Play className="w-3 h-3" /> Run Audit
+            </button>
+          )}
+
+          {result && (
+            <div className={`mt-1.5 flex items-start gap-1 ${result.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+              {result.ok
+                ? <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                : <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />}
+              <span className="text-[10px] leading-tight">{result.msg}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -108,7 +189,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Night audit */}
-        <NightAuditClock />
+        <NightAuditClock canRun={hasPermission((session?.user as any)?.role ?? '', 'POST_PAYMENT')} />
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
