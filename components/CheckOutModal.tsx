@@ -215,57 +215,8 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
 
   return (
     <>
-      {/* Print layout */}
-      <div className="hidden print:block p-8 font-sans">
-        <div className="text-center mb-6 pb-4 border-b-2 border-gray-800">
-          <h1 className="text-2xl font-bold">Guest Folio</h1>
-          <p className="text-sm text-gray-600 mt-1">{res.guestName} — Room {res.roomId} — {res.reservationNumber}</p>
-          <p className="text-sm text-gray-500">{formatDate(res.checkIn)} → {formatDate(res.checkOut)} · {nights} night{nights !== 1 ? 's' : ''}</p>
-        </div>
-        {folios.map((folio) => (
-          <div key={folio.id} className="mb-8 break-inside-avoid">
-            <h2 className="font-bold text-lg border-b pb-1 mb-3">{folio.name}</h2>
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-gray-300">
-                  <th className="text-left py-1 pr-4">Date</th>
-                  <th className="text-left py-1 pr-4">Description</th>
-                  <th className="text-right py-1">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {folio.charges.map((fc) => (
-                  <tr key={fc.id} className="border-b border-gray-100">
-                    <td className="py-1 pr-4 text-gray-500">{fc.charge.date}</td>
-                    <td className="py-1 pr-4">{fc.charge.item}</td>
-                    <td className={`py-1 text-right ${fc.charge.amount < 0 ? 'text-green-700' : ''}`}>
-                      {fc.charge.amount < 0 ? `(฿${formatCurrency(Math.abs(fc.charge.amount))})` : `฿${formatCurrency(fc.charge.amount)}`}
-                    </td>
-                  </tr>
-                ))}
-                <tr className="font-bold border-t border-gray-400">
-                  <td colSpan={2} className="pt-2">Total</td>
-                  <td className="pt-2 text-right">฿{formatCurrency(folioBalance(folio, res))}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="text-xs text-gray-500 mt-2">Payment: {folio.paymentMethod ?? '—'} · Status: {folio.status}</p>
-          </div>
-        ))}
-        <div className="mt-12 grid grid-cols-2 gap-16 pt-8 border-t border-gray-300">
-          <div>
-            <div className="border-b-2 border-dashed border-gray-400 h-12 mb-1" />
-            <p className="text-xs text-gray-400 text-center">Guest Signature</p>
-          </div>
-          <div>
-            <div className="border-b-2 border-dashed border-gray-400 h-12 mb-1" />
-            <p className="text-xs text-gray-400 text-center">Authorized By</p>
-          </div>
-        </div>
-      </div>
-
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm print:hidden">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
         <div className="w-full max-w-5xl bg-white rounded-lg shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
 
           {/* Header */}
@@ -719,7 +670,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-slate-200 flex items-center gap-3 bg-white shrink-0">
             <button
-              onClick={() => window.print()}
+              onClick={() => window.open(`/print/${res.id}`, '_blank')}
               className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-black rounded-lg hover:bg-slate-50 transition-all"
             >
               <Printer className="w-4 h-4" /> Print Folio
