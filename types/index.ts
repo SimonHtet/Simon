@@ -225,6 +225,15 @@ export interface Company {
   updatedAt?: string | Date
 }
 
+export interface StaffUser {
+  id: string
+  name: string | null
+  email: string
+  role: string
+  hotelId: string
+  createdAt: string | Date
+}
+
 export interface DashboardStats {
   todayArrivals: number
   todayDepartures: number

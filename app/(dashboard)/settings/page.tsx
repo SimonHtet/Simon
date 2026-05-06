@@ -2,18 +2,90 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { ChargeCode } from '@/types'
-import { Plus, Pencil, Check, X, ToggleLeft, ToggleRight } from 'lucide-react'
+import { ChargeCode, StaffUser } from '@/types'
+import { Plus, Pencil, Check, X, ToggleLeft, ToggleRight, Trash2, KeyRound } from 'lucide-react'
 
 const inputCls = 'border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent'
 
 const CATEGORIES = ['F&B', 'Housekeeping', 'Spa', 'Transport', 'Minibar', 'Misc', 'ROOM', 'PAYMENT']
+const ROLES = ['admin', 'manager', 'front_desk', 'housekeeping'] as const
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Admin',
+  manager: 'Manager',
+  front_desk: 'Front Desk',
+  housekeeping: 'Housekeeping',
+}
+const ROLE_COLORS: Record<string, string> = {
+  admin: 'bg-red-100 text-red-700',
+  manager: 'bg-purple-100 text-purple-700',
+  front_desk: 'bg-teal-100 text-teal-700',
+  housekeeping: 'bg-amber-100 text-amber-700',
+}
 
 export default function SettingsPage() {
   const { data: session } = useSession()
-  const role = (session?.user as { role?: string })?.role
+  const role = (session?.user as { role?: string; id?: string })?.role
+  const currentUserId = (session?.user as { id?: string })?.id
   const isAdmin = role === 'admin'
 
+  // --- Staff state ---
+  const [users, setUsers] = useState<StaffUser[]>([])
+  const [usersLoading, setUsersLoading] = useState(true)
+  const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  const [showAddUser, setShowAddUser] = useState(false)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [userError, setUserError] = useState('')
+  const [userEditForm, setUserEditForm] = useState({ name: '', userRole: '', password: '' })
+  const [addUserForm, setAddUserForm] = useState({ name: '', email: '', password: '', userRole: 'front_desk' })
+
+  async function loadUsers() {
+    setUsersLoading(true)
+    try {
+      const res = await fetch('/api/users')
+      const data = await res.json()
+      setUsers(Array.isArray(data) ? data : [])
+    } catch { }
+    setUsersLoading(false)
+  }
+
+  async function handleAddUser() {
+    setUserError('')
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(addUserForm),
+    })
+    const data = await res.json()
+    if (!res.ok) { setUserError(data.error || 'Failed'); return }
+    setAddUserForm({ name: '', email: '', password: '', userRole: 'front_desk' })
+    setShowAddUser(false)
+    loadUsers()
+  }
+
+  async function handleEditUser(id: string) {
+    setUserError('')
+    const body: Record<string, string> = { name: userEditForm.name, userRole: userEditForm.userRole }
+    if (userEditForm.password.trim()) body.password = userEditForm.password
+    const res = await fetch(`/api/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (!res.ok) { setUserError(data.error || 'Failed'); return }
+    setEditingUserId(null)
+    loadUsers()
+  }
+
+  async function handleDeleteUser(id: string) {
+    const res = await fetch(`/api/users/${id}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) { setUserError(data.error || 'Failed'); setDeleteConfirmId(null); return }
+    setDeleteConfirmId(null)
+    loadUsers()
+  }
+
+  // --- Charge code state ---
   const [codes, setCodes] = useState<ChargeCode[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -33,6 +105,7 @@ export default function SettingsPage() {
     setLoading(false)
   }
 
+  useEffect(() => { if (isAdmin) loadUsers() }, [isAdmin])
   useEffect(() => { load() }, [])
 
   // Sort: sub-codes appear directly after their parent
@@ -96,6 +169,180 @@ export default function SettingsPage() {
         <h1 className="text-xl font-bold text-gray-900">Settings</h1>
         <p className="text-sm text-gray-500">Manage hotel configuration</p>
       </div>
+
+      {/* Staff Accounts Section — admin only */}
+      {isAdmin && (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">Staff Accounts</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Manage hotel staff logins and roles</p>
+            </div>
+            <button
+              onClick={() => { setShowAddUser(true); setUserError('') }}
+              className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Add Staff
+            </button>
+          </div>
+
+          {usersLoading ? (
+            <div className="flex items-center justify-center h-24">
+              <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div>
+              {/* Add form */}
+              {showAddUser && (
+                <div className="px-6 py-4 bg-teal-50 border-b border-teal-100">
+                  <p className="text-xs font-bold text-teal-700 uppercase tracking-wide mb-3">New Staff Account</p>
+                  <div className="grid grid-cols-4 gap-3">
+                    <input
+                      placeholder="Full name"
+                      value={addUserForm.name}
+                      onChange={(e) => setAddUserForm(p => ({ ...p, name: e.target.value }))}
+                      className={inputCls}
+                    />
+                    <input
+                      placeholder="Email"
+                      type="email"
+                      value={addUserForm.email}
+                      onChange={(e) => setAddUserForm(p => ({ ...p, email: e.target.value }))}
+                      className={inputCls}
+                    />
+                    <input
+                      placeholder="Password (min 6 chars)"
+                      type="password"
+                      value={addUserForm.password}
+                      onChange={(e) => setAddUserForm(p => ({ ...p, password: e.target.value }))}
+                      className={inputCls}
+                    />
+                    <select
+                      value={addUserForm.userRole}
+                      onChange={(e) => setAddUserForm(p => ({ ...p, userRole: e.target.value }))}
+                      className={`${inputCls} bg-white`}
+                    >
+                      {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                    </select>
+                  </div>
+                  {userError && <p className="text-xs text-red-600 mt-2">{userError}</p>}
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={handleAddUser} className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-sm font-semibold hover:bg-teal-700">Save</button>
+                    <button onClick={() => { setShowAddUser(false); setUserError('') }} className="px-4 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancel</button>
+                  </div>
+                </div>
+              )}
+
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    <th className="text-left px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Name</th>
+                    <th className="text-left px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Email</th>
+                    <th className="text-left px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-36">Role</th>
+                    <th className="text-left px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-32">Created</th>
+                    <th className="px-6 py-3 w-28" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                      {editingUserId === u.id ? (
+                        <>
+                          <td className="px-6 py-2">
+                            <input
+                              value={userEditForm.name}
+                              onChange={(e) => setUserEditForm(p => ({ ...p, name: e.target.value }))}
+                              className={`${inputCls} w-full`}
+                              placeholder="Full name"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-slate-400 text-xs">{u.email}</td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={userEditForm.userRole}
+                              onChange={(e) => setUserEditForm(p => ({ ...p, userRole: e.target.value }))}
+                              className={`${inputCls} bg-white w-full`}
+                            >
+                              {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              value={userEditForm.password}
+                              onChange={(e) => setUserEditForm(p => ({ ...p, password: e.target.value }))}
+                              className={`${inputCls} w-full`}
+                              type="password"
+                              placeholder="New password (optional)"
+                            />
+                          </td>
+                          <td className="px-6 py-2">
+                            {userError && editingUserId === u.id && (
+                              <p className="text-xs text-red-600 mb-1">{userError}</p>
+                            )}
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => handleEditUser(u.id)} className="p-1 text-teal-600 hover:bg-teal-50 rounded"><Check className="w-4 h-4" /></button>
+                              <button onClick={() => { setEditingUserId(null); setUserError('') }} className="p-1 text-gray-400 hover:bg-gray-100 rounded"><X className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-6 py-3 font-medium text-slate-800">
+                            {u.name || <span className="text-slate-400 italic">No name</span>}
+                            {u.id === currentUserId && <span className="ml-2 text-[10px] font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">You</span>}
+                          </td>
+                          <td className="px-3 py-3 text-slate-500">{u.email}</td>
+                          <td className="px-3 py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${ROLE_COLORS[u.role] ?? 'bg-gray-100 text-gray-500'}`}>
+                              {ROLE_LABELS[u.role] ?? u.role}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-slate-400 text-xs">
+                            {new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="px-6 py-3">
+                            {deleteConfirmId === u.id ? (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-red-600 font-bold mr-1">Delete?</span>
+                                <button onClick={() => handleDeleteUser(u.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Check className="w-4 h-4" /></button>
+                                <button onClick={() => setDeleteConfirmId(null)} className="p-1 text-gray-400 hover:bg-gray-100 rounded"><X className="w-4 h-4" /></button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => { setEditingUserId(u.id); setUserEditForm({ name: u.name ?? '', userRole: u.role, password: '' }); setUserError('') }}
+                                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                                  title="Edit"
+                                >
+                                  <Pencil className="w-3.5 h-3.5 text-gray-400" />
+                                </button>
+                                {u.id !== currentUserId && (
+                                  <button
+                                    onClick={() => setDeleteConfirmId(u.id)}
+                                    className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                  {users.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">No staff accounts found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Charge Codes Section */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
