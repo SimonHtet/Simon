@@ -32,6 +32,12 @@ export default function ReservationsPage() {
   const [activeModal, setActiveModal] = useState<ActiveModal>(null)
   const [loading, setLoading] = useState(true)
 
+  const fetchDetail = useCallback(async (id: string): Promise<Reservation | null> => {
+    const res = await fetch(`/api/reservations/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, [])
+
   const refreshData = useCallback(async () => {
     const [roomsRes, resRes] = await Promise.all([
       fetch('/api/rooms'),
@@ -41,18 +47,24 @@ export default function ReservationsPage() {
     setRooms(roomsData)
     setReservations(resData)
     if (selectedRes) {
-      const updated = resData.find((r: Reservation) => r.id === selectedRes.id)
+      const updated = await fetchDetail(selectedRes.id)
       if (updated) setSelectedRes(updated)
     }
-  }, [selectedRes?.id])
+  }, [selectedRes?.id, fetchDetail])
 
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
   }, [])
 
+  async function handleSelectReservation(res: Reservation) {
+    const detail = await fetchDetail(res.id)
+    setSelectedRes(detail ?? res)
+  }
+
   // Called from reservations list rows — opens the panel in check-in mode
-  function handleCheckIn(res: Reservation) {
-    setSelectedRes(res)
+  async function handleCheckIn(res: Reservation) {
+    const detail = await fetchDetail(res.id)
+    setSelectedRes(detail ?? res)
     setCheckInMode(true)
   }
 
@@ -212,7 +224,7 @@ export default function ReservationsPage() {
     <>
       <ReservationsView
         reservations={reservations}
-        onSelectReservation={setSelectedRes}
+        onSelectReservation={handleSelectReservation}
         onCheckIn={handleCheckIn}
         onCheckOut={handleCheckOut}
         onNewReservation={() => setActiveModal('newReservation')}

@@ -4,6 +4,7 @@ import { getSessionOrUnauthorized } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { generateReservationNumber, calculateNights, maskPassport } from '@/lib/utils'
 
+// Full include — used for POST response and single-record endpoints
 const RESERVATION_INCLUDE = {
   guest: true,
   room: true,
@@ -14,6 +15,39 @@ const RESERVATION_INCLUDE = {
   preferences: true,
   folios: { include: { charges: { include: { charge: true } } } },
   linkedReservations: { select: { id: true, reservationNumber: true, guestName: true, roomId: true, checkIn: true, checkOut: true, status: true } },
+}
+
+// Slim select — list endpoints only (no charges/packages/folios/guest record)
+const RESERVATION_LIST_SELECT = {
+  id: true,
+  reservationNumber: true,
+  hotelId: true,
+  guestId: true,
+  guestName: true,
+  nationality: true,
+  passportNumber: true,
+  roomId: true,
+  roomTypeId: true,
+  status: true,
+  checkIn: true,
+  checkOut: true,
+  rate: true,
+  totalNights: true,
+  totalAmount: true,
+  adults: true,
+  children: true,
+  source: true,
+  vipStatus: true,
+  companyId: true,
+  specials: true,
+  eta: true,
+  isMaster: true,
+  masterResId: true,
+  createdAt: true,
+  updatedAt: true,
+  room: { select: { id: true, floor: true, type: true, status: true } },
+  company: { select: { id: true, name: true } },
+  traces: { where: { status: 'pending' as const }, select: { id: true } },
 }
 
 const MAX_LENGTHS: Record<string, number> = {
@@ -33,16 +67,13 @@ export async function GET() {
   try {
     const reservations = await prisma.reservation.findMany({
       where: { hotelId: hotelId! },
-      include: RESERVATION_INCLUDE,
+      select: RESERVATION_LIST_SELECT,
       orderBy: { createdAt: 'desc' },
     })
 
     const masked = reservations.map((r) => ({
       ...r,
       passportNumber: maskPassport(r.passportNumber),
-      guest: r.guest
-        ? { ...r.guest, passportNumber: maskPassport(r.guest.passportNumber) }
-        : null,
     }))
 
     return NextResponse.json(masked)

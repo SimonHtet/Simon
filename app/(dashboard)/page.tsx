@@ -34,6 +34,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
+  const fetchDetail = useCallback(async (id: string): Promise<Reservation | null> => {
+    const res = await fetch(`/api/reservations/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, [])
+
   const refreshData = useCallback(async () => {
     const [roomsRes, resRes, statsRes] = await Promise.all([
       fetch('/api/rooms'),
@@ -54,12 +60,12 @@ export default function DashboardPage() {
     setReservations(Array.isArray(resData) ? resData : [])
     setStats(statsData)
 
-    // Refresh selected reservation if open
-    if (selectedRes && Array.isArray(resData)) {
-      const updated = resData.find((r: Reservation) => r.id === selectedRes.id)
+    // Refresh selected reservation detail from individual endpoint
+    if (selectedRes) {
+      const updated = await fetchDetail(selectedRes.id)
       if (updated) setSelectedRes(updated)
     }
-  }, [selectedRes?.id])
+  }, [selectedRes?.id, fetchDetail])
 
   useEffect(() => {
     refreshData()
@@ -67,9 +73,15 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  async function handleSelectReservation(res: Reservation) {
+    const detail = await fetchDetail(res.id)
+    setSelectedRes(detail ?? res)
+  }
+
   // Called from dashboard rows — opens the panel in check-in mode
-  function handleCheckIn(res: Reservation) {
-    setSelectedRes(res)
+  async function handleCheckIn(res: Reservation) {
+    const detail = await fetchDetail(res.id)
+    setSelectedRes(detail ?? res)
     setCheckInMode(true)
   }
 
@@ -246,7 +258,7 @@ export default function DashboardPage() {
         rooms={rooms}
         reservations={reservations}
         stats={stats}
-        onSelectReservation={setSelectedRes}
+        onSelectReservation={handleSelectReservation}
         onCheckIn={handleCheckIn}
         onCheckOut={handleCheckOut}
       />

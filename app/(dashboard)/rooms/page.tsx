@@ -22,6 +22,12 @@ export default function RoomsPage() {
   const [loading, setLoading] = useState(true)
   const [newResRoomId, setNewResRoomId] = useState<string | null>(null)
 
+  const fetchDetail = useCallback(async (id: string): Promise<Reservation | null> => {
+    const res = await fetch(`/api/reservations/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, [])
+
   const refreshData = useCallback(async () => {
     const [roomsRes, resRes] = await Promise.all([
       fetch('/api/rooms'),
@@ -31,10 +37,15 @@ export default function RoomsPage() {
     setRooms(roomsData)
     setReservations(resData)
     if (selectedRes) {
-      const updated = resData.find((r: Reservation) => r.id === selectedRes.id)
+      const updated = await fetchDetail(selectedRes.id)
       if (updated) setSelectedRes(updated)
     }
-  }, [selectedRes?.id])
+  }, [selectedRes?.id, fetchDetail])
+
+  async function handleSelectReservation(res: Reservation) {
+    const detail = await fetchDetail(res.id)
+    setSelectedRes(detail ?? res)
+  }
 
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
@@ -177,7 +188,7 @@ export default function RoomsPage() {
       <RoomGridView
         rooms={rooms}
         reservations={reservations}
-        onSelectReservation={setSelectedRes}
+        onSelectReservation={handleSelectReservation}
         onRefresh={refreshData}
         onNewReservation={(roomId) => setNewResRoomId(roomId)}
       />
