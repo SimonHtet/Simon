@@ -11,19 +11,30 @@ export default function GuestsPage() {
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const fetchDetail = useCallback(async (id: string): Promise<Reservation | null> => {
+    const res = await fetch(`/api/reservations/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, [])
+
   const refreshData = useCallback(async () => {
     const [roomsRes, resRes] = await Promise.all([
       fetch('/api/rooms'),
-      fetch('/api/reservations'),
+      fetch('/api/reservations?includeAll=1'),
     ])
     const [roomsData, resData] = await Promise.all([roomsRes.json(), resRes.json()])
     setRooms(roomsData)
     setReservations(resData)
     if (selectedRes) {
-      const updated = resData.find((r: Reservation) => r.id === selectedRes.id)
+      const updated = await fetchDetail(selectedRes.id)
       if (updated) setSelectedRes(updated)
     }
-  }, [selectedRes?.id])
+  }, [selectedRes?.id, fetchDetail])
+
+  const handleSelectReservation = useCallback(async (res: Reservation) => {
+    const detail = await fetchDetail(res.id)
+    setSelectedRes(detail ?? res)
+  }, [fetchDetail])
 
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
@@ -59,7 +70,7 @@ export default function GuestsPage() {
     <>
       <GuestHistoryView
         reservations={reservations}
-        onSelectReservation={setSelectedRes}
+        onSelectReservation={handleSelectReservation}
       />
 
       {selectedRes && (

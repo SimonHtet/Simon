@@ -78,6 +78,16 @@ const PACKAGE_RATES: Record<string, { amount: number; perNight: boolean }> = {
   LAUNDRY:   { amount: 200, perNight: true },
 }
 
+function normalizeRes(r: Reservation): Reservation {
+  return {
+    ...r,
+    charges: r.charges ?? [],
+    packages: r.packages ?? [],
+    traces: r.traces ?? [],
+    folios: r.folios ?? [],
+  } as Reservation
+}
+
 export default function ReservationDetailPanel({
   reservation: initialRes,
   rooms,
@@ -95,7 +105,7 @@ export default function ReservationDetailPanel({
   onUpdateReservation,
   initialCheckInMode = false,
 }: Props) {
-  const [localRes, setLocalRes] = useState(initialRes)
+  const [localRes, setLocalRes] = useState(() => normalizeRes(initialRes))
   const [editingField, setEditingField] = useState<string | null>(null)
   const [checkInMode, setCheckInMode] = useState(initialCheckInMode)
   const [activeTab, setActiveTab] = useState('charges')
@@ -113,8 +123,8 @@ export default function ReservationDetailPanel({
   const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const [activePackages, setActivePackages] = useState<Set<string>>(() => {
-    const fromPackages = initialRes.packages.filter((p) => p.active).map((p) => p.pkgId)
-    const fromCharges = initialRes.charges
+    const fromPackages = (initialRes.packages ?? []).filter((p) => p.active).map((p) => p.pkgId)
+    const fromCharges = (initialRes.charges ?? [])
       .filter((c) => c.category && c.amount > 0)
       .map((c) => c.category as string)
     return new Set(fromPackages.concat(fromCharges))
@@ -171,7 +181,7 @@ export default function ReservationDetailPanel({
     !!localRes.passportNumber
 
   useEffect(() => {
-    setLocalRes(initialRes)
+    setLocalRes(normalizeRes(initialRes))
   }, [initialRes])
 
   useEffect(() => {
