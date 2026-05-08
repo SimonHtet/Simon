@@ -100,7 +100,8 @@ export default function RoomsPage() {
   }
 
   async function handleCheckOut(res: Reservation) {
-    setSelectedRes(res)
+    const detail = await fetchDetail(res.id)
+    setSelectedRes(detail ?? res)
     setActiveModal('checkout')
   }
 

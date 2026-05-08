@@ -116,7 +116,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
 
   const activeFolio = folios.find((f) => f.id === activeFolioId)
   const assignedChargeIds = new Set(folios.flatMap((f) => f.charges.map((fc) => fc.chargeId)))
-  const unassignedCharges = res.charges.filter((c) => !assignedChargeIds.has(c.id))
+  const unassignedCharges = (res.charges ?? []).filter((c) => !assignedChargeIds.has(c.id))
 
   const activePm = activeFolio ? (paymentMethods[activeFolio.id] ?? 'credit_card') : 'credit_card'
   const activeBalance = activeFolio ? folioBalance(activeFolio, res) : 0
