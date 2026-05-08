@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Room, Reservation } from '@/types'
 import ReservationsView from '@/components/ReservationsView'
 import ReservationDetailPanel from '@/components/ReservationDetailPanel'
@@ -32,29 +32,46 @@ export default function ReservationsPage() {
   const [activeModal, setActiveModal] = useState<ActiveModal>(null)
   const [loading, setLoading] = useState(true)
 
+  // Ref so refresh callbacks always read the current selection without re-binding deps
+  const selectedIdRef = useRef<string | null>(null)
+  selectedIdRef.current = selectedRes?.id ?? null
+
   const fetchDetail = useCallback(async (id: string): Promise<Reservation | null> => {
     const res = await fetch(`/api/reservations/${id}`)
     if (!res.ok) return null
     return res.json()
   }, [])
 
-  const refreshData = useCallback(async () => {
-    const [roomsRes, resRes] = await Promise.all([
-      fetch('/api/rooms'),
-      fetch('/api/reservations'),
-    ])
-    const [roomsData, resData] = await Promise.all([roomsRes.json(), resRes.json()])
-    setRooms(roomsData)
-    setReservations(resData)
-    if (selectedRes) {
-      const updated = await fetchDetail(selectedRes.id)
-      if (updated) setSelectedRes(updated)
-    }
-  }, [selectedRes?.id, fetchDetail])
+  const refreshList = useCallback(async () => {
+    const r = await fetch('/api/reservations')
+    if (r.ok) setReservations(await r.json())
+  }, [])
+
+  const refreshRooms = useCallback(async () => {
+    const r = await fetch('/api/rooms')
+    if (r.ok) setRooms(await r.json())
+  }, [])
+
+  const refreshSelected = useCallback(async () => {
+    const id = selectedIdRef.current
+    if (!id) return
+    const updated = await fetchDetail(id)
+    if (updated) setSelectedRes(updated)
+  }, [fetchDetail])
+
+  // Most non-room actions
+  const afterAction = useCallback(async () => {
+    await Promise.all([refreshList(), refreshSelected()])
+  }, [refreshList, refreshSelected])
+
+  // Actions that change room status (checkin/checkout/cancel/noshow/move/new)
+  const afterRoomAction = useCallback(async () => {
+    await Promise.all([refreshList(), refreshRooms(), refreshSelected()])
+  }, [refreshList, refreshRooms, refreshSelected])
 
   useEffect(() => {
-    refreshData().finally(() => setLoading(false))
-  }, [])
+    Promise.all([refreshList(), refreshRooms()]).finally(() => setLoading(false))
+  }, [refreshList, refreshRooms])
 
   async function handleSelectReservation(res: Reservation) {
     const detail = await fetchDetail(res.id)
@@ -75,7 +92,7 @@ export default function ReservationsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     })
-    await refreshData()
+    await afterRoomAction()
   }
 
   async function handleCheckOut(res: Reservation) {
@@ -87,7 +104,7 @@ export default function ReservationsPage() {
     if (!selectedRes) return
     await fetch(`/api/reservations/${selectedRes.id}/checkout`, { method: 'POST' })
     setActiveModal(null)
-    await refreshData()
+    await afterRoomAction()
   }
 
   async function handleCancel(res: Reservation) {
@@ -96,12 +113,12 @@ export default function ReservationsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason: '' }),
     })
-    await refreshData()
+    await afterRoomAction()
   }
 
   async function handleNoShow(res: Reservation) {
     await fetch(`/api/reservations/${res.id}/noshow`, { method: 'POST' })
-    await refreshData()
+    await afterRoomAction()
   }
 
   async function handleMoveRoom(res: Reservation) {
@@ -117,7 +134,7 @@ export default function ReservationsPage() {
       body: JSON.stringify({ newRoomId, reason, pricingAction }),
     })
     setActiveModal(null)
-    await refreshData()
+    await afterRoomAction()
   }
 
   async function handleExtendStay(res: Reservation) {
@@ -133,7 +150,7 @@ export default function ReservationsPage() {
       body: JSON.stringify({ extraNights }),
     })
     setActiveModal(null)
-    await refreshData()
+    await afterAction()
   }
 
   async function handleAddCharge(res: Reservation) {
@@ -149,7 +166,7 @@ export default function ReservationsPage() {
       body: JSON.stringify(data),
     })
     setActiveModal(null)
-    await refreshData()
+    await afterAction()
   }
 
   async function handlePostPayment(res: Reservation) {
@@ -165,7 +182,7 @@ export default function ReservationsPage() {
       body: JSON.stringify(data),
     })
     setActiveModal(null)
-    await refreshData()
+    await afterAction()
   }
 
   async function handleAddTrace(res: Reservation) {
@@ -181,7 +198,7 @@ export default function ReservationsPage() {
       body: JSON.stringify(data),
     })
     setActiveModal(null)
-    await refreshData()
+    await afterAction()
   }
 
   async function handleResolveTrace(reservationId: string, traceId: number) {
@@ -190,7 +207,7 @@ export default function ReservationsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ traceId }),
     })
-    await refreshData()
+    await afterAction()
   }
 
   async function handleUpdateReservation(id: string, data: Partial<Reservation>) {
@@ -199,7 +216,7 @@ export default function ReservationsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    await refreshData()
+    await afterAction()
   }
 
   async function handleNewReservation(data: any) {
@@ -209,7 +226,7 @@ export default function ReservationsPage() {
       body: JSON.stringify(data),
     })
     setActiveModal(null)
-    await refreshData()
+    await afterRoomAction()
   }
 
   if (loading) {

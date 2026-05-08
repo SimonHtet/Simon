@@ -1,7 +1,7 @@
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  directUrl  = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -16,6 +16,8 @@ model User {
   role      String   @default("front_desk")
   hotelId   String   @default("HOTEL-001")
   createdAt DateTime @default(now())
+
+  @@index([hotelId])
 }
 
 model Hotel {
@@ -34,6 +36,9 @@ model Room {
   hotelId      String        @default("HOTEL-001")
   updatedAt    DateTime      @updatedAt
   reservations Reservation[]
+
+  @@index([hotelId])
+  @@index([hotelId, status])
 }
 
 model Guest {
@@ -66,6 +71,12 @@ model Guest {
   allergiesPref   String?
   createdAt       DateTime      @default(now())
   reservations    Reservation[]
+
+  @@index([hotelId])
+  @@index([hotelId, name])
+  @@index([hotelId, passportNumber])
+  @@index([hotelId, email])
+  @@index([hotelId, phone])
 }
 
 model ChargeCode {
@@ -79,70 +90,77 @@ model ChargeCode {
   parentCode  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([hotelId])
+  @@index([hotelId, active])
 }
 
 model Company {
-  id             String        @id @default(cuid())
-  hotelId        String        @default("HOTEL-001")
-  name           String
-  contactName    String?
-  contactEmail   String?
-  contactPhone   String?
-  address        String?
-  taxId          String?
-  notes          String?
-  type           String        @default("COMPANY")
-  contractRates  Json          @default("{}")
-  blackoutStart  String?
-  blackoutEnd    String?
-  active              Boolean       @default(true)
-  creditLimit         Float         @default(0)
-  creditUsed          Float         @default(0)
-  creditResetDay      Int           @default(1)
-  lastCreditReset     String?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  reservations        Reservation[]
-  creditTransactions  CreditTransaction[]
+  id                 String              @id @default(cuid())
+  hotelId            String              @default("HOTEL-001")
+  name               String
+  contactName        String?
+  contactEmail       String?
+  contactPhone       String?
+  address            String?
+  taxId              String?
+  notes              String?
+  type               String              @default("COMPANY")
+  contractRates      Json                @default("{}")
+  blackoutStart      String?
+  blackoutEnd        String?
+  active             Boolean             @default(true)
+  creditLimit        Float               @default(0)
+  creditUsed         Float               @default(0)
+  creditResetDay     Int                 @default(1)
+  lastCreditReset    String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  reservations       Reservation[]
+  creditTransactions CreditTransaction[]
+
+  @@index([hotelId])
+  @@index([hotelId, type])
+  @@index([hotelId, active])
 }
 
 model Reservation {
-  id                 String    @id @default(cuid())
-  reservationNumber  String    @unique
-  hotelId            String    @default("HOTEL-001")
+  id                 String        @id @default(cuid())
+  reservationNumber  String        @unique
+  hotelId            String        @default("HOTEL-001")
   guestId            String
-  guest              Guest     @relation(fields: [guestId], references: [id])
+  guest              Guest         @relation(fields: [guestId], references: [id])
   guestName          String
   nationality        String?
   roomId             String
-  room               Room      @relation(fields: [roomId], references: [id])
+  room               Room          @relation(fields: [roomId], references: [id])
   roomTypeId         String
-  status             String    @default("confirmed")
+  status             String        @default("confirmed")
   checkIn            String
   checkOut           String
   rate               Float
   totalNights        Int
   totalAmount        Float
-  adults             Int       @default(1)
-  children           Int       @default(0)
+  adults             Int           @default(1)
+  children           Int           @default(0)
   source             String?
   bookingReference   String?
   vipStatus          String?
   passportNumber     String?
   companyId          String?
-  company            Company?  @relation(fields: [companyId], references: [id])
+  company            Company?      @relation(fields: [companyId], references: [id])
   specials           String?
   eta                String?
   flightNumber       String?
   visaDetails        String?
-  turndown           Boolean   @default(false)
-  dnm                Boolean   @default(false)
+  turndown           Boolean       @default(false)
+  dnm                Boolean       @default(false)
   actualCheckIn      DateTime?
   actualCheckOut     DateTime?
   cancelledAt        DateTime?
   cancellationReason String?
   moveReason         String?
-  isMaster           Boolean   @default(false)
+  isMaster           Boolean       @default(false)
   masterResId        String?
   masterReservation  Reservation?  @relation("MasterLinked", fields: [masterResId], references: [id])
   linkedReservations Reservation[] @relation("MasterLinked")
@@ -155,13 +173,24 @@ model Reservation {
   country            String?
   createdBy          String?
   notes              String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
   charges            Charge[]
   traces             Trace[]
   packages           Package[]
   preferences        Preferences?
   folios             Folio[]
+
+  @@index([hotelId])
+  @@index([hotelId, status])
+  @@index([hotelId, checkIn])
+  @@index([hotelId, checkOut])
+  @@index([hotelId, status, checkIn])
+  @@index([hotelId, status, checkOut])
+  @@index([roomId])
+  @@index([guestId])
+  @@index([companyId])
+  @@index([masterResId])
 }
 
 model Charge {
@@ -174,18 +203,23 @@ model Charge {
   category      String?
   createdAt     DateTime     @default(now())
   folioCharge   FolioCharge?
+
+  @@index([reservationId])
+  @@index([date])
 }
 
 model Folio {
-  id            Int         @id @default(autoincrement())
+  id            Int           @id @default(autoincrement())
   reservationId String
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
   name          String
   paymentMethod String?
-  status        String      @default("open")
+  status        String        @default("open")
   settledAt     DateTime?
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime      @default(now())
   charges       FolioCharge[]
+
+  @@index([reservationId])
 }
 
 model FolioCharge {
@@ -194,6 +228,8 @@ model FolioCharge {
   folio    Folio  @relation(fields: [folioId], references: [id])
   chargeId Int    @unique
   charge   Charge @relation(fields: [chargeId], references: [id])
+
+  @@index([folioId])
 }
 
 model Trace {
@@ -205,6 +241,10 @@ model Trace {
   status        String      @default("pending")
   department    String      @default("FRONT OFFICE")
   createdAt     DateTime    @default(now())
+
+  @@index([reservationId])
+  @@index([status])
+  @@index([reservationId, status])
 }
 
 model Package {
@@ -215,6 +255,8 @@ model Package {
   active        Boolean     @default(false)
   licensePlate  String?
   carModel      String?
+
+  @@index([reservationId])
 }
 
 model CreditTransaction {
@@ -229,16 +271,21 @@ model CreditTransaction {
   status        String    @default("unpaid")
   paidAt        DateTime?
   createdAt     DateTime  @default(now())
+
+  @@index([companyId])
+  @@index([hotelId])
+  @@index([reservationId])
+  @@index([companyId, status])
 }
 
 model NightAudit {
-  id             Int      @id @default(autoincrement())
-  hotelId        String
-  businessDate   String
-  chargesPosted  Int
-  totalAmount    Float
-  runBy          String
-  createdAt      DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  hotelId       String
+  businessDate  String
+  chargesPosted Int
+  totalAmount   Float
+  runBy         String
+  createdAt     DateTime @default(now())
 
   @@unique([hotelId, businessDate])
 }

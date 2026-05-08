@@ -141,11 +141,23 @@ export default function ReservationDetailPanel({
   const roomTypeName = ROOM_TYPES[localRes.roomTypeId]?.name ?? localRes.roomTypeId
   const nights = calculateNights(localRes.checkIn, localRes.checkOut)
 
+  // Charges actually displayed on the folio = saved charges + pending (pre-checkin) packages.
+  // Pending packages live in their own state so a parent refresh doesn't wipe them.
+  const displayCharges = [
+    ...localRes.charges,
+    ...pendingPackageCharges.map((c, i) => ({
+      id: -(i + 1),
+      reservationId: localRes.id,
+      createdAt: new Date().toISOString(),
+      ...c,
+    })),
+  ]
+
   const totalRoomAndCharges =
     localRes.rate * nights +
-    localRes.charges.filter((c) => c.amount > 0).reduce((s, c) => s + c.amount, 0)
+    displayCharges.filter((c) => c.amount > 0).reduce((s, c) => s + c.amount, 0)
   const totalPayments = Math.abs(
-    localRes.charges.filter((c) => c.amount < 0).reduce((s, c) => s + c.amount, 0)
+    displayCharges.filter((c) => c.amount < 0).reduce((s, c) => s + c.amount, 0)
   )
   const balance = totalRoomAndCharges - totalPayments
 
@@ -221,6 +233,11 @@ export default function ReservationDetailPanel({
     }, 3000)
   }
 
+  async function refetchSelf() {
+    const r = await fetch(`/api/reservations/${localRes.id}`)
+    if (r.ok) setLocalRes(await r.json())
+  }
+
   async function togglePackage(pkgId: string) {
     const isActive = activePackages.has(pkgId)
 
@@ -229,17 +246,18 @@ export default function ReservationDetailPanel({
       setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })
       const wasPending = pendingPackageCharges.some((c) => c.category === pkgId)
       setPendingPackageCharges((prev) => prev.filter((c) => c.category !== pkgId))
-      // Remove from local folio
+      // Optimistic remove from saved charges
       setLocalRes((prev) => ({
         ...prev,
         charges: prev.charges.filter((c) => !(c.category === pkgId && c.amount > 0)),
       }))
-      // Delete from DB only if it was already posted
+      // Delete from DB only if it was already posted, then re-sync
       if (!wasPending) {
         await fetch(
           `/api/reservations/${localRes.id}/charges/package?category=${pkgId}`,
           { method: 'DELETE' }
         )
+        await refetchSelf()
       }
       return
     }
@@ -262,19 +280,23 @@ export default function ReservationDetailPanel({
       date: today,
       category: pkgId,
     }
-    // Optimistic UI update
-    setLocalRes((prev) => ({
-      ...prev,
-      charges: [...prev.charges, { id: Date.now(), ...chargeData }],
-    }))
+
     if (localRes.status === 'confirmed') {
+      // Pre-checkin: queue, don't write yet. displayCharges renders these as overlay.
       setPendingPackageCharges((prev) => [...prev, chargeData])
     } else {
-      await fetch(`/api/reservations/${localRes.id}/charges`, {
+      // Post-checkin: write to DB, then refetch to pick up the real Charge row
+      const r = await fetch(`/api/reservations/${localRes.id}/charges`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(chargeData),
       })
+      if (r.ok) {
+        await refetchSelf()
+      } else {
+        // Roll back the active set if the POST failed
+        setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })
+      }
     }
   }
 
@@ -1009,7 +1031,7 @@ export default function ReservationDetailPanel({
                             ฿{formatCurrency(localRes.rate * nights)}
                           </td>
                         </tr>
-                        {localRes.charges.map((c) => (
+                        {displayCharges.map((c) => (
                           <tr
                             key={c.id}
                             className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
