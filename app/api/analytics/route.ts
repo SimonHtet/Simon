@@ -78,8 +78,7 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    const rooms = await prisma.room.findMany({ where: { hotelId: hotelId! } })
-    const totalRooms = rooms.length
+    const totalRooms = await prisma.room.count({ where: { hotelId: hotelId! } })
 
     const days = buildDailyMap(from, to, reservations)
 
@@ -91,6 +90,9 @@ export async function GET(req: NextRequest) {
       reservationCount: number; lastStay: string
     }> = {}
     const roomTypeMap: Record<string, { revenue: number; nights: number }> = {}
+
+    const sourceRevMap: Record<string, { count: number; revenue: number }> = {}
+    const losMap: Record<string, number> = {}
 
     for (const res of reservations) {
       const ciDate = new Date(res.checkIn)
@@ -128,13 +130,7 @@ export async function GET(req: NextRequest) {
         totalRoomNights++
         nc.setDate(nc.getDate() + 1)
       }
-    }
 
-    const sourceRevMap: Record<string, { count: number; revenue: number }> = {}
-    const losMap: Record<string, number> = {}
-
-    for (const res of reservations) {
-      const resSource = res.source ?? 'Direct'
       sourceRevMap[resSource] = sourceRevMap[resSource] ?? { count: 0, revenue: 0 }
       sourceRevMap[resSource].count++
       sourceRevMap[resSource].revenue += res.totalAmount

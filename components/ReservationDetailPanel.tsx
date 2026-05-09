@@ -261,13 +261,12 @@ export default function ReservationDetailPanel({
         ...prev,
         charges: prev.charges.filter((c) => !(c.category === pkgId && c.amount > 0)),
       }))
-      // Delete from DB only if it was already posted, then re-sync
+      // Delete from DB only if it was already posted — optimistic update above already removed it from UI
       if (!wasPending) {
         await fetch(
           `/api/reservations/${localRes.id}/charges/package?category=${pkgId}`,
           { method: 'DELETE' }
         )
-        await refetchSelf()
       }
       return
     }
@@ -295,14 +294,15 @@ export default function ReservationDetailPanel({
       // Pre-checkin: queue, don't write yet. displayCharges renders these as overlay.
       setPendingPackageCharges((prev) => [...prev, chargeData])
     } else {
-      // Post-checkin: write to DB, then refetch to pick up the real Charge row
+      // Post-checkin: write to DB, then apply the returned charge directly — no full refetch needed
       const r = await fetch(`/api/reservations/${localRes.id}/charges`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(chargeData),
       })
       if (r.ok) {
-        await refetchSelf()
+        const charge = await r.json()
+        setLocalRes((prev) => ({ ...prev, charges: [...(prev.charges ?? []), charge] }))
       } else {
         // Roll back the active set if the POST failed
         setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })

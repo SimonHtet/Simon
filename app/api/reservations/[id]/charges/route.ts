@@ -42,7 +42,10 @@ export async function POST(
   }
 
   try {
-    const reservation = await prisma.reservation.findUnique({ where: { id: params.id } })
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: params.id },
+      select: { hotelId: true },
+    })
     if (!reservation) {
       return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
     }
