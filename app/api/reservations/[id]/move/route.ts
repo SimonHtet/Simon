@@ -26,6 +26,7 @@ export async function POST(
   try {
     const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
+      select: { hotelId: true, roomId: true, roomTypeId: true, status: true, rate: true, totalNights: true },
     })
 
     if (!reservation) {
@@ -38,6 +39,7 @@ export async function POST(
 
     const newRoom = await prisma.room.findFirst({
       where: { id: newRoomId, hotelId: hotelId! },
+      select: { id: true, type: true, status: true },
     })
     if (!newRoom) {
       return NextResponse.json({ error: 'New room not found' }, { status: 404 })
@@ -70,7 +72,7 @@ export async function POST(
 
     const oldRoomId = reservation.roomId
 
-    const [updated] = await prisma.$transaction([
+    await prisma.$transaction([
       prisma.reservation.update({
         where: { id: params.id },
         data: {
@@ -83,14 +85,7 @@ export async function POST(
             totalAmount: reservation.rate * calculateNights(newCheckIn, newCheckOut),
           }),
         },
-        include: {
-          guest: true,
-          room: true,
-          charges: { orderBy: { createdAt: 'asc' } },
-          traces: { orderBy: { createdAt: 'asc' } },
-          packages: true,
-          preferences: true,
-        },
+        select: { id: true },
       }),
       prisma.room.update({
         where: { id: oldRoomId },
@@ -149,7 +144,7 @@ export async function POST(
       // 'complimentary' and 'keep_rate': no rate or charge changes
     }
 
-    return NextResponse.json(updated)
+    return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[POST /api/reservations/[id]/move] DB error:', err)
     return NextResponse.json({ error: 'Database error' }, { status: 500 })

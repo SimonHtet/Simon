@@ -129,6 +129,12 @@ export default function RoomTimelineView({ rooms, reservations, onSelectReservat
     const draggedRes = reservations.find((r) => r.id === resId)
     if (!draggedRes) return
 
+    // Block cross-type moves — use the Move Room button in the panel for type changes (pricing dialog required)
+    if (draggedRes.roomTypeId !== targetRoom.type) {
+      flashError(targetRoom.id)
+      return
+    }
+
     const newCheckIn = dropDate
     const newCheckOutDate = new Date(dropDate)
     newCheckOutDate.setDate(newCheckOutDate.getDate() + nights)

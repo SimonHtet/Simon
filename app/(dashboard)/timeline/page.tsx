@@ -40,6 +40,17 @@ export default function TimelinePage() {
     }
   }, [selectedRes?.id, fetchDetail])
 
+  // Lean refresh for drag-and-drop — skips fetchDetail since timeline doesn't need panel detail post-move
+  const refreshAfterMove = useCallback(async () => {
+    const [roomsRes, resRes] = await Promise.all([
+      fetch('/api/rooms'),
+      fetch('/api/reservations'),
+    ])
+    const [roomsData, resData] = await Promise.all([roomsRes.json(), resRes.json()])
+    setRooms(Array.isArray(roomsData) ? roomsData : [])
+    setReservations(Array.isArray(resData) ? resData : [])
+  }, [])
+
   async function handleSelectReservation(res: Reservation) {
     const detail = await fetchDetail(res.id)
     setSelectedRes(detail ?? res)
@@ -180,7 +191,7 @@ export default function TimelinePage() {
         rooms={rooms}
         reservations={reservations}
         onSelectReservation={handleSelectReservation}
-        onRefresh={refreshData}
+        onRefresh={refreshAfterMove}
       />
 
       {selectedRes && !activeModal && (

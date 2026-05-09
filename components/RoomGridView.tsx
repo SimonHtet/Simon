@@ -193,6 +193,20 @@ export default function RoomGridView({ rooms, reservations, onSelectReservation,
                     </button>
                   )}
 
+                  {/* Orphaned occupied room (no active reservation) — data inconsistency, allow manual reset */}
+                  {room.status === 'occupied' && !activeRes && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        await patchRoomStatus(room.id, 'dirty')
+                        onRefresh?.()
+                      }}
+                      className="mt-1.5 w-full text-[9px] font-black px-2 py-1 bg-rose-100 hover:bg-amber-100 text-rose-600 hover:text-amber-700 border border-rose-200 hover:border-amber-300 rounded-lg transition-all uppercase tracking-wider"
+                    >
+                      Fix Room
+                    </button>
+                  )}
+
                   {/* Maintenance toggle for available rooms */}
                   {room.status === 'available' && (
                     <button
