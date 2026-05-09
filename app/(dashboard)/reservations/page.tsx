@@ -96,9 +96,15 @@ export default function ReservationsPage() {
   }
 
   async function handleCheckOut(res: Reservation) {
-    const detail = await fetchDetail(res.id)
-    setSelectedRes(detail ?? res)
+    const alreadyHaveDetail = selectedRes?.id === res.id
+    setSelectedRes(alreadyHaveDetail ? selectedRes! : res)
     setActiveModal('checkout')
+    if (!alreadyHaveDetail) {
+      const id = res.id
+      fetchDetail(id).then(detail => {
+        if (detail) setSelectedRes(prev => prev?.id === id ? detail : prev)
+      })
+    }
   }
 
   async function handleCheckOutConfirm() {

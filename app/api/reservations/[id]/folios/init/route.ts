@@ -54,7 +54,13 @@ export async function POST(
       })
     }
 
-    return NextResponse.json({ ok: true, folioId: mainFolioId })
+    // Return the full folio list so the caller skips a separate GET /folios round trip.
+    const folios = await prisma.folio.findMany({
+      where: { reservationId: params.id },
+      include: { charges: { include: { charge: true } } },
+      orderBy: { createdAt: 'asc' },
+    })
+    return NextResponse.json({ ok: true, folioId: mainFolioId, folios })
   } catch (err) {
     console.error('[POST /folios/init]', err)
     return NextResponse.json({ error: 'Database error' }, { status: 500 })

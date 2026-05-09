@@ -84,18 +84,25 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
     })
   }, [res.id])
 
-  // Bug 1: guard against StrictMode double-invoke
+  // Guard against StrictMode double-invoke; init returns folios directly — no second GET needed.
   useEffect(() => {
     if (initCalledRef.current) return
     initCalledRef.current = true
     async function init() {
       setLoadingFolios(true)
-      await fetch(`/api/reservations/${res.id}/folios/init`, { method: 'POST' })
-      await refreshFolios()
+      const data = await fetch(`/api/reservations/${res.id}/folios/init`, { method: 'POST' }).then((r) => r.json())
+      const list: Folio[] = Array.isArray(data.folios) ? data.folios : []
+      setFolios(list)
+      setActiveFolioId(list[0]?.id ?? null)
+      setPaymentMethods(() => {
+        const next: Record<number, string> = {}
+        list.forEach((f) => { next[f.id] = f.paymentMethod ?? 'credit_card' })
+        return next
+      })
       setLoadingFolios(false)
     }
     init()
-  }, [res.id, refreshFolios])
+  }, [res.id])
 
   // Reset credit error + override when active folio changes
   useEffect(() => {
