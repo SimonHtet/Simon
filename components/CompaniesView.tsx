@@ -6,7 +6,7 @@ import CompanyForm from './CompanyForm'
 import {
   Building2, Plus, Search, Edit2, Trash2, Check, X,
   Phone, Mail, MapPin, BadgeDollarSign, AlertTriangle,
-  ChevronDown, ChevronUp, CreditCard,
+  ChevronDown, ChevronUp, CreditCard, Printer, PlusCircle,
 } from 'lucide-react'
 
 const RACK_RATES: Record<string, number> = {
@@ -72,6 +72,20 @@ export default function CompaniesView() {
   async function handleMarkPaid(companyId: string, txId: number) {
     await fetch(`/api/companies/${companyId}/credit/${txId}`, { method: 'PUT' })
     await loadCredit(companyId)
+  }
+
+  async function handlePostCharge(companyId: string, amount: number, description: string) {
+    const res = await fetch(`/api/companies/${companyId}/credit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, description }),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error ?? 'Failed to post charge')
+    }
+    await loadCredit(companyId)
+    load()
   }
 
   async function handleSave(data: Partial<Company>) {
@@ -257,6 +271,7 @@ export default function CompaniesView() {
                               showPaid={showPaid[co.id] ?? false}
                               onTogglePaid={() => setShowPaid((p) => ({ ...p, [co.id]: !p[co.id] }))}
                               onMarkPaid={(txId) => handleMarkPaid(co.id, txId)}
+                              onPostCharge={(amount, description) => handlePostCharge(co.id, amount, description)}
                             />
                           ) : null}
                         </div>
@@ -314,9 +329,32 @@ interface CreditSectionProps {
   showPaid: boolean
   onTogglePaid: () => void
   onMarkPaid: (txId: number) => void
+  onPostCharge: (amount: number, description: string) => Promise<void>
 }
 
-function CreditSection({ credit, showPaid, onTogglePaid, onMarkPaid }: CreditSectionProps) {
+function CreditSection({ credit, companyId, showPaid, onTogglePaid, onMarkPaid, onPostCharge }: CreditSectionProps) {
+  const [showPostForm, setShowPostForm] = useState(false)
+  const [postAmount, setPostAmount] = useState('')
+  const [postDesc, setPostDesc] = useState('')
+  const [posting, setPosting] = useState(false)
+  const [postError, setPostError] = useState('')
+
+  async function handlePost() {
+    const amount = parseFloat(postAmount)
+    if (!postDesc.trim() || isNaN(amount) || amount <= 0) return
+    setPosting(true)
+    setPostError('')
+    try {
+      await onPostCharge(amount, postDesc.trim())
+      setPostAmount('')
+      setPostDesc('')
+      setShowPostForm(false)
+    } catch (e: any) {
+      setPostError(e?.message ?? 'Failed to post charge')
+    } finally {
+      setPosting(false)
+    }
+  }
   const pct = credit.creditLimit > 0 ? Math.min(100, Math.round((credit.creditUsed / credit.creditLimit) * 100)) : 0
   const unpaid = credit.transactions.filter((t) => t.status === 'unpaid')
   const paid = credit.transactions.filter((t) => t.status === 'paid')
@@ -346,6 +384,61 @@ function CreditSection({ credit, showPaid, onTogglePaid, onMarkPaid }: CreditSec
           <span className="text-emerald-600 font-semibold">฿{credit.creditAvailable.toLocaleString()} available</span>
         </div>
       </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-2 mb-3">
+        <button
+          onClick={() => { setShowPostForm((v) => !v); setPostError('') }}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-semibold transition-colors"
+        >
+          <PlusCircle className="w-3.5 h-3.5" />
+          Post Charge
+        </button>
+        <button
+          onClick={() => window.open(`/print/company/${companyId}`, '_blank')}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg text-xs font-semibold transition-colors"
+        >
+          <Printer className="w-3.5 h-3.5" />
+          Print Statement
+        </button>
+      </div>
+
+      {/* Post charge form */}
+      {showPostForm && (
+        <div className="mb-3 p-3 bg-sky-50 border border-sky-200 rounded-lg space-y-2">
+          <p className="text-[10px] font-black text-sky-600 uppercase tracking-widest">Post Charge to City Ledger</p>
+          <input
+            type="text"
+            placeholder="Description (e.g. Room charges — Jan 2026)"
+            value={postDesc}
+            onChange={(e) => setPostDesc(e.target.value)}
+            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+          />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Amount ฿"
+              value={postAmount}
+              onChange={(e) => setPostAmount(e.target.value)}
+              className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+            />
+            <button
+              onClick={handlePost}
+              disabled={posting || !postDesc.trim() || !postAmount}
+              className="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+            >
+              {posting ? '…' : 'Post'}
+            </button>
+            <button
+              onClick={() => { setShowPostForm(false); setPostError('') }}
+              className="px-3 py-2 border border-slate-200 text-slate-500 rounded-lg text-xs hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+          </div>
+          {postError && <p className="text-xs text-red-600 font-semibold">{postError}</p>}
+        </div>
+      )}
 
       {/* Unpaid transactions */}
       {unpaid.length > 0 && (
