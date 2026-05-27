@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
         .sort((a, b) => b.amount - a.amount),
       byCategory: Object.entries(catMap)
         .map(([category, amount]) => ({ category, amount }))
-        .sort((a, b) => b - a),
+        .sort((a, b) => b.amount - a.amount),
       daily: Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date)),
       deferredByCompany: Object.entries(deferredByCompany)
         .map(([id, v]) => ({ id, ...v }))
