@@ -20,6 +20,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Receipt,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/rbac'
 import { HOTEL_NAME, LOCATION } from '@/lib/constants'
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { href: '/guests', label: 'Guest History', icon: Users },
   { href: '/companies', label: 'Companies', icon: Building2 },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/accounting', label: 'Accounting', icon: Receipt },
   { href: '/settings', label: 'Settings', icon: Settings2 },
 ]
 

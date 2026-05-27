@@ -228,6 +228,37 @@ export interface Company {
   updatedAt?: string | Date
 }
 
+export interface TaxInvoiceLineItem {
+  description: string
+  quantity: number
+  unitPrice: number
+  amount: number
+}
+
+export interface TaxInvoice {
+  id: string
+  invoiceNumber: string
+  hotelId?: string
+  companyId?: string | null
+  company?: Company | null
+  reservationId?: string | null
+  billTo: string
+  billTaxId?: string | null
+  billAddress?: string | null
+  lineItems: TaxInvoiceLineItem[]
+  subtotal: number
+  vatRate: number
+  vatAmount: number
+  totalAmount: number
+  status: 'draft' | 'issued' | 'paid' | 'void'
+  issuedAt?: string | Date | null
+  dueDate?: string | null
+  notes?: string | null
+  createdBy?: string | null
+  createdAt?: string | Date
+  updatedAt?: string | Date
+}
+
 export interface StaffUser {
   id: string
   name: string | null

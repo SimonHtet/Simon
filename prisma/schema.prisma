@@ -121,6 +121,7 @@ model Company {
   updatedAt          DateTime            @updatedAt
   reservations       Reservation[]
   creditTransactions CreditTransaction[]
+  taxInvoices        TaxInvoice[]
 
   @@index([hotelId])
   @@index([hotelId, type])
@@ -279,6 +280,34 @@ model CreditTransaction {
   @@index([hotelId])
   @@index([reservationId])
   @@index([companyId, status])
+}
+
+model TaxInvoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  hotelId       String    @default("HOTEL-001")
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id])
+  reservationId String?
+  billTo        String
+  billTaxId     String?
+  billAddress   String?
+  lineItems     Json      @default("[]")
+  subtotal      Float
+  vatRate       Float     @default(7)
+  vatAmount     Float
+  totalAmount   Float
+  status        String    @default("draft")
+  issuedAt      DateTime?
+  dueDate       String?
+  notes         String?
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([hotelId])
+  @@index([companyId])
+  @@index([hotelId, status])
 }
 
 model NightAudit {

@@ -101,3 +101,40 @@ export async function POST(
     return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
 }
+
+// PATCH — settle all unpaid transactions for this company
+export async function PATCH(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { hotelId, error } = await getSessionOrUnauthorized()
+  if (error) return error
+
+  try {
+    const company = await prisma.company.findFirst({ where: { id: params.id, hotelId: hotelId! } })
+    if (!company) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    const unpaid = await prisma.creditTransaction.findMany({
+      where: { companyId: params.id, status: 'unpaid', amount: { gt: 0 } },
+    })
+    if (unpaid.length === 0) return NextResponse.json({ settled: 0, totalAmount: 0 })
+
+    const totalAmount = unpaid.reduce((s, t) => s + t.amount, 0)
+
+    await prisma.$transaction([
+      prisma.creditTransaction.updateMany({
+        where: { companyId: params.id, status: 'unpaid', amount: { gt: 0 } },
+        data: { status: 'paid', paidAt: new Date() },
+      }),
+      prisma.company.update({
+        where: { id: params.id },
+        data: { creditUsed: { decrement: totalAmount } },
+      }),
+    ])
+
+    return NextResponse.json({ settled: unpaid.length, totalAmount })
+  } catch (err) {
+    console.error('[PATCH /companies/[id]/credit]', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
+}
