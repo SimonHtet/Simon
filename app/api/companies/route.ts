@@ -38,6 +38,9 @@ export async function POST(req: NextRequest) {
     active = true,
     creditLimit = 0,
     creditResetDay = 1,
+    bankName,
+    bankAccountName,
+    bankAccountNumber,
   } = body
 
   if (!name?.trim()) {
@@ -65,6 +68,9 @@ export async function POST(req: NextRequest) {
         active,
         creditLimit: creditLimit ?? 0,
         creditResetDay: creditResetDay ?? 1,
+        bankName: bankName || null,
+        bankAccountName: bankAccountName || null,
+        bankAccountNumber: bankAccountNumber || null,
       },
     })
     return NextResponse.json(company, { status: 201 })

@@ -54,6 +54,9 @@ export default function CompanyForm({ initial, onSave, onClose }: Props) {
     active: initial?.active !== false,
     creditLimit: initial?.creditLimit ?? 0,
     creditResetDay: initial?.creditResetDay ?? 1,
+    bankName: initial?.bankName ?? '',
+    bankAccountName: initial?.bankAccountName ?? '',
+    bankAccountNumber: initial?.bankAccountNumber ?? '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -89,6 +92,9 @@ export default function CompanyForm({ initial, onSave, onClose }: Props) {
         active: form.active,
         creditLimit: form.creditLimit,
         creditResetDay: form.creditResetDay,
+        bankName: form.bankName || null,
+        bankAccountName: form.bankAccountName || null,
+        bankAccountNumber: form.bankAccountNumber || null,
       })
       onClose()
     } catch (e: any) {
@@ -247,6 +253,19 @@ export default function CompanyForm({ initial, onSave, onClose }: Props) {
                     className={inputCls}
                   />
                 </Field>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <Field label="Bank Name">
+                  <input type="text" value={form.bankName} onChange={(e) => set('bankName', e.target.value)} className={inputCls} placeholder="e.g. Kasikorn Bank" />
+                </Field>
+                <Field label="Account Name">
+                  <input type="text" value={form.bankAccountName} onChange={(e) => set('bankAccountName', e.target.value)} className={inputCls} placeholder="Account holder name" />
+                </Field>
+                <div className="col-span-2">
+                  <Field label="Account Number">
+                    <input type="text" value={form.bankAccountNumber} onChange={(e) => set('bankAccountNumber', e.target.value)} className={inputCls} placeholder="e.g. 123-4-56789-0" />
+                  </Field>
+                </div>
               </div>
             </div>
           </div>

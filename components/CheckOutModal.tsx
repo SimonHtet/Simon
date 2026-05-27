@@ -66,6 +66,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const creditPct = creditLimit > 0 ? Math.min(100, Math.round((creditUsed / creditLimit) * 100)) : 0
   const canCompanyCredit = !!(res.companyId && creditLimit > 0)
   const creditExceeded = canCompanyCredit && creditUsed >= creditLimit
+  const noCityLedgerCompany = !res.companyId
 
   const refreshFolios = useCallback(async () => {
     const data = await fetch(`/api/reservations/${res.id}/folios`).then((r) => r.json())
@@ -218,7 +219,9 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
 
   const allSettled = folios.length > 0 && folios.every((f) => f.status === 'settled')
   const totalBalance = folios.reduce((s, f) => s + folioBalance(f, res), 0)
-  const settleDisabled = settling || (activePm === 'company_credit' && canCompanyCredit && creditExceeded && !managerOverride)
+  const settleDisabled = settling
+    || (activePm === 'company_credit' && canCompanyCredit && creditExceeded && !managerOverride)
+    || (activePm === 'city_ledger' && noCityLedgerCompany)
 
   return (
     <>
@@ -598,15 +601,31 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                           )}
 
                           {activePm === 'city_ledger' && (
-                            <div className="mb-3 p-3 bg-white border border-slate-200 rounded-lg">
-                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Ledger Reference</p>
-                              <input
-                                type="text"
-                                placeholder="e.g. CL-2026-042"
-                                value={ledgerRef}
-                                onChange={(e) => setLedgerRef(e.target.value)}
-                                className={inputCls}
-                              />
+                            <div className="mb-3 p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+                              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">City Ledger Account</p>
+                              {noCityLedgerCompany ? (
+                                <p className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                                  No company linked to this reservation — assign a corporate account before using City Ledger.
+                                </p>
+                              ) : res.company ? (
+                                <>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-slate-800">{res.company.name}</span>
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${res.company.type === 'AGENT' ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700'}`}>
+                                      {res.company.type}
+                                    </span>
+                                  </div>
+                                  {(res.company.bankName || res.company.bankAccountNumber) ? (
+                                    <div className="text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-2 space-y-0.5">
+                                      {res.company.bankName && <p><span className="text-slate-400">Bank:</span> <span className="font-semibold">{res.company.bankName}</span></p>}
+                                      {res.company.bankAccountName && <p><span className="text-slate-400">Account Name:</span> <span className="font-semibold">{res.company.bankAccountName}</span></p>}
+                                      {res.company.bankAccountNumber && <p><span className="text-slate-400">Account No:</span> <span className="font-mono font-bold">{res.company.bankAccountNumber}</span></p>}
+                                    </div>
+                                  ) : (
+                                    <p className="text-[10px] text-amber-600">No bank details on file — add them in Companies.</p>
+                                  )}
+                                </>
+                              ) : null}
                             </div>
                           )}
 

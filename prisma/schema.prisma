@@ -114,6 +114,9 @@ model Company {
   creditUsed         Float               @default(0)
   creditResetDay     Int                 @default(1)
   lastCreditReset    String?
+  bankName           String?
+  bankAccountName    String?
+  bankAccountNumber  String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   reservations       Reservation[]

@@ -220,6 +220,9 @@ export interface Company {
   creditUsed: number
   creditResetDay: number
   lastCreditReset?: string | null
+  bankName?: string | null
+  bankAccountName?: string | null
+  bankAccountNumber?: string | null
   creditTransactions?: CreditTransaction[]
   createdAt?: string | Date
   updatedAt?: string | Date

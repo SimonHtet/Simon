@@ -52,6 +52,9 @@ export async function PUT(
         active: body.active !== undefined ? body.active : existing.active,
         creditLimit: body.creditLimit !== undefined ? body.creditLimit : existing.creditLimit,
         creditResetDay: body.creditResetDay !== undefined ? body.creditResetDay : existing.creditResetDay,
+        bankName: body.bankName !== undefined ? body.bankName : existing.bankName,
+        bankAccountName: body.bankAccountName !== undefined ? body.bankAccountName : existing.bankAccountName,
+        bankAccountNumber: body.bankAccountNumber !== undefined ? body.bankAccountNumber : existing.bankAccountNumber,
       },
     })
     return NextResponse.json(updated)
