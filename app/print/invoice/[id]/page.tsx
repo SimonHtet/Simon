@@ -33,7 +33,7 @@ export default async function PrintInvoicePage({ params }: { params: { id: strin
   })
   if (!invoice) notFound()
 
-  const lineItems = invoice.lineItems as TaxInvoiceLineItem[]
+  const lineItems = invoice.lineItems as unknown as TaxInvoiceLineItem[]
   const issuedDate = fmtDate(invoice.issuedAt ?? invoice.createdAt)
   const printedAt = new Date().toLocaleString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',

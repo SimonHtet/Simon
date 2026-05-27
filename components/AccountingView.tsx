@@ -393,7 +393,7 @@ function InvoiceForm({ initial, onSave, onClose }: InvoiceFormProps) {
   const [billTaxId, setBillTaxId] = useState(initial?.billTaxId ?? '')
   const [billAddress, setBillAddress] = useState(initial?.billAddress ?? '')
   const [lines, setLines] = useState<TaxInvoiceLineItem[]>(
-    (initial?.lineItems as TaxInvoiceLineItem[])?.length ? initial.lineItems as TaxInvoiceLineItem[] : [emptyLine()]
+    (initial?.lineItems as unknown as TaxInvoiceLineItem[])?.length ? initial.lineItems as unknown as TaxInvoiceLineItem[] : [emptyLine()]
   )
   const [vatRate, setVatRate] = useState(initial?.vatRate ?? 7)
   const [dueDate, setDueDate] = useState(initial?.dueDate ?? '')
