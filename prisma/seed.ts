@@ -322,7 +322,11 @@ async function main() {
   // ── Companies ──────────────────────────────────────────────────────────────
   const bangkokAgency = await prisma.company.upsert({
     where: { id: 'CO001' },
-    update: {},
+    update: {
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Bangkok Travel Agency Co., Ltd.',
+      bankAccountNumber: '123-4-56789-0',
+    },
     create: {
       id: 'CO001',
       hotelId: 'HOTEL-001',
@@ -333,12 +337,19 @@ async function main() {
       contactPhone: '+66 2 456 7890',
       contractRates: { STANDARD: 15, DELUXE: 15, SUITE: 10, POOL_VILLA: 10 },
       active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Bangkok Travel Agency Co., Ltd.',
+      bankAccountNumber: '123-4-56789-0',
     },
   })
 
   await prisma.company.upsert({
     where: { id: 'CO002' },
-    update: {},
+    update: {
+      bankName: 'Siam Commercial Bank',
+      bankAccountName: 'Siam Corporate Group Co., Ltd.',
+      bankAccountNumber: '234-5-67890-1',
+    },
     create: {
       id: 'CO002',
       hotelId: 'HOTEL-001',
@@ -351,6 +362,9 @@ async function main() {
       blackoutStart: '2025-12-20',
       blackoutEnd: '2026-01-05',
       active: true,
+      bankName: 'Siam Commercial Bank',
+      bankAccountName: 'Siam Corporate Group Co., Ltd.',
+      bankAccountNumber: '234-5-67890-1',
     },
   })
 
@@ -474,6 +488,9 @@ async function main() {
       contactPhone: '+66 2 234 5678',
       contractRates: { STANDARD: 18, DELUXE: 16, SUITE: 12, POOL_VILLA: 8 },
       active: true,
+      bankName: 'Siam Commercial Bank',
+      bankAccountName: 'Siam Business Group Co., Ltd.',
+      bankAccountNumber: '345-6-78901-2',
     },
     {
       id: 'CO004',
@@ -484,6 +501,9 @@ async function main() {
       contactPhone: '+66 2 345 6789',
       contractRates: { STANDARD: 15, DELUXE: 12, SUITE: 10, POOL_VILLA: 8 },
       active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Bangkok Hospital Group PCL',
+      bankAccountNumber: '456-7-89012-3',
     },
     {
       id: 'CO005',
@@ -494,6 +514,9 @@ async function main() {
       contactPhone: '+66 2 537 2000',
       contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 15, POOL_VILLA: 10 },
       active: true,
+      bankName: 'Krungthai Bank',
+      bankAccountName: 'PTT Public Company Limited',
+      bankAccountNumber: '567-8-90123-4',
     },
     {
       id: 'CO006',
@@ -504,6 +527,9 @@ async function main() {
       contactPhone: '+66 2 101 1111',
       contractRates: { STANDARD: 22, DELUXE: 20, SUITE: 15, POOL_VILLA: 12 },
       active: true,
+      bankName: 'Kasikornbank',
+      bankAccountName: 'Central Group Co., Ltd.',
+      bankAccountNumber: '678-9-01234-5',
     },
     {
       id: 'CO007',
@@ -514,6 +540,9 @@ async function main() {
       contactPhone: '+66 2 365 6000',
       contractRates: { STANDARD: 25, DELUXE: 22, SUITE: 18, POOL_VILLA: 15 },
       active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Minor International PCL',
+      bankAccountNumber: '789-0-12345-6',
     },
     {
       id: 'CO008',
@@ -524,6 +553,9 @@ async function main() {
       contactPhone: '+66 2 456 7891',
       contractRates: { STANDARD: 12, DELUXE: 12, SUITE: 8, POOL_VILLA: 8 },
       active: true,
+      bankName: 'Kasikornbank',
+      bankAccountName: 'Asia Pacific Tours Co., Ltd.',
+      bankAccountNumber: '890-1-23456-7',
     },
     {
       id: 'CO009',
@@ -534,6 +566,9 @@ async function main() {
       contactPhone: '+81 3 3276 7777',
       contractRates: { STANDARD: 15, DELUXE: 12, SUITE: 10, POOL_VILLA: 8 },
       active: true,
+      bankName: 'MUFG Bank, Bangkok Branch',
+      bankAccountName: 'JTB Corporation',
+      bankAccountNumber: '901-2-34567-8',
     },
     {
       id: 'CO010',
@@ -544,6 +579,9 @@ async function main() {
       contactPhone: '+66 2 632 0800',
       contractRates: { STANDARD: 18, DELUXE: 15, SUITE: 12, POOL_VILLA: 10 },
       active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Kuoni Travel (Thailand) Ltd.',
+      bankAccountNumber: '012-3-45678-9',
     },
     {
       id: 'CO011',
@@ -554,6 +592,9 @@ async function main() {
       contactPhone: '+66 2 636 9000',
       contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 12, POOL_VILLA: 10 },
       active: true,
+      bankName: 'Deutsche Bank AG, Bangkok Branch',
+      bankAccountName: 'TUI (Thailand) Co., Ltd.',
+      bankAccountNumber: '135-7-90246-8',
     },
     {
       id: 'CO012',
@@ -564,13 +605,20 @@ async function main() {
       contactPhone: '+66 2 252 4050',
       contractRates: { STANDARD: 15, DELUXE: 14, SUITE: 10, POOL_VILLA: 8 },
       active: true,
+      bankName: 'Standard Chartered Bank (Thai)',
+      bankAccountName: 'Thomas Cook Asia Co., Ltd.',
+      bankAccountNumber: '246-8-13579-0',
     },
   ]
 
   for (const co of additionalCompanies) {
     await prisma.company.upsert({
       where: { id: co.id },
-      update: {},
+      update: {
+        bankName: co.bankName,
+        bankAccountName: co.bankAccountName,
+        bankAccountNumber: co.bankAccountNumber,
+      },
       create: { ...co, hotelId: 'HOTEL-001' },
     })
   }
