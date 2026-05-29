@@ -272,6 +272,7 @@ model CreditTransaction {
   folioId       Int?
   amount        Float
   description   String
+  type          String    @default("company_credit")
   status        String    @default("unpaid")
   paidAt        DateTime?
   createdAt     DateTime  @default(now())

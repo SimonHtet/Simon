@@ -66,7 +66,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const creditPct = creditLimit > 0 ? Math.min(100, Math.round((creditUsed / creditLimit) * 100)) : 0
   const canCompanyCredit = !!(res.companyId && creditLimit > 0)
   const creditExceeded = canCompanyCredit && creditUsed >= creditLimit
-  const noCityLedgerCompany = !res.companyId
+  const noCityLedgerCompany = !res.companyId || !res.company?.bankAccountNumber
 
   const refreshFolios = useCallback(async () => {
     const data = await fetch(`/api/reservations/${res.id}/folios`).then((r) => r.json())
@@ -149,7 +149,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
 
       const pm = paymentMethods[folioId] ?? 'credit_card'
 
-      if (pm === 'company_credit' && res.companyId && !managerOverride) {
+      if ((pm === 'company_credit' || pm === 'city_ledger') && res.companyId) {
         const balance = folioBalance(folio, res)
         if (balance > 0) {
           const creditRes = await fetch(`/api/companies/${res.companyId}/credit`, {
@@ -160,9 +160,10 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
               description: `Folio ${folio.name} — Res ${res.reservationNumber}`,
               reservationId: res.id,
               folioId: folio.id,
+              type: pm === 'city_ledger' ? 'city_ledger' : 'company_credit',
             }),
           })
-          if (!creditRes.ok) {
+          if (!creditRes.ok && (pm === 'company_credit' && !managerOverride)) {
             const err = await creditRes.json()
             setCreditError(err.error ?? 'Insufficient credit')
             return

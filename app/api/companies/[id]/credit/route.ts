@@ -54,7 +54,8 @@ export async function POST(
   if (error) return error
 
   const body = await req.json().catch(() => ({}))
-  const { amount, description, reservationId, folioId } = body
+  const { amount, description, reservationId, folioId, type = 'company_credit' } = body
+  const isCityLedger = type === 'city_ledger'
 
   if (!amount || amount <= 0) {
     return NextResponse.json({ error: 'amount must be greater than 0' }, { status: 400 })
@@ -69,15 +70,17 @@ export async function POST(
     })
     if (!company) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const creditAvailable = Math.max(0, company.creditLimit - company.creditUsed)
-    if (creditAvailable < amount) {
-      return NextResponse.json(
-        { error: `Insufficient credit — ฿${creditAvailable.toLocaleString()} available` },
-        { status: 400 }
-      )
+    if (!isCityLedger) {
+      const creditAvailable = Math.max(0, company.creditLimit - company.creditUsed)
+      if (creditAvailable < amount) {
+        return NextResponse.json(
+          { error: `Insufficient credit — ฿${creditAvailable.toLocaleString()} available` },
+          { status: 400 }
+        )
+      }
     }
 
-    const [tx] = await prisma.$transaction([
+    const ops: Parameters<typeof prisma.$transaction>[0] = [
       prisma.creditTransaction.create({
         data: {
           companyId: params.id,
@@ -86,14 +89,20 @@ export async function POST(
           description: description.trim(),
           reservationId: reservationId ?? null,
           folioId: folioId ?? null,
+          type,
           status: 'unpaid',
         },
       }),
-      prisma.company.update({
-        where: { id: params.id },
-        data: { creditUsed: { increment: amount } },
-      }),
-    ])
+    ]
+    if (!isCityLedger) {
+      ops.push(
+        prisma.company.update({
+          where: { id: params.id },
+          data: { creditUsed: { increment: amount } },
+        })
+      )
+    }
+    const [tx] = await prisma.$transaction(ops)
 
     return NextResponse.json(tx, { status: 201 })
   } catch (err) {
@@ -120,17 +129,25 @@ export async function PATCH(
     if (unpaid.length === 0) return NextResponse.json({ settled: 0, totalAmount: 0 })
 
     const totalAmount = unpaid.reduce((s, t) => s + t.amount, 0)
+    const creditDebit = unpaid
+      .filter((t) => t.type === 'company_credit')
+      .reduce((s, t) => s + t.amount, 0)
 
-    await prisma.$transaction([
+    const settleOps: Parameters<typeof prisma.$transaction>[0] = [
       prisma.creditTransaction.updateMany({
         where: { companyId: params.id, status: 'unpaid', amount: { gt: 0 } },
         data: { status: 'paid', paidAt: new Date() },
       }),
-      prisma.company.update({
-        where: { id: params.id },
-        data: { creditUsed: { decrement: totalAmount } },
-      }),
-    ])
+    ]
+    if (creditDebit > 0) {
+      settleOps.push(
+        prisma.company.update({
+          where: { id: params.id },
+          data: { creditUsed: { decrement: creditDebit } },
+        })
+      )
+    }
+    await prisma.$transaction(settleOps)
 
     return NextResponse.json({ settled: unpaid.length, totalAmount })
   } catch (err) {
