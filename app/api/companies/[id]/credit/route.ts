@@ -80,8 +80,8 @@ export async function POST(
       }
     }
 
-    const ops: Parameters<typeof prisma.$transaction>[0] = [
-      prisma.creditTransaction.create({
+    const tx = await prisma.$transaction(async (db) => {
+      const created = await db.creditTransaction.create({
         data: {
           companyId: params.id,
           hotelId: hotelId!,
@@ -92,17 +92,15 @@ export async function POST(
           type,
           status: 'unpaid',
         },
-      }),
-    ]
-    if (!isCityLedger) {
-      ops.push(
-        prisma.company.update({
+      })
+      if (!isCityLedger) {
+        await db.company.update({
           where: { id: params.id },
           data: { creditUsed: { increment: amount } },
         })
-      )
-    }
-    const [tx] = await prisma.$transaction(ops)
+      }
+      return created
+    })
 
     return NextResponse.json(tx, { status: 201 })
   } catch (err) {
@@ -133,21 +131,18 @@ export async function PATCH(
       .filter((t) => t.type === 'company_credit')
       .reduce((s, t) => s + t.amount, 0)
 
-    const settleOps: Parameters<typeof prisma.$transaction>[0] = [
-      prisma.creditTransaction.updateMany({
+    await prisma.$transaction(async (db) => {
+      await db.creditTransaction.updateMany({
         where: { companyId: params.id, status: 'unpaid', amount: { gt: 0 } },
         data: { status: 'paid', paidAt: new Date() },
-      }),
-    ]
-    if (creditDebit > 0) {
-      settleOps.push(
-        prisma.company.update({
+      })
+      if (creditDebit > 0) {
+        await db.company.update({
           where: { id: params.id },
           data: { creditUsed: { decrement: creditDebit } },
         })
-      )
-    }
-    await prisma.$transaction(settleOps)
+      }
+    })
 
     return NextResponse.json({ settled: unpaid.length, totalAmount })
   } catch (err) {
