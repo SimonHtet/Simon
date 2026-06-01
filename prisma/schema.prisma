@@ -31,6 +31,7 @@ model Room {
   id           String        @id
   floor        Int
   type         String
+  rate         Float         @default(0)
   status       String        @default("available")
   resId        String?
   hotelId      String        @default("HOTEL-001")

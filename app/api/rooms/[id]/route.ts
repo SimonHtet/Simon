@@ -12,31 +12,35 @@ export async function PATCH(
   if (error) return error
 
   const body = await req.json().catch(() => ({}))
-  const { status } = body
-
-  if (!VALID_STATUSES.includes(status)) {
-    return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
-  }
-
-  // Housekeeping can only mark dirty rooms as available
-  if (role === 'housekeeping' && status !== 'available') {
-    return NextResponse.json({ error: 'Forbidden — housekeeping can only mark rooms clean' }, { status: 403 })
-  }
 
   try {
     const room = await prisma.room.findFirst({
       where: { id: params.id, hotelId: hotelId! },
     })
+    if (!room) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    if (!room) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    // Rate update — admin/manager only
+    if (body.rate !== undefined) {
+      if (role !== 'admin' && role !== 'manager') {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      const rate = parseFloat(body.rate)
+      if (isNaN(rate) || rate < 0) {
+        return NextResponse.json({ error: 'Invalid rate' }, { status: 400 })
+      }
+      const updated = await prisma.room.update({ where: { id: params.id }, data: { rate } })
+      return NextResponse.json(updated)
     }
 
-    const updated = await prisma.room.update({
-      where: { id: params.id },
-      data: { status },
-    })
-
+    // Status update — existing logic
+    const { status } = body
+    if (!VALID_STATUSES.includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+    }
+    if (role === 'housekeeping' && status !== 'available') {
+      return NextResponse.json({ error: 'Forbidden — housekeeping can only mark rooms clean' }, { status: 403 })
+    }
+    const updated = await prisma.room.update({ where: { id: params.id }, data: { status } })
     return NextResponse.json(updated)
   } catch (err) {
     console.error('[PATCH /api/rooms/[id]] DB error:', err)

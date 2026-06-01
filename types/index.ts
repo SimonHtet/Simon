@@ -10,6 +10,7 @@ export interface Room {
   id: string
   floor: number
   type: string
+  rate: number
   status: RoomStatus
   resId?: string | null
   hotelId?: string

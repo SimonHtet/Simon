@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { ChargeCode, StaffUser } from '@/types'
+import { ChargeCode, Room, StaffUser } from '@/types'
 import { Plus, Pencil, Check, X, ToggleLeft, ToggleRight, Trash2, KeyRound } from 'lucide-react'
 
 const inputCls = 'border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent'
@@ -85,6 +85,38 @@ export default function SettingsPage() {
     loadUsers()
   }
 
+  // --- Room rates state ---
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [roomsLoading, setRoomsLoading] = useState(true)
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null)
+  const [editRateValue, setEditRateValue] = useState('')
+  const [roomRateError, setRoomRateError] = useState('')
+  const canEditRates = role === 'admin' || role === 'manager'
+
+  async function loadRooms() {
+    setRoomsLoading(true)
+    try {
+      const res = await fetch('/api/rooms')
+      const data = await res.json()
+      setRooms(Array.isArray(data) ? data : [])
+    } catch { }
+    setRoomsLoading(false)
+  }
+
+  async function handleSaveRate(id: string) {
+    setRoomRateError('')
+    const rate = parseFloat(editRateValue)
+    if (isNaN(rate) || rate < 0) { setRoomRateError('Enter a valid rate'); return }
+    const res = await fetch(`/api/rooms/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rate }),
+    })
+    if (!res.ok) { const d = await res.json(); setRoomRateError(d.error || 'Failed'); return }
+    setEditingRoomId(null)
+    loadRooms()
+  }
+
   // --- Charge code state ---
   const [codes, setCodes] = useState<ChargeCode[]>([])
   const [loading, setLoading] = useState(true)
@@ -106,6 +138,7 @@ export default function SettingsPage() {
   }
 
   useEffect(() => { if (isAdmin) loadUsers() }, [isAdmin])
+  useEffect(() => { if (canEditRates) loadRooms() }, [canEditRates])
   useEffect(() => { load() }, [])
 
   // Sort: sub-codes appear directly after their parent
@@ -340,6 +373,88 @@ export default function SettingsPage() {
                 </tbody>
               </table>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Room Rates Section — admin/manager only */}
+      {canEditRates && (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h2 className="font-semibold text-gray-900">Room Rates</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Set the nightly rate for each room</p>
+          </div>
+
+          {roomsLoading ? (
+            <div className="flex items-center justify-center h-24">
+              <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="text-left px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-28">Room</th>
+                  <th className="text-left px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-20">Floor</th>
+                  <th className="text-left px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide">Type</th>
+                  <th className="text-right px-3 py-3 text-xs font-bold text-slate-500 uppercase tracking-wide w-40">Rate (฿/night)</th>
+                  <th className="px-6 py-3 w-20" />
+                </tr>
+              </thead>
+              <tbody>
+                {rooms.map((room) => (
+                  <tr key={room.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                    {editingRoomId === room.id ? (
+                      <>
+                        <td className="px-6 py-2 font-mono font-bold text-gray-700">{room.id}</td>
+                        <td className="px-3 py-2 text-slate-500">{room.floor}</td>
+                        <td className="px-3 py-2 text-slate-500">{room.type}</td>
+                        <td className="px-3 py-2 text-right">
+                          <input
+                            type="number"
+                            value={editRateValue}
+                            onChange={(e) => setEditRateValue(e.target.value)}
+                            className={`${inputCls} w-32 text-right`}
+                            placeholder="0"
+                            autoFocus
+                          />
+                        </td>
+                        <td className="px-6 py-2">
+                          {roomRateError && editingRoomId === room.id && (
+                            <p className="text-xs text-red-600 mb-1">{roomRateError}</p>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => handleSaveRate(room.id)} className="p-1 text-teal-600 hover:bg-teal-50 rounded"><Check className="w-4 h-4" /></button>
+                            <button onClick={() => { setEditingRoomId(null); setRoomRateError('') }} className="p-1 text-gray-400 hover:bg-gray-100 rounded"><X className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-6 py-3 font-mono font-bold text-gray-700">{room.id}</td>
+                        <td className="px-3 py-3 text-slate-500">{room.floor}</td>
+                        <td className="px-3 py-3 text-slate-700">{room.type}</td>
+                        <td className="px-3 py-3 text-right font-semibold text-gray-900">
+                          {room.rate > 0 ? `฿${room.rate.toLocaleString()}` : <span className="text-slate-400 font-normal">Not set</span>}
+                        </td>
+                        <td className="px-6 py-3">
+                          <button
+                            onClick={() => { setEditingRoomId(room.id); setEditRateValue(String(room.rate ?? '')); setRoomRateError('') }}
+                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-gray-400" />
+                          </button>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+                {rooms.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">No rooms found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           )}
         </div>
       )}
