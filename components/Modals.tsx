@@ -723,7 +723,7 @@ export function AddChargeModal({ reservation: res, onConfirm, onClose }: AddChar
 
 interface PostPaymentModalProps {
   reservation: Reservation
-  onConfirm: (data: { item: string; amount: number; date: string }) => Promise<void>
+  onConfirm: (data: { item: string; amount: number; date: string; paymentMethod?: string }) => Promise<void>
   onClose: () => void
 }
 
@@ -745,7 +745,7 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
     setError('')
     setLoading(true)
     try {
-      await onConfirm({ item: `Payment — ${paymentType}`, amount: parseFloat(amount), date })
+      await onConfirm({ item: `Payment — ${paymentType}`, amount: parseFloat(amount), date, paymentMethod: paymentType })
     } catch (e: any) {
       setError(e.message || 'Failed to post payment')
     } finally {

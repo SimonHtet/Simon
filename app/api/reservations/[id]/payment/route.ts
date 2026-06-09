@@ -17,7 +17,7 @@ export async function POST(
   }
 
   const body = await req.json()
-  const { item, amount, date } = body
+  const { item, amount, date, paymentMethod } = body
 
   if (!item || amount === undefined || !date) {
     return NextResponse.json({ error: 'item, amount, and date are required' }, { status: 400 })
@@ -47,14 +47,34 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const payment = await prisma.charge.create({
-    data: {
-      reservationId: params.id,
-      item,
-      amount: -Math.abs(parsedAmount),
-      date,
-      category: 'PAYMENT',
-    },
+  const isCityLedger = paymentMethod === 'City Ledger'
+
+  const payment = await prisma.$transaction(async (db) => {
+    const charge = await db.charge.create({
+      data: {
+        reservationId: params.id,
+        item,
+        amount: -Math.abs(parsedAmount),
+        date,
+        category: 'PAYMENT',
+      },
+    })
+
+    if (isCityLedger && reservation.companyId) {
+      await db.creditTransaction.create({
+        data: {
+          companyId: reservation.companyId,
+          hotelId: hotelId!,
+          amount: parsedAmount,
+          description: `Post Payment — Res ${reservation.id}`,
+          reservationId: params.id,
+          type: 'city_ledger',
+          status: 'unpaid',
+        },
+      })
+    }
+
+    return charge
   })
 
   return NextResponse.json(payment, { status: 201 })
