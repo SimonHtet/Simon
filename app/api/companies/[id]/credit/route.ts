@@ -70,7 +70,7 @@ export async function POST(
     })
     if (!company) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    if (!isCityLedger) {
+    if (company.creditLimit > 0) {
       const creditAvailable = Math.max(0, company.creditLimit - company.creditUsed)
       if (creditAvailable < amount) {
         return NextResponse.json(

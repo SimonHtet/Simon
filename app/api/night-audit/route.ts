@@ -73,6 +73,34 @@ export async function POST(_req: NextRequest) {
     }),
   ])
 
+  // Link the new charges to existing Main folios so they appear in print immediately
+  const [newCharges, mainFolios] = await Promise.all([
+    prisma.charge.findMany({
+      where: {
+        reservationId: { in: reservations.map((r) => r.id) },
+        date: businessDate,
+        category: 'ROOM',
+        item: { startsWith: 'Room Charge —' },
+        folioCharge: null,
+      },
+      select: { id: true, reservationId: true },
+    }),
+    prisma.folio.findMany({
+      where: { reservationId: { in: reservations.map((r) => r.id) }, name: 'Main' },
+      select: { id: true, reservationId: true },
+    }),
+  ])
+
+  if (newCharges.length > 0 && mainFolios.length > 0) {
+    const folioByRes = new Map(mainFolios.map((f) => [f.reservationId, f.id]))
+    const links = newCharges
+      .filter((c) => folioByRes.has(c.reservationId))
+      .map((c) => ({ folioId: folioByRes.get(c.reservationId)!, chargeId: c.id }))
+    if (links.length > 0) {
+      await prisma.folioCharge.createMany({ data: links, skipDuplicates: true })
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     businessDate,

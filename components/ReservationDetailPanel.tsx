@@ -358,7 +358,7 @@ export default function ReservationDetailPanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleFieldSave(field, (localRes as any)[field])
               if (e.key === 'Escape') {
-                setLocalRes(initialRes)
+                setLocalRes(prev => ({ ...prev, [field]: (initialRes as any)[field] }))
                 setEditingField(null)
               }
             }}
@@ -541,7 +541,7 @@ export default function ReservationDetailPanel({
                 </p>
               </div>
               <EditableField label="Nationality" value={localRes.nationality} field="nationality" />
-              <EditableField label="Language" value="English" field="language" />
+              <EditableField label="Language" value={localRes.language ?? ''} field="language" />
 
               {/* Passport — highlighted in check-in mode */}
               <div

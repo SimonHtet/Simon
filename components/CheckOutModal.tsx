@@ -174,9 +174,9 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
               type: pm === 'city_ledger' ? 'city_ledger' : 'company_credit',
             }),
           })
-          if (!creditRes.ok && (pm === 'company_credit' && !managerOverride)) {
+          if (!creditRes.ok && !(pm === 'company_credit' && managerOverride)) {
             const err = await creditRes.json()
-            setCreditError(err.error ?? 'Insufficient credit')
+            setCreditError(err.error ?? 'Credit posting failed')
             return
           }
         }

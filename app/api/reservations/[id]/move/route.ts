@@ -77,6 +77,7 @@ export async function POST(
         where: { id: params.id },
         data: {
           roomId: newRoomId,
+          roomTypeId: newRoom.type,
           moveReason: reason || null,
           ...(newCheckIn && { checkIn: newCheckIn }),
           ...(newCheckOut && { checkOut: newCheckOut }),
