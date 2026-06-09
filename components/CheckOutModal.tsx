@@ -220,9 +220,13 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
 
   const allSettled = folios.length > 0 && folios.every((f) => f.status === 'settled')
   const totalBalance = folios.reduce((s, f) => s + folioBalance(f, res), 0)
+  const cashShort = activePm === 'cash' && activeBalance > 0
+    && (!cashTendered.trim() || parseFloat(cashTendered) < activeBalance)
+
   const settleDisabled = settling
     || (activePm === 'company_credit' && canCompanyCredit && creditExceeded && !managerOverride)
     || (activePm === 'city_ledger' && noCityLedgerCompany)
+    || cashShort
 
   return (
     <>
@@ -584,6 +588,9 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                               />
                               {cashTendered.trim() !== '' && cashChange > 0 && (
                                 <p className="text-xs font-bold text-teal-600 mt-1.5">Change: ฿{cashChange.toLocaleString()}</p>
+                              )}
+                              {cashTendered.trim() !== '' && activeBalance > 0 && parseFloat(cashTendered) < activeBalance && (
+                                <p className="text-xs font-bold text-red-500 mt-1.5">Short ฿{formatCurrency(activeBalance - parseFloat(cashTendered))}</p>
                               )}
                             </div>
                           )}

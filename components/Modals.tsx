@@ -735,6 +735,11 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const hasCompany = !!(res.companyId && res.company)
+  const isCityLedger = paymentType === 'City Ledger'
+  const noCityLedgerCompany = isCityLedger && !hasCompany
+  const creditAvailable = hasCompany ? Math.max(0, (res.company!.creditLimit ?? 0) - (res.company!.creditUsed ?? 0)) : 0
+
   async function handleConfirm() {
     if (!amount || parseFloat(amount) <= 0) { setError('Amount must be greater than 0'); return }
     setError('')
@@ -766,6 +771,40 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
             {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </FormField>
+
+        {isCityLedger && (
+          <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-2">
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">City Ledger Account</p>
+            {!hasCompany ? (
+              <p className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                No company linked to this reservation — assign a corporate account before using City Ledger.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-slate-800">{res.company!.name}</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${res.company!.type === 'AGENT' ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700'}`}>
+                    {res.company!.type}
+                  </span>
+                </div>
+                {res.company!.creditLimit > 0 && (
+                  <p className="text-xs text-slate-600">
+                    Available credit: <span className="font-bold text-sky-700">฿{creditAvailable.toLocaleString()}</span>
+                    {' '}of ฿{res.company!.creditLimit.toLocaleString()}
+                  </p>
+                )}
+                {(res.company!.bankName || res.company!.bankAccountNumber) && (
+                  <div className="text-xs text-slate-600 bg-slate-50 rounded-lg px-3 py-2 space-y-0.5">
+                    {res.company!.bankName && <p><span className="text-slate-400">Bank:</span> <span className="font-semibold">{res.company!.bankName}</span></p>}
+                    {res.company!.bankAccountName && <p><span className="text-slate-400">Account Name:</span> <span className="font-semibold">{res.company!.bankAccountName}</span></p>}
+                    {res.company!.bankAccountNumber && <p><span className="text-slate-400">Account No:</span> <span className="font-mono font-bold">{res.company!.bankAccountNumber}</span></p>}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <FormField label="Amount (฿)" required>
             <input type="number" min={0} step={0.01} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} />
@@ -778,7 +817,7 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
       </div>
       <div className="px-6 pb-6 flex gap-3 border-t border-gray-100 pt-4">
         <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
-        <button onClick={handleConfirm} disabled={loading} className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60">
+        <button onClick={handleConfirm} disabled={loading || noCityLedgerCompany} className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60">
           {loading ? 'Posting...' : 'Post Payment'}
         </button>
       </div>

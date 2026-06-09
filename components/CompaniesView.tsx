@@ -196,6 +196,8 @@ export default function CompaniesView() {
             const isExpanded = expandedId === co.id
             const credit = creditData[co.id]
             const loadingCredit = creditLoading[co.id]
+            const creditAvail = co.creditLimit > 0 ? Math.max(0, co.creditLimit - co.creditUsed) : 0
+            const creditPct = co.creditLimit > 0 ? Math.min(100, Math.round((co.creditUsed / co.creditLimit) * 100)) : 0
             return (
               <div key={co.id} className={`bg-white border rounded-2xl p-5 transition-shadow hover:shadow-md ${!co.active ? 'opacity-50' : ''}`}>
                 <div className="flex items-start justify-between gap-4">
@@ -209,6 +211,15 @@ export default function CompaniesView() {
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${co.type === 'AGENT' ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700'}`}>
                           {co.type}
                         </span>
+                        {co.creditLimit > 0 && (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            creditPct >= 100 ? 'bg-red-100 text-red-700'
+                            : creditPct >= 70 ? 'bg-amber-100 text-amber-700'
+                            : 'bg-emerald-100 text-emerald-700'
+                          }`}>
+                            ฿{creditAvail.toLocaleString()} avail
+                          </span>
+                        )}
                         {!co.active && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">INACTIVE</span>}
                         {inBlackout && (
                           <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">

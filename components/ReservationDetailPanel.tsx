@@ -120,7 +120,7 @@ export default function ReservationDetailPanel({
     keysIssued: 0,
     specialRequests: false,
   })
-  const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | null>(null)
+  const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | 'undo_checkout' | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const [activePackages, setActivePackages] = useState<Set<string>>(() => {
     const fromPackages = (initialRes.packages ?? []).filter((p) => p.active).map((p) => p.pkgId)
@@ -1275,15 +1275,23 @@ export default function ReservationDetailPanel({
             className={`px-6 py-3 border-t shrink-0 ${
               confirmAction === 'cancel'
                 ? 'bg-red-50 border-red-200'
+                : confirmAction === 'undo_checkout'
+                ? 'bg-amber-50 border-amber-200'
                 : 'bg-orange-50 border-orange-200'
             }`}
           >
             <p
               className={`text-sm font-semibold mb-2 ${
-                confirmAction === 'cancel' ? 'text-red-700' : 'text-orange-700'
+                confirmAction === 'cancel' ? 'text-red-700'
+                : confirmAction === 'undo_checkout' ? 'text-amber-700'
+                : 'text-orange-700'
               }`}
             >
-              {confirmAction === 'cancel' ? 'Confirm Cancellation?' : 'Mark as No Show?'}
+              {confirmAction === 'cancel'
+                ? 'Confirm Cancellation?'
+                : confirmAction === 'undo_checkout'
+                ? 'Undo Check-Out? Reservation returns to In-House and room back to Occupied.'
+                : 'Mark as No Show?'}
             </p>
             {confirmAction === 'cancel' && (
               <input
@@ -1296,15 +1304,26 @@ export default function ReservationDetailPanel({
             )}
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  if (confirmAction === 'cancel') onCancel(localRes)
-                  else onNoShow(localRes)
-                  setConfirmAction(null)
-                  onClose()
+                onClick={async () => {
+                  if (confirmAction === 'cancel') {
+                    onCancel(localRes)
+                    setConfirmAction(null)
+                    onClose()
+                  } else if (confirmAction === 'noshow') {
+                    onNoShow(localRes)
+                    setConfirmAction(null)
+                    onClose()
+                  } else if (confirmAction === 'undo_checkout') {
+                    await fetch(`/api/reservations/${localRes.id}/undo-checkout`, { method: 'POST' })
+                    await refetchSelf()
+                    setConfirmAction(null)
+                  }
                 }}
                 className={`flex-1 py-1.5 text-white text-xs font-semibold rounded-lg ${
                   confirmAction === 'cancel'
                     ? 'bg-red-500 hover:bg-red-600'
+                    : confirmAction === 'undo_checkout'
+                    ? 'bg-amber-500 hover:bg-amber-600'
                     : 'bg-orange-500 hover:bg-orange-600'
                 }`}
               >
@@ -1430,12 +1449,22 @@ export default function ReservationDetailPanel({
                 {(localRes.status === 'checked_out' ||
                   localRes.status === 'cancelled' ||
                   localRes.status === 'no_show') && (
-                  <button
-                    disabled
-                    className="px-6 py-2 bg-slate-200 text-slate-400 font-bold rounded-lg cursor-not-allowed"
-                  >
-                    {getResStatusLabel(localRes.status)}
-                  </button>
+                  <>
+                    <button
+                      disabled
+                      className="px-6 py-2 bg-slate-200 text-slate-400 font-bold rounded-lg cursor-not-allowed"
+                    >
+                      {getResStatusLabel(localRes.status)}
+                    </button>
+                    {localRes.status === 'checked_out' && (
+                      <button
+                        onClick={() => setConfirmAction('undo_checkout')}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-600 font-bold rounded-lg hover:bg-slate-50 transition-all"
+                      >
+                        Undo Check-Out
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </>
