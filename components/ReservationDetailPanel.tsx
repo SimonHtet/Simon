@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { prefetchFolios } from '@/lib/folio-prefetch'
 import { motion, AnimatePresence } from 'motion/react'
 import { Reservation, Room } from '@/types'
 import { ROOM_TYPES } from '@/lib/constants'
@@ -183,6 +184,11 @@ export default function ReservationDetailPanel({
   useEffect(() => {
     setLocalRes(normalizeRes(initialRes))
   }, [initialRes])
+
+  // Warm up folios/init while the agent reads the panel so checkout modal opens instantly
+  useEffect(() => {
+    if (localRes.status === 'checked_in') prefetchFolios(localRes.id)
+  }, [localRes.id, localRes.status])
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)

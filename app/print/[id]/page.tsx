@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import PrintTrigger from './PrintTrigger'
+import PrintControls from './PrintControls'
 
 function fmt(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -56,7 +56,6 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
 
   return (
     <>
-      <PrintTrigger />
       <style>{`
         @page { size: A4; margin: 18mm 20mm; }
         @media print {
@@ -67,20 +66,7 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
         * { box-sizing: border-box; }
       `}</style>
 
-      {/* Screen: back link */}
-      <div className="no-print flex items-center gap-3 px-8 py-4 bg-white border-b border-slate-200 text-sm">
-        <button onClick={() => window.close()} className="text-teal-600 font-semibold hover:underline">
-          ← Close tab
-        </button>
-        <span className="text-slate-300">|</span>
-        <span className="text-slate-500">Folio — {reservation.reservationNumber}</span>
-        <button
-          onClick={() => window.print()}
-          className="ml-auto px-4 py-1.5 bg-slate-800 text-white text-xs font-bold rounded hover:bg-slate-700"
-        >
-          Print
-        </button>
-      </div>
+      <PrintControls resNumber={reservation.reservationNumber} />
 
       {/* Receipt */}
       <div className="max-w-[700px] mx-auto my-8 bg-white shadow-sm p-10 print:shadow-none print:my-0 print:p-0">

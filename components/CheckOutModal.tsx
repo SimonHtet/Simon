@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { Reservation, Folio } from '@/types'
 import { formatCurrency, formatDate, calculateNights } from '@/lib/utils'
 import { X, Printer, Plus, Check, ArrowRight } from 'lucide-react'
+import { getFoliosPromise, prefetchFolios } from '@/lib/folio-prefetch'
 
 interface Props {
   reservation: Reservation
@@ -85,14 +86,24 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
     })
   }, [res.id])
 
-  // Guard against StrictMode double-invoke; init returns folios directly — no second GET needed.
+  // Guard against StrictMode double-invoke; reuse in-flight prefetch promise if available.
   useEffect(() => {
     if (initCalledRef.current) return
     initCalledRef.current = true
     async function init() {
       setLoadingFolios(true)
-      const data = await fetch(`/api/reservations/${res.id}/folios/init`, { method: 'POST' }).then((r) => r.json())
-      const list: Folio[] = Array.isArray(data.folios) ? data.folios : []
+      // Reuse the promise started by ReservationDetailPanel (or start a fresh one)
+      const cached = getFoliosPromise(res.id)
+      let list: Folio[]
+      if (cached) {
+        const result = await cached
+        list = result ?? []
+      } else {
+        prefetchFolios(res.id)
+        const fresh = getFoliosPromise(res.id)!
+        const result = await fresh
+        list = result ?? []
+      }
       setFolios(list)
       setActiveFolioId(list[0]?.id ?? null)
       setPaymentMethods(() => {
