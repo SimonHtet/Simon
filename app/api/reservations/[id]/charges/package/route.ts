@@ -30,6 +30,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // Remove folio links first to avoid FK constraint violations
+    const toDelete = await prisma.charge.findMany({
+      where: { reservationId: params.id, category, amount: { gt: 0 } },
+      select: { id: true },
+    })
+    if (toDelete.length > 0) {
+      await prisma.folioCharge.deleteMany({
+        where: { chargeId: { in: toDelete.map((c) => c.id) } },
+      })
+    }
     const result = await prisma.charge.deleteMany({
       where: {
         reservationId: params.id,

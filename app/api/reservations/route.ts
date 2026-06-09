@@ -178,16 +178,16 @@ export async function POST(req: NextRequest) {
   const totalAmount = rate * totalNights
 
   try {
-    // Match existing guest by stable identifiers first, fall back to name
-    const guestMatchOr: Prisma.GuestWhereInput[] = []
-    if (passportNumber) guestMatchOr.push({ passportNumber })
-    if (email) guestMatchOr.push({ email })
-    if (phone) guestMatchOr.push({ phone })
-    guestMatchOr.push({ name: guestName })
+    // Match by stable identifiers only — never fall back to name alone to avoid
+    // merging two different guests who happen to share a name.
+    const stableIds: Prisma.GuestWhereInput[] = []
+    if (passportNumber) stableIds.push({ passportNumber })
+    if (email) stableIds.push({ email })
+    if (phone) stableIds.push({ phone })
 
-    let guest = await prisma.guest.findFirst({
-      where: { hotelId: hotelId!, OR: guestMatchOr },
-    })
+    let guest = stableIds.length > 0
+      ? await prisma.guest.findFirst({ where: { hotelId: hotelId!, OR: stableIds } })
+      : null
 
     if (!guest) {
       guest = await prisma.guest.create({

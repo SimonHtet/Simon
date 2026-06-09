@@ -64,6 +64,15 @@ export async function POST(
       },
     })
 
+    // Auto-link to Main folio if one already exists so the charge is immediately visible in print
+    const mainFolio = await prisma.folio.findFirst({
+      where: { reservationId: params.id, name: 'Main' },
+      select: { id: true },
+    })
+    if (mainFolio) {
+      await prisma.folioCharge.create({ data: { folioId: mainFolio.id, chargeId: charge.id } })
+    }
+
     return NextResponse.json(charge, { status: 201 })
   } catch (err) {
     console.error('[POST /api/reservations/[id]/charges] DB error:', err)

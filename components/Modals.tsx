@@ -753,8 +753,9 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
     }
   }
 
-  const totalCharges = res.charges.filter(c => c.amount > 0).reduce((s, c) => s + c.amount, 0)
-  const totalPaid = Math.abs(res.charges.filter(c => c.amount < 0).reduce((s, c) => s + c.amount, 0))
+  const charges = res.charges ?? []
+  const totalCharges = charges.filter(c => c.amount > 0).reduce((s, c) => s + c.amount, 0)
+  const totalPaid = Math.abs(charges.filter(c => c.amount < 0).reduce((s, c) => s + c.amount, 0))
   const balance = (totalCharges || res.totalAmount) - totalPaid
 
   return (
