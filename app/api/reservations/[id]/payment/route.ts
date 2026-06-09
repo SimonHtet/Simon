@@ -72,6 +72,10 @@ export async function POST(
           status: 'unpaid',
         },
       })
+      await db.company.update({
+        where: { id: reservation.companyId },
+        data: { creditUsed: { increment: parsedAmount } },
+      })
     }
 
     return charge

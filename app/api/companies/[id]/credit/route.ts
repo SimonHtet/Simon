@@ -93,12 +93,10 @@ export async function POST(
           status: 'unpaid',
         },
       })
-      if (!isCityLedger) {
-        await db.company.update({
-          where: { id: params.id },
-          data: { creditUsed: { increment: amount } },
-        })
-      }
+      await db.company.update({
+        where: { id: params.id },
+        data: { creditUsed: { increment: amount } },
+      })
       return created
     })
 
@@ -127,19 +125,16 @@ export async function PATCH(
     if (unpaid.length === 0) return NextResponse.json({ settled: 0, totalAmount: 0 })
 
     const totalAmount = unpaid.reduce((s, t) => s + t.amount, 0)
-    const creditDebit = unpaid
-      .filter((t) => t.type === 'company_credit')
-      .reduce((s, t) => s + t.amount, 0)
 
     await prisma.$transaction(async (db) => {
       await db.creditTransaction.updateMany({
         where: { companyId: params.id, status: 'unpaid', amount: { gt: 0 } },
         data: { status: 'paid', paidAt: new Date() },
       })
-      if (creditDebit > 0) {
+      if (totalAmount > 0) {
         await db.company.update({
           where: { id: params.id },
-          data: { creditUsed: { decrement: creditDebit } },
+          data: { creditUsed: { decrement: totalAmount } },
         })
       }
     })
