@@ -213,6 +213,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })
     }
 
+    // No double-booking — reject if an active reservation overlaps these dates
+    const conflict = await prisma.reservation.findFirst({
+      where: {
+        roomId,
+        status: { in: ACTIVE_STATUSES },
+        checkIn: { lt: checkOut },
+        checkOut: { gt: checkIn },
+      },
+      select: { reservationNumber: true, guestName: true, checkIn: true, checkOut: true },
+    })
+    if (conflict) {
+      return NextResponse.json(
+        { error: `Room ${roomId} is already booked ${conflict.checkIn} → ${conflict.checkOut} (${conflict.reservationNumber})` },
+        { status: 409 }
+      )
+    }
+
     // Retry on the rare reservationNumber collision via unique-constraint error
     const buildResData = (reservationNumber: string) => ({
       reservationNumber,

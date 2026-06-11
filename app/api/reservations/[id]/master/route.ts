@@ -11,26 +11,33 @@ export async function POST(
   if (error) return error
 
   const body = await req.json().catch(() => ({}))
-  const { masterResId } = body
+  const { masterResId, masterResNumber } = body
 
-  if (!masterResId) {
-    return NextResponse.json({ error: 'masterResId is required' }, { status: 400 })
-  }
-  if (masterResId === params.id) {
-    return NextResponse.json({ error: 'Reservation cannot be its own master' }, { status: 400 })
+  if (!masterResId && !masterResNumber) {
+    return NextResponse.json({ error: 'masterResId or masterResNumber is required' }, { status: 400 })
   }
 
   try {
     const [res, master] = await Promise.all([
       prisma.reservation.findFirst({ where: { id: params.id, hotelId: hotelId! } }),
-      prisma.reservation.findFirst({ where: { id: masterResId, hotelId: hotelId! } }),
+      masterResId
+        ? prisma.reservation.findFirst({ where: { id: masterResId, hotelId: hotelId! } })
+        : prisma.reservation.findFirst({
+            where: { reservationNumber: masterResNumber.trim().toUpperCase(), hotelId: hotelId! },
+          }),
     ])
     if (!res) return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
     if (!master) return NextResponse.json({ error: 'Master reservation not found' }, { status: 404 })
+    if (master.id === params.id) {
+      return NextResponse.json({ error: 'Reservation cannot be its own master' }, { status: 400 })
+    }
+    if (master.masterResId) {
+      return NextResponse.json({ error: 'That reservation is itself linked under a master' }, { status: 400 })
+    }
 
     await prisma.$transaction([
-      prisma.reservation.update({ where: { id: params.id }, data: { masterResId, isMaster: false } }),
-      prisma.reservation.update({ where: { id: masterResId }, data: { isMaster: true } }),
+      prisma.reservation.update({ where: { id: params.id }, data: { masterResId: master.id, isMaster: false } }),
+      prisma.reservation.update({ where: { id: master.id }, data: { isMaster: true } }),
     ])
 
     return NextResponse.json({ linked: true })

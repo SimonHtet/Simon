@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import {
   LayoutDashboard,
@@ -21,9 +21,13 @@ import {
   AlertCircle,
   Loader2,
   Receipt,
+  Sparkles,
+  Search,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/rbac'
 import { HOTEL_NAME, LOCATION } from '@/lib/constants'
+import { getResStatusBadge, getResStatusLabel } from '@/lib/utils'
+import Toaster from '@/components/Toaster'
 
 type NavItem = {
   href: string
@@ -37,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/reservations', label: 'Reservations', icon: CalendarDays },
   { href: '/timeline', label: 'Timeline', icon: Clock },
   { href: '/rooms', label: 'Room Grid', icon: Grid3X3 },
+  { href: '/housekeeping', label: 'Housekeeping', icon: Sparkles },
   { href: '/guests', label: 'Guest History', icon: Users },
   { href: '/companies', label: 'Companies', icon: Building2 },
   { href: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
@@ -159,6 +164,100 @@ function NightAuditClock({ canRun }: { canRun: boolean }) {
   )
 }
 
+type SearchResult = {
+  id: string
+  reservationNumber: string
+  guestName: string
+  roomId: string
+  status: string
+  checkIn: string
+  checkOut: string
+}
+
+function GlobalSearch() {
+  const router = useRouter()
+  const [q, setQ] = useState('')
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [open, setOpen] = useState(false)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [])
+
+  function onChange(value: string) {
+    setQ(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (value.trim().length < 2) {
+      setResults([])
+      setOpen(false)
+      return
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/search?q=${encodeURIComponent(value.trim())}`)
+        const data = await r.json()
+        setResults(Array.isArray(data) ? data : [])
+        setOpen(true)
+      } catch {
+        setResults([])
+      }
+    }, 250)
+  }
+
+  function select(res: SearchResult) {
+    setQ('')
+    setResults([])
+    setOpen(false)
+    router.push(`/reservations?focus=${res.id}`)
+  }
+
+  return (
+    <div ref={boxRef} className="relative w-72">
+      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-sky-400 focus-within:border-transparent transition-all">
+        <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+        <input
+          value={q}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => { if (results.length > 0) setOpen(true) }}
+          placeholder="Search guest, reservation, room…"
+          className="flex-1 bg-transparent text-xs text-gray-800 placeholder-gray-400 focus:outline-none"
+        />
+      </div>
+      {open && (
+        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+          {results.length === 0 ? (
+            <p className="px-3 py-3 text-xs text-gray-400 text-center">No matches</p>
+          ) : (
+            results.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => select(r)}
+                className="w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-gray-100 last:border-0"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-gray-800 truncate">{r.guestName}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${getResStatusBadge(r.status as any)}`}>
+                    {getResStatusLabel(r.status as any)}
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {r.reservationNumber} · Room {r.roomId} · {r.checkIn} → {r.checkOut}
+                </p>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { data: session } = useSession()
@@ -257,7 +356,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </h2>
             <p className="text-xs text-gray-400">{HOTEL_NAME} · {LOCATION}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <GlobalSearch />
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-semibold text-emerald-700">
               <Radio className="w-2.5 h-2.5 animate-pulse" />
               System Live
@@ -270,6 +370,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      <Toaster />
     </div>
   )
 }

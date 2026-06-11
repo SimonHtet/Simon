@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Room, Reservation, DashboardStats } from '@/types'
+import { toast } from '@/lib/toast'
+import { PageSkeleton } from '@/components/Skeletons'
 import DashboardView from '@/components/DashboardView'
 import ReservationDetailPanel from '@/components/ReservationDetailPanel'
 import CheckOutModal from '@/components/CheckOutModal'
@@ -96,11 +98,17 @@ export default function DashboardPage() {
 
   // Called from the panel's "Confirm Check-In" button — makes the actual API call
   async function handleCheckInConfirm(res: Reservation) {
-    await fetch(`/api/reservations/${res.id}/checkin`, {
+    const r = await fetch(`/api/reservations/${res.id}/checkin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     })
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}))
+      toast(d.error ?? 'Check-in failed', 'error')
+      return
+    }
+    toast(`${res.guestName} checked in — Room ${res.roomId}`)
     await refreshData()
   }
 
@@ -121,9 +129,10 @@ export default function DashboardPage() {
     const res = await fetch(`/api/reservations/${selectedRes.id}/checkout`, { method: 'POST' })
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      alert(data.error ?? 'Check-out failed')
+      toast(data.error ?? 'Check-out failed', 'error')
       return
     }
+    toast(`${selectedRes.guestName} checked out — Room ${selectedRes.roomId}`)
     setActiveModal(null)
     await refreshData()
   }
@@ -149,11 +158,17 @@ export default function DashboardPage() {
 
   async function handleMoveRoomConfirm(newRoomId: string, reason: string, pricingAction: string) {
     if (!selectedRes) return
-    await fetch(`/api/reservations/${selectedRes.id}/move`, {
+    const r = await fetch(`/api/reservations/${selectedRes.id}/move`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newRoomId, reason, pricingAction }),
     })
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}))
+      toast(d.error ?? 'Room move failed', 'error')
+      return
+    }
+    toast(`Moved to Room ${newRoomId}`)
     setActiveModal(null)
     await refreshData()
   }
@@ -165,11 +180,17 @@ export default function DashboardPage() {
 
   async function handleExtendStayConfirm(extraNights: number) {
     if (!selectedRes) return
-    await fetch(`/api/reservations/${selectedRes.id}/extend`, {
+    const r = await fetch(`/api/reservations/${selectedRes.id}/extend`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ extraNights }),
     })
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}))
+      toast(d.error ?? 'Could not extend stay', 'error')
+      return
+    }
+    toast(`Stay extended by ${extraNights} night${extraNights !== 1 ? 's' : ''}`)
     setActiveModal(null)
     await refreshData()
   }
@@ -181,11 +202,17 @@ export default function DashboardPage() {
 
   async function handleAddChargeConfirm(data: { item: string; amount: number; date: string; category?: string }) {
     if (!selectedRes) return
-    await fetch(`/api/reservations/${selectedRes.id}/charges`, {
+    const r = await fetch(`/api/reservations/${selectedRes.id}/charges`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}))
+      toast(d.error ?? 'Could not add charge', 'error')
+      return
+    }
+    toast(`Charge posted — ฿${Number(data.amount).toLocaleString()}`)
     setActiveModal(null)
     await refreshData()
   }
@@ -197,11 +224,17 @@ export default function DashboardPage() {
 
   async function handlePostPaymentConfirm(data: { item: string; amount: number; date: string }) {
     if (!selectedRes) return
-    await fetch(`/api/reservations/${selectedRes.id}/payment`, {
+    const r = await fetch(`/api/reservations/${selectedRes.id}/payment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}))
+      toast(d.error ?? 'Could not post payment', 'error')
+      return
+    }
+    toast(`Payment posted — ฿${Number(data.amount).toLocaleString()}`)
     setActiveModal(null)
     await refreshData()
   }
@@ -241,21 +274,24 @@ export default function DashboardPage() {
   }
 
   async function handleNewReservation(data: any) {
-    await fetch('/api/reservations', {
+    const r = await fetch('/api/reservations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
+    if (!r.ok) {
+      // Keep the modal open (e.g. on a double-booking conflict) so dates can be fixed
+      const d = await r.json().catch(() => ({}))
+      toast(d.error ?? 'Could not create reservation', 'error')
+      return
+    }
+    toast('Reservation created')
     setActiveModal(null)
     await refreshData()
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-sky-500 border-t-transparent" />
-      </div>
-    )
+    return <PageSkeleton />
   }
 
   if (loadError) {

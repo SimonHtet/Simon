@@ -20,7 +20,7 @@ export async function PUT(
     const folio = await prisma.folio.findUnique({
       where: { id: folioId },
       include: {
-        charges: { include: { charge: { select: { amount: true } } } },
+        charges: { include: { charge: { select: { amount: true, category: true, item: true } } } },
         reservation: { select: { hotelId: true, rate: true, checkIn: true, checkOut: true } },
       },
     })
@@ -35,11 +35,19 @@ export async function PUT(
         return NextResponse.json({ error: 'A payment method is required to settle a folio' }, { status: 400 })
       }
 
-      // Same balance formula as the check-out modal: Main carries the room cost
+      // Same balance formula as the check-out modal: Main carries the projected
+      // room cost minus any nightly room charges already posted by night audit
       const chargesSum = folio.charges.reduce((s, fc) => s + fc.charge.amount, 0)
-      const balance = folio.name.toLowerCase() === 'main'
-        ? chargesSum + folio.reservation.rate * calculateNights(folio.reservation.checkIn, folio.reservation.checkOut)
-        : chargesSum
+      let balance = chargesSum
+      if (folio.name.toLowerCase() === 'main') {
+        const roomPosted = folio.charges
+          .filter((fc) => fc.charge.category === 'ROOM' && fc.charge.item.startsWith('Room Charge —'))
+          .reduce((s, fc) => s + fc.charge.amount, 0)
+        balance += Math.max(
+          0,
+          folio.reservation.rate * calculateNights(folio.reservation.checkIn, folio.reservation.checkOut) - roomPosted
+        )
+      }
 
       if (balance > 0) {
         if (pm === 'cash') {

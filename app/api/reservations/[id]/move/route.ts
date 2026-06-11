@@ -26,7 +26,7 @@ export async function POST(
   try {
     const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
-      select: { hotelId: true, roomId: true, roomTypeId: true, status: true, rate: true, totalNights: true },
+      select: { hotelId: true, roomId: true, roomTypeId: true, status: true, rate: true, totalNights: true, checkIn: true, checkOut: true },
     })
 
     if (!reservation) {
@@ -52,22 +52,24 @@ export async function POST(
       )
     }
 
-    if (newCheckIn && newCheckOut) {
-      const conflict = await prisma.reservation.findFirst({
-        where: {
-          roomId: newRoomId,
-          id: { not: params.id },
-          status: { in: ['confirmed', 'checked_in'] },
-          checkIn: { lt: newCheckOut },
-          checkOut: { gt: newCheckIn },
-        },
-      })
-      if (conflict) {
-        return NextResponse.json(
-          { error: 'Room has a conflicting reservation on those dates' },
-          { status: 400 }
-        )
-      }
+    // Target room must be free for the stay dates (the new ones if provided,
+    // otherwise the reservation's current dates)
+    const rangeStart = newCheckIn ?? reservation.checkIn
+    const rangeEnd = newCheckOut ?? reservation.checkOut
+    const conflict = await prisma.reservation.findFirst({
+      where: {
+        roomId: newRoomId,
+        id: { not: params.id },
+        status: { in: ['confirmed', 'checked_in'] },
+        checkIn: { lt: rangeEnd },
+        checkOut: { gt: rangeStart },
+      },
+    })
+    if (conflict) {
+      return NextResponse.json(
+        { error: 'Room has a conflicting reservation on those dates' },
+        { status: 400 }
+      )
     }
 
     const oldRoomId = reservation.roomId

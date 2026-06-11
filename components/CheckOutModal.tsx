@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 import { Reservation, Folio } from '@/types'
 import { formatCurrency, formatDate, calculateNights } from '@/lib/utils'
-import { X, Printer, Plus, Check, ArrowRight } from 'lucide-react'
+import { X, Printer, Plus, Check, ArrowRight, ArrowRightLeft } from 'lucide-react'
 import { getFoliosPromise, prefetchFolios } from '@/lib/folio-prefetch'
+import { toast } from '@/lib/toast'
 
 interface Props {
   reservation: Reservation
@@ -22,10 +23,17 @@ const PAYMENT_METHODS = [
   { id: 'company_credit', label: 'Company Credit' },
 ]
 
+// Main carries the projected room cost. Night audit posts nightly "Room Charge —"
+// lines into Main, so those are subtracted from the projection — otherwise the
+// room would be counted twice once the audit has run.
 function folioBalance(folio: Folio, res: Reservation): number {
   const chargesSum = folio.charges.reduce((s, fc) => s + fc.charge.amount, 0)
   if (folio.name.toLowerCase() === 'main') {
-    return chargesSum + res.rate * calculateNights(res.checkIn, res.checkOut)
+    const roomPosted = folio.charges
+      .filter((fc) => fc.charge.category === 'ROOM' && fc.charge.item.startsWith('Room Charge —'))
+      .reduce((s, fc) => s + fc.charge.amount, 0)
+    const projection = Math.max(0, res.rate * calculateNights(res.checkIn, res.checkOut) - roomPosted)
+    return chargesSum + projection
   }
   return chargesSum
 }
@@ -48,6 +56,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const [movingChargeId, setMovingChargeId] = useState<number | null>(null)
   const [creditError, setCreditError] = useState('')
   const [managerOverride, setManagerOverride] = useState(false)
+  const [billingToMaster, setBillingToMaster] = useState(false)
 
   // Payment detail fields (recording only — not sent to API)
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '' })
@@ -204,6 +213,24 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
       await refreshFolios()
     } finally {
       setSettling(false)
+    }
+  }
+
+  // Group billing — move this room's whole outstanding bill onto the master room
+  async function handleBillToMaster() {
+    setCreditError('')
+    setBillingToMaster(true)
+    try {
+      const r = await fetch(`/api/reservations/${res.id}/bill-to-master`, { method: 'POST' })
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        setCreditError(data.error ?? 'Could not transfer to master bill')
+        return
+      }
+      toast(`฿${Number(data.transferred ?? 0).toLocaleString()} transferred to master ${data.masterResNumber}`)
+      await refreshFolios()
+    } finally {
+      setBillingToMaster(false)
     }
   }
 
@@ -483,6 +510,31 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
 
                       {activeFolio.status !== 'settled' ? (
                         <>
+                          {/* Group billing — linked reservations can push their bill to the master room */}
+                          {res.masterResId && (
+                            <div className="mb-4 p-3 bg-violet-50 border border-violet-200 rounded-lg">
+                              <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-1.5">
+                                Group Billing
+                              </p>
+                              <p className="text-xs text-violet-700 mb-2">
+                                This room is part of a group — transfer its entire bill to the master room.
+                              </p>
+                              <button
+                                onClick={handleBillToMaster}
+                                disabled={billingToMaster}
+                                className="w-full py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-black rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                              >
+                                {billingToMaster ? (
+                                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                  <>
+                                    <ArrowRightLeft className="w-3.5 h-3.5" /> Bill to Master Room
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
+
                           {/* Section 3 — Payment Method */}
                           <div className="mb-3">
                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">

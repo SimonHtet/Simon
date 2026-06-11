@@ -123,6 +123,9 @@ export default function ReservationDetailPanel({
   })
   const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | 'undo_checkout' | null>(null)
   const [cancelReason, setCancelReason] = useState('')
+  const [linkNumber, setLinkNumber] = useState('')
+  const [linking, setLinking] = useState(false)
+  const [linkError, setLinkError] = useState('')
   const [activePackages, setActivePackages] = useState<Set<string>>(() => {
     const fromPackages = (initialRes.packages ?? []).filter((p) => p.active).map((p) => p.pkgId)
     const fromCharges = (initialRes.charges ?? [])
@@ -252,6 +255,45 @@ export default function ReservationDetailPanel({
   async function refetchSelf() {
     const r = await fetch(`/api/reservations/${localRes.id}`)
     if (r.ok) setLocalRes(await r.json())
+  }
+
+  async function handleLinkMaster() {
+    if (!linkNumber.trim() || linking) return
+    setLinkError('')
+    setLinking(true)
+    try {
+      const r = await fetch(`/api/reservations/${localRes.id}/master`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ masterResNumber: linkNumber.trim() }),
+      })
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}))
+        setLinkError(data.error ?? 'Could not link reservation')
+        return
+      }
+      setLinkNumber('')
+      await refetchSelf()
+    } finally {
+      setLinking(false)
+    }
+  }
+
+  async function handleUnlinkMaster() {
+    if (linking) return
+    setLinkError('')
+    setLinking(true)
+    try {
+      const r = await fetch(`/api/reservations/${localRes.id}/master`, { method: 'DELETE' })
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}))
+        setLinkError(data.error ?? 'Could not unlink reservation')
+        return
+      }
+      await refetchSelf()
+    } finally {
+      setLinking(false)
+    }
   }
 
   async function togglePackage(pkgId: string) {
@@ -1224,12 +1266,42 @@ export default function ReservationDetailPanel({
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                       {localRes.isMaster ? 'Master Reservation — Linked Rooms' : 'Linked Reservations'}
                     </p>
-                    {localRes.masterResId && (
+                    {localRes.masterResId ? (
                       <div className="flex items-center gap-2 text-xs text-sky-700 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2">
                         <ArrowRightLeft className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span>This reservation is linked under master: <span className="font-bold">{localRes.masterResId}</span></span>
+                        <span className="flex-1">This room is part of a group — its bill can be transferred to the master at check-out</span>
+                        <button
+                          onClick={handleUnlinkMaster}
+                          disabled={linking}
+                          className="px-2 py-1 bg-white border border-sky-200 rounded-lg text-[10px] font-bold text-sky-600 hover:bg-sky-100 disabled:opacity-50 whitespace-nowrap"
+                        >
+                          Unlink
+                        </button>
                       </div>
-                    )}
+                    ) : !localRes.isMaster ? (
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                          Link under a master reservation (group booking)
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            value={linkNumber}
+                            onChange={(e) => setLinkNumber(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleLinkMaster() }}
+                            placeholder="Master res no. e.g. RES-AB12CD"
+                            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          />
+                          <button
+                            onClick={handleLinkMaster}
+                            disabled={linking || !linkNumber.trim()}
+                            className="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg disabled:opacity-50 whitespace-nowrap"
+                          >
+                            {linking ? '…' : 'Link'}
+                          </button>
+                        </div>
+                        {linkError && <p className="text-[10px] font-bold text-red-500 mt-1.5">{linkError}</p>}
+                      </div>
+                    ) : null}
                     {localRes.linkedReservations && localRes.linkedReservations.length > 0 ? (
                       <div className="space-y-2">
                         {localRes.linkedReservations.map((lr: any) => (

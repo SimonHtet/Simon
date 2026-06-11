@@ -40,6 +40,9 @@ export async function PATCH(
     if (role === 'housekeeping' && status !== 'available') {
       return NextResponse.json({ error: 'Forbidden — housekeeping can only mark rooms clean' }, { status: 403 })
     }
+    if (room.status === 'occupied' && room.resId) {
+      return NextResponse.json({ error: 'Room is occupied — check the guest out first' }, { status: 400 })
+    }
     const updated = await prisma.room.update({ where: { id: params.id }, data: { status } })
     return NextResponse.json(updated)
   } catch (err) {
