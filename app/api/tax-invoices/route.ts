@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
+import { hasPermission } from '@/lib/rbac'
 
 async function nextInvoiceNumber(hotelId: string): Promise<string> {
   const now = new Date()
@@ -15,8 +16,11 @@ async function nextInvoiceNumber(hotelId: string): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'VIEW_FINANCIALS')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
@@ -40,8 +44,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { hotelId, session, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, session, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'VIEW_FINANCIALS')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   const body = await req.json().catch(() => ({}))
   const {

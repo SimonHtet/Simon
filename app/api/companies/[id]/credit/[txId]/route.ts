@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
+import { hasPermission } from '@/lib/rbac'
 
 export async function PUT(
   _req: NextRequest,
   { params }: { params: { id: string; txId: string } }
 ) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'POST_PAYMENT')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   const txId = parseInt(params.txId, 10)
   if (isNaN(txId)) return NextResponse.json({ error: 'Invalid txId' }, { status: 400 })

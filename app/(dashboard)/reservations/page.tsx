@@ -73,16 +73,23 @@ export default function ReservationsPage() {
     Promise.all([refreshList(), refreshRooms()]).finally(() => setLoading(false))
   }, [refreshList, refreshRooms])
 
-  async function handleSelectReservation(res: Reservation) {
-    const detail = await fetchDetail(res.id)
-    setSelectedRes(detail ?? res)
+  // Open the panel immediately with the list data, hydrate full detail in background
+  function hydrateDetail(id: string) {
+    fetchDetail(id).then((detail) => {
+      if (detail) setSelectedRes((prev) => (prev?.id === id ? detail : prev))
+    })
+  }
+
+  function handleSelectReservation(res: Reservation) {
+    setSelectedRes(res)
+    hydrateDetail(res.id)
   }
 
   // Called from reservations list rows — opens the panel in check-in mode
-  async function handleCheckIn(res: Reservation) {
-    const detail = await fetchDetail(res.id)
-    setSelectedRes(detail ?? res)
+  function handleCheckIn(res: Reservation) {
+    setSelectedRes(res)
     setCheckInMode(true)
+    hydrateDetail(res.id)
   }
 
   // Called from the panel's "Confirm Check-In" button — makes the actual API call

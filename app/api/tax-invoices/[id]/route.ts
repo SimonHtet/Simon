@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
+import { hasPermission } from '@/lib/rbac'
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'VIEW_FINANCIALS')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   try {
     const invoice = await prisma.taxInvoice.findFirst({
@@ -26,8 +30,11 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'VIEW_FINANCIALS')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   const body = await req.json().catch(() => ({}))
 
@@ -80,8 +87,11 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'VIEW_FINANCIALS')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   try {
     const existing = await prisma.taxInvoice.findFirst({ where: { id: params.id, hotelId: hotelId! } })

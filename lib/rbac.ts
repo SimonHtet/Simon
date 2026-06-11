@@ -11,6 +11,7 @@ export const PERMISSIONS = {
   ADD_CHARGE:         ['admin', 'manager', 'front_desk'],
   POST_PAYMENT:       ['admin', 'manager'],
   VIEW_FINANCIALS:    ['admin', 'manager'],
+  MANAGE_COMPANIES:   ['admin', 'manager'],
   VIEW_ALL_USERS:     ['admin'],
   MANAGE_USERS:       ['admin'],
 } as const

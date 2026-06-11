@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
+import { hasPermission } from '@/lib/rbac'
 
 export async function GET(
   _req: NextRequest,
@@ -50,8 +51,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  // Front desk needs this to settle folios to company credit at checkout
+  if (!hasPermission(role!, 'ADD_CHARGE')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   const body = await req.json().catch(() => ({}))
   const { amount, description, reservationId, folioId, type = 'company_credit' } = body
@@ -112,8 +117,11 @@ export async function PATCH(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'POST_PAYMENT')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   try {
     const company = await prisma.company.findFirst({ where: { id: params.id, hotelId: hotelId! } })

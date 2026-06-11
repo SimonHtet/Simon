@@ -25,16 +25,23 @@ import {
 import { hasPermission } from '@/lib/rbac'
 import { HOTEL_NAME, LOCATION } from '@/lib/constants'
 
-const NAV_ITEMS = [
+type NavItem = {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  roles?: string[]
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/reservations', label: 'Reservations', icon: CalendarDays },
   { href: '/timeline', label: 'Timeline', icon: Clock },
   { href: '/rooms', label: 'Room Grid', icon: Grid3X3 },
   { href: '/guests', label: 'Guest History', icon: Users },
   { href: '/companies', label: 'Companies', icon: Building2 },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { href: '/accounting', label: 'Accounting', icon: Receipt },
-  { href: '/settings', label: 'Settings', icon: Settings2 },
+  { href: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
+  { href: '/accounting', label: 'Accounting', icon: Receipt, roles: ['admin', 'manager'] },
+  { href: '/settings', label: 'Settings', icon: Settings2, roles: ['admin', 'manager'] },
 ]
 
 function NightAuditClock({ canRun }: { canRun: boolean }) {
@@ -155,6 +162,8 @@ function NightAuditClock({ canRun }: { canRun: boolean }) {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role ?? ''
+  const visibleNavItems = NAV_ITEMS.filter((n) => !n.roles || n.roles.includes(userRole))
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -195,7 +204,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {visibleNavItems.map(({ href, label, icon: Icon }) => {
             const active = isActive(href)
             return (
               <Link

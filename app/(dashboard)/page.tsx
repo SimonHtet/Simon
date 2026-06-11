@@ -41,6 +41,9 @@ export default function DashboardPage() {
   }, [])
 
   const refreshData = useCallback(async () => {
+    // Refresh selected reservation detail in parallel with the list fetches
+    const detailPromise = selectedRes ? fetchDetail(selectedRes.id) : null
+
     const [roomsRes, resRes, statsRes] = await Promise.all([
       fetch('/api/rooms'),
       fetch('/api/reservations'),
@@ -60,9 +63,8 @@ export default function DashboardPage() {
     setReservations(Array.isArray(resData) ? resData : [])
     setStats(statsData)
 
-    // Refresh selected reservation detail from individual endpoint
-    if (selectedRes) {
-      const updated = await fetchDetail(selectedRes.id)
+    if (detailPromise) {
+      const updated = await detailPromise
       if (updated) setSelectedRes(updated)
     }
   }, [selectedRes?.id, fetchDetail])
@@ -73,16 +75,23 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  async function handleSelectReservation(res: Reservation) {
-    const detail = await fetchDetail(res.id)
-    setSelectedRes(detail ?? res)
+  // Open the panel immediately with the list data, hydrate full detail in background
+  function hydrateDetail(id: string) {
+    fetchDetail(id).then((detail) => {
+      if (detail) setSelectedRes((prev) => (prev?.id === id ? detail : prev))
+    })
+  }
+
+  function handleSelectReservation(res: Reservation) {
+    setSelectedRes(res)
+    hydrateDetail(res.id)
   }
 
   // Called from dashboard rows — opens the panel in check-in mode
-  async function handleCheckIn(res: Reservation) {
-    const detail = await fetchDetail(res.id)
-    setSelectedRes(detail ?? res)
+  function handleCheckIn(res: Reservation) {
+    setSelectedRes(res)
     setCheckInMode(true)
+    hydrateDetail(res.id)
   }
 
   // Called from the panel's "Confirm Check-In" button — makes the actual API call
