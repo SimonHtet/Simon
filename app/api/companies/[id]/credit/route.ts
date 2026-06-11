@@ -59,7 +59,7 @@ export async function POST(
   }
 
   const body = await req.json().catch(() => ({}))
-  const { amount, description, reservationId, folioId, type = 'company_credit' } = body
+  const { amount, description, reservationId, folioId, type = 'company_credit', override = false } = body
   const isCityLedger = type === 'city_ledger'
 
   if (!amount || amount <= 0) {
@@ -77,7 +77,10 @@ export async function POST(
 
     if (company.creditLimit > 0) {
       const creditAvailable = Math.max(0, company.creditLimit - company.creditUsed)
-      if (creditAvailable < amount) {
+      // Managers can override the limit; the transaction is still recorded so
+      // the receivable is never lost.
+      const managerOverride = override === true && (role === 'admin' || role === 'manager')
+      if (creditAvailable < amount && !managerOverride) {
         return NextResponse.json(
           { error: `Insufficient credit — ฿${creditAvailable.toLocaleString()} available` },
           { status: 400 }

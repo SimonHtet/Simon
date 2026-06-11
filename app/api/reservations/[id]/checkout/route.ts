@@ -31,6 +31,38 @@ export async function POST(
       return NextResponse.json({ error: 'Reservation is not checked in' }, { status: 400 })
     }
 
+    // Settlement enforcement — the modal disables the button client-side, but the
+    // API must not allow checkout with open folios or unbilled charges.
+    const [folios, unassignedCount] = await Promise.all([
+      prisma.folio.findMany({
+        where: { reservationId: params.id },
+        select: { id: true, name: true, status: true },
+      }),
+      prisma.charge.count({
+        where: { reservationId: params.id, folioCharge: null },
+      }),
+    ])
+
+    if (folios.length === 0) {
+      return NextResponse.json(
+        { error: 'No folio found — open the check-out screen and settle payment first' },
+        { status: 400 }
+      )
+    }
+    const openFolios = folios.filter((f) => f.status !== 'settled')
+    if (openFolios.length > 0) {
+      return NextResponse.json(
+        { error: `Cannot check out — unsettled folio(s): ${openFolios.map((f) => f.name).join(', ')}` },
+        { status: 400 }
+      )
+    }
+    if (unassignedCount > 0) {
+      return NextResponse.json(
+        { error: `Cannot check out — ${unassignedCount} charge(s) not assigned to any folio` },
+        { status: 400 }
+      )
+    }
+
     const [updated] = await prisma.$transaction([
       prisma.reservation.update({
         where: { id: params.id },

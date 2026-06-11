@@ -116,10 +116,12 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
     init()
   }, [res.id])
 
-  // Reset credit error + override when active folio changes
+  // Reset credit error, override and cash input when active folio changes —
+  // a stale tendered amount must not validate another folio's balance
   useEffect(() => {
     setCreditError('')
     setManagerOverride(false)
+    setCashTendered('')
   }, [activeFolioId])
 
   // Close move menu on outside click
@@ -172,9 +174,12 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
               reservationId: res.id,
               folioId: folio.id,
               type: pm === 'city_ledger' ? 'city_ledger' : 'company_credit',
+              // Server records the transaction over-limit for managers, so the
+              // receivable is never lost — a failed post always blocks settling
+              override: managerOverride,
             }),
           })
-          if (!creditRes.ok && !(pm === 'company_credit' && managerOverride)) {
+          if (!creditRes.ok) {
             const err = await creditRes.json()
             setCreditError(err.error ?? 'Credit posting failed')
             return
@@ -182,11 +187,20 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
         }
       }
 
-      await fetch(`/api/reservations/${res.id}/folios/${folioId}`, {
+      const settleRes = await fetch(`/api/reservations/${res.id}/folios/${folioId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'settled', paymentMethod: pm }),
+        body: JSON.stringify({
+          status: 'settled',
+          paymentMethod: pm,
+          ...(pm === 'cash' && cashTendered.trim() ? { amountTendered: parseFloat(cashTendered) } : {}),
+        }),
       })
+      if (!settleRes.ok) {
+        const err = await settleRes.json().catch(() => ({}))
+        setCreditError(err.error ?? 'Could not settle folio')
+        return
+      }
       await refreshFolios()
     } finally {
       setSettling(false)

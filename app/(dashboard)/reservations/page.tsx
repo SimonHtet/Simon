@@ -116,7 +116,12 @@ export default function ReservationsPage() {
 
   async function handleCheckOutConfirm() {
     if (!selectedRes) return
-    await fetch(`/api/reservations/${selectedRes.id}/checkout`, { method: 'POST' })
+    const res = await fetch(`/api/reservations/${selectedRes.id}/checkout`, { method: 'POST' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      alert(data.error ?? 'Check-out failed')
+      return
+    }
     setActiveModal(null)
     await afterRoomAction()
   }
