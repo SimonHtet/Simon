@@ -1,0 +1,5808 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "next-env.d.ts",
+      "file_type": "code",
+      "source_file": "next-env.d.ts",
+      "source_location": "L1",
+      "id": "next_env_d_ts",
+      "community": 24,
+      "norm_label": "next-env.d.ts"
+    },
+    {
+      "label": "next.config.js",
+      "file_type": "code",
+      "source_file": "next.config.js",
+      "source_location": "L1",
+      "id": "next_config_js",
+      "community": 25,
+      "norm_label": "next.config.js"
+    },
+    {
+      "label": "postcss.config.js",
+      "file_type": "code",
+      "source_file": "postcss.config.js",
+      "source_location": "L1",
+      "id": "postcss_config_js",
+      "community": 26,
+      "norm_label": "postcss.config.js"
+    },
+    {
+      "label": "tailwind.config.ts",
+      "file_type": "code",
+      "source_file": "tailwind.config.ts",
+      "source_location": "L1",
+      "id": "tailwind_config_ts",
+      "community": 27,
+      "norm_label": "tailwind.config.ts"
+    },
+    {
+      "label": "layout.tsx",
+      "file_type": "code",
+      "source_file": "app/layout.tsx",
+      "source_location": "L1",
+      "id": "app_layout_tsx",
+      "community": 15,
+      "norm_label": "layout.tsx"
+    },
+    {
+      "label": "RootLayout()",
+      "file_type": "code",
+      "source_file": "app/layout.tsx",
+      "source_location": "L10",
+      "id": "app_layout_rootlayout",
+      "community": 15,
+      "norm_label": "rootlayout()"
+    },
+    {
+      "label": "providers.tsx",
+      "file_type": "code",
+      "source_file": "app/providers.tsx",
+      "source_location": "L1",
+      "id": "app_providers_tsx",
+      "community": 15,
+      "norm_label": "providers.tsx"
+    },
+    {
+      "label": "Providers()",
+      "file_type": "code",
+      "source_file": "app/providers.tsx",
+      "source_location": "L5",
+      "id": "app_providers_providers",
+      "community": 15,
+      "norm_label": "providers()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(auth)/login/page.tsx",
+      "source_location": "L1",
+      "id": "app_auth_login_page_tsx",
+      "community": 19,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "handleSubmit()",
+      "file_type": "code",
+      "source_file": "app/(auth)/login/page.tsx",
+      "source_location": "L14",
+      "id": "login_page_handlesubmit",
+      "community": 19,
+      "norm_label": "handlesubmit()"
+    },
+    {
+      "label": "DashboardShell.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/DashboardShell.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_dashboardshell_tsx",
+      "community": 16,
+      "norm_label": "dashboardshell.tsx"
+    },
+    {
+      "label": "NightAuditClock()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/DashboardShell.tsx",
+      "source_location": "L33",
+      "id": "dashboard_dashboardshell_nightauditclock",
+      "community": 16,
+      "norm_label": "nightauditclock()"
+    },
+    {
+      "label": "isActive()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/DashboardShell.tsx",
+      "source_location": "L83",
+      "id": "dashboard_dashboardshell_isactive",
+      "community": 16,
+      "norm_label": "isactive()"
+    },
+    {
+      "label": "layout.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/layout.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_layout_tsx",
+      "community": 20,
+      "norm_label": "layout.tsx"
+    },
+    {
+      "label": "DashboardLayout()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/layout.tsx",
+      "source_location": "L6",
+      "id": "dashboard_layout_dashboardlayout",
+      "community": 20,
+      "norm_label": "dashboardlayout()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_page_tsx",
+      "community": 2,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "handleCheckIn()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L71",
+      "id": "dashboard_page_handlecheckin",
+      "community": 2,
+      "norm_label": "handlecheckin()"
+    },
+    {
+      "label": "handleCheckInConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L77",
+      "id": "dashboard_page_handlecheckinconfirm",
+      "community": 2,
+      "norm_label": "handlecheckinconfirm()"
+    },
+    {
+      "label": "handleCheckOut()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L86",
+      "id": "dashboard_page_handlecheckout",
+      "community": 2,
+      "norm_label": "handlecheckout()"
+    },
+    {
+      "label": "handleCheckOutConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L91",
+      "id": "dashboard_page_handlecheckoutconfirm",
+      "community": 2,
+      "norm_label": "handlecheckoutconfirm()"
+    },
+    {
+      "label": "handleCancel()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L98",
+      "id": "dashboard_page_handlecancel",
+      "community": 2,
+      "norm_label": "handlecancel()"
+    },
+    {
+      "label": "handleNoShow()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L107",
+      "id": "dashboard_page_handlenoshow",
+      "community": 2,
+      "norm_label": "handlenoshow()"
+    },
+    {
+      "label": "handleMoveRoom()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L112",
+      "id": "dashboard_page_handlemoveroom",
+      "community": 2,
+      "norm_label": "handlemoveroom()"
+    },
+    {
+      "label": "handleMoveRoomConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L117",
+      "id": "dashboard_page_handlemoveroomconfirm",
+      "community": 2,
+      "norm_label": "handlemoveroomconfirm()"
+    },
+    {
+      "label": "handleExtendStay()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L128",
+      "id": "dashboard_page_handleextendstay",
+      "community": 2,
+      "norm_label": "handleextendstay()"
+    },
+    {
+      "label": "handleExtendStayConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L133",
+      "id": "dashboard_page_handleextendstayconfirm",
+      "community": 2,
+      "norm_label": "handleextendstayconfirm()"
+    },
+    {
+      "label": "handleAddCharge()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L144",
+      "id": "dashboard_page_handleaddcharge",
+      "community": 2,
+      "norm_label": "handleaddcharge()"
+    },
+    {
+      "label": "handleAddChargeConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L149",
+      "id": "dashboard_page_handleaddchargeconfirm",
+      "community": 2,
+      "norm_label": "handleaddchargeconfirm()"
+    },
+    {
+      "label": "handlePostPayment()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L160",
+      "id": "dashboard_page_handlepostpayment",
+      "community": 2,
+      "norm_label": "handlepostpayment()"
+    },
+    {
+      "label": "handlePostPaymentConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L165",
+      "id": "dashboard_page_handlepostpaymentconfirm",
+      "community": 2,
+      "norm_label": "handlepostpaymentconfirm()"
+    },
+    {
+      "label": "handleAddTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L176",
+      "id": "dashboard_page_handleaddtrace",
+      "community": 2,
+      "norm_label": "handleaddtrace()"
+    },
+    {
+      "label": "handleAddTraceConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L181",
+      "id": "dashboard_page_handleaddtraceconfirm",
+      "community": 2,
+      "norm_label": "handleaddtraceconfirm()"
+    },
+    {
+      "label": "handleResolveTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L192",
+      "id": "dashboard_page_handleresolvetrace",
+      "community": 2,
+      "norm_label": "handleresolvetrace()"
+    },
+    {
+      "label": "handleUpdateReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L201",
+      "id": "dashboard_page_handleupdatereservation",
+      "community": 2,
+      "norm_label": "handleupdatereservation()"
+    },
+    {
+      "label": "handleNewReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L210",
+      "id": "dashboard_page_handlenewreservation",
+      "community": 2,
+      "norm_label": "handlenewreservation()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/analytics/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_analytics_page_tsx",
+      "community": 21,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "AnalyticsPage()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/analytics/page.tsx",
+      "source_location": "L5",
+      "id": "analytics_page_analyticspage",
+      "community": 21,
+      "norm_label": "analyticspage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/companies/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_companies_page_tsx",
+      "community": 22,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "CompaniesPage()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/companies/page.tsx",
+      "source_location": "L5",
+      "id": "companies_page_companiespage",
+      "community": 22,
+      "norm_label": "companiespage()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/guests/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_guests_page_tsx",
+      "community": 17,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "handleResolveTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/guests/page.tsx",
+      "source_location": "L32",
+      "id": "guests_page_handleresolvetrace",
+      "community": 17,
+      "norm_label": "handleresolvetrace()"
+    },
+    {
+      "label": "handleUpdateReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/guests/page.tsx",
+      "source_location": "L41",
+      "id": "guests_page_handleupdatereservation",
+      "community": 17,
+      "norm_label": "handleupdatereservation()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_reservations_page_tsx",
+      "community": 3,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "handleCheckIn()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L54",
+      "id": "reservations_page_handlecheckin",
+      "community": 3,
+      "norm_label": "handlecheckin()"
+    },
+    {
+      "label": "handleCheckInConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L60",
+      "id": "reservations_page_handlecheckinconfirm",
+      "community": 3,
+      "norm_label": "handlecheckinconfirm()"
+    },
+    {
+      "label": "handleCheckOut()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L69",
+      "id": "reservations_page_handlecheckout",
+      "community": 3,
+      "norm_label": "handlecheckout()"
+    },
+    {
+      "label": "handleCheckOutConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L74",
+      "id": "reservations_page_handlecheckoutconfirm",
+      "community": 3,
+      "norm_label": "handlecheckoutconfirm()"
+    },
+    {
+      "label": "handleCancel()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L81",
+      "id": "reservations_page_handlecancel",
+      "community": 3,
+      "norm_label": "handlecancel()"
+    },
+    {
+      "label": "handleNoShow()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L90",
+      "id": "reservations_page_handlenoshow",
+      "community": 3,
+      "norm_label": "handlenoshow()"
+    },
+    {
+      "label": "handleMoveRoom()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L95",
+      "id": "reservations_page_handlemoveroom",
+      "community": 3,
+      "norm_label": "handlemoveroom()"
+    },
+    {
+      "label": "handleMoveRoomConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L100",
+      "id": "reservations_page_handlemoveroomconfirm",
+      "community": 3,
+      "norm_label": "handlemoveroomconfirm()"
+    },
+    {
+      "label": "handleExtendStay()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L111",
+      "id": "reservations_page_handleextendstay",
+      "community": 3,
+      "norm_label": "handleextendstay()"
+    },
+    {
+      "label": "handleExtendStayConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L116",
+      "id": "reservations_page_handleextendstayconfirm",
+      "community": 3,
+      "norm_label": "handleextendstayconfirm()"
+    },
+    {
+      "label": "handleAddCharge()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L127",
+      "id": "reservations_page_handleaddcharge",
+      "community": 3,
+      "norm_label": "handleaddcharge()"
+    },
+    {
+      "label": "handleAddChargeConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L132",
+      "id": "reservations_page_handleaddchargeconfirm",
+      "community": 3,
+      "norm_label": "handleaddchargeconfirm()"
+    },
+    {
+      "label": "handlePostPayment()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L143",
+      "id": "reservations_page_handlepostpayment",
+      "community": 3,
+      "norm_label": "handlepostpayment()"
+    },
+    {
+      "label": "handlePostPaymentConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L148",
+      "id": "reservations_page_handlepostpaymentconfirm",
+      "community": 3,
+      "norm_label": "handlepostpaymentconfirm()"
+    },
+    {
+      "label": "handleAddTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L159",
+      "id": "reservations_page_handleaddtrace",
+      "community": 3,
+      "norm_label": "handleaddtrace()"
+    },
+    {
+      "label": "handleAddTraceConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L164",
+      "id": "reservations_page_handleaddtraceconfirm",
+      "community": 3,
+      "norm_label": "handleaddtraceconfirm()"
+    },
+    {
+      "label": "handleResolveTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L175",
+      "id": "reservations_page_handleresolvetrace",
+      "community": 3,
+      "norm_label": "handleresolvetrace()"
+    },
+    {
+      "label": "handleUpdateReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L184",
+      "id": "reservations_page_handleupdatereservation",
+      "community": 3,
+      "norm_label": "handleupdatereservation()"
+    },
+    {
+      "label": "handleNewReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L193",
+      "id": "reservations_page_handlenewreservation",
+      "community": 3,
+      "norm_label": "handlenewreservation()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_rooms_page_tsx",
+      "community": 6,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "handleResolveTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L43",
+      "id": "rooms_page_handleresolvetrace",
+      "community": 6,
+      "norm_label": "handleresolvetrace()"
+    },
+    {
+      "label": "handleUpdateReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L52",
+      "id": "rooms_page_handleupdatereservation",
+      "community": 6,
+      "norm_label": "handleupdatereservation()"
+    },
+    {
+      "label": "handleNewReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L61",
+      "id": "rooms_page_handlenewreservation",
+      "community": 6,
+      "norm_label": "handlenewreservation()"
+    },
+    {
+      "label": "handleExtendStay()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L75",
+      "id": "rooms_page_handleextendstay",
+      "community": 6,
+      "norm_label": "handleextendstay()"
+    },
+    {
+      "label": "handleExtendStayConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L80",
+      "id": "rooms_page_handleextendstayconfirm",
+      "community": 6,
+      "norm_label": "handleextendstayconfirm()"
+    },
+    {
+      "label": "handleCheckOut()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L91",
+      "id": "rooms_page_handlecheckout",
+      "community": 6,
+      "norm_label": "handlecheckout()"
+    },
+    {
+      "label": "handleCheckOutConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L96",
+      "id": "rooms_page_handlecheckoutconfirm",
+      "community": 6,
+      "norm_label": "handlecheckoutconfirm()"
+    },
+    {
+      "label": "handleMoveRoom()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L103",
+      "id": "rooms_page_handlemoveroom",
+      "community": 6,
+      "norm_label": "handlemoveroom()"
+    },
+    {
+      "label": "handleMoveRoomConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L108",
+      "id": "rooms_page_handlemoveroomconfirm",
+      "community": 6,
+      "norm_label": "handlemoveroomconfirm()"
+    },
+    {
+      "label": "handleAddCharge()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L119",
+      "id": "rooms_page_handleaddcharge",
+      "community": 6,
+      "norm_label": "handleaddcharge()"
+    },
+    {
+      "label": "handleAddChargeConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L124",
+      "id": "rooms_page_handleaddchargeconfirm",
+      "community": 6,
+      "norm_label": "handleaddchargeconfirm()"
+    },
+    {
+      "label": "handlePostPayment()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L135",
+      "id": "rooms_page_handlepostpayment",
+      "community": 6,
+      "norm_label": "handlepostpayment()"
+    },
+    {
+      "label": "handlePostPaymentConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L140",
+      "id": "rooms_page_handlepostpaymentconfirm",
+      "community": 6,
+      "norm_label": "handlepostpaymentconfirm()"
+    },
+    {
+      "label": "handleAddTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L151",
+      "id": "rooms_page_handleaddtrace",
+      "community": 6,
+      "norm_label": "handleaddtrace()"
+    },
+    {
+      "label": "handleAddTraceConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L156",
+      "id": "rooms_page_handleaddtraceconfirm",
+      "community": 6,
+      "norm_label": "handleaddtraceconfirm()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_settings_page_tsx",
+      "community": 12,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "load()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L26",
+      "id": "settings_page_load",
+      "community": 12,
+      "norm_label": "load()"
+    },
+    {
+      "label": "handleAdd()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L48",
+      "id": "settings_page_handleadd",
+      "community": 12,
+      "norm_label": "handleadd()"
+    },
+    {
+      "label": "handleEdit()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L68",
+      "id": "settings_page_handleedit",
+      "community": 12,
+      "norm_label": "handleedit()"
+    },
+    {
+      "label": "handleToggle()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L77",
+      "id": "settings_page_handletoggle",
+      "community": 12,
+      "norm_label": "handletoggle()"
+    },
+    {
+      "label": "page.tsx",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L1",
+      "id": "app_dashboard_timeline_page_tsx",
+      "community": 7,
+      "norm_label": "page.tsx"
+    },
+    {
+      "label": "handleResolveTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L41",
+      "id": "timeline_page_handleresolvetrace",
+      "community": 7,
+      "norm_label": "handleresolvetrace()"
+    },
+    {
+      "label": "handleUpdateReservation()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L50",
+      "id": "timeline_page_handleupdatereservation",
+      "community": 7,
+      "norm_label": "handleupdatereservation()"
+    },
+    {
+      "label": "handleExtendStay()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L59",
+      "id": "timeline_page_handleextendstay",
+      "community": 7,
+      "norm_label": "handleextendstay()"
+    },
+    {
+      "label": "handleExtendStayConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L64",
+      "id": "timeline_page_handleextendstayconfirm",
+      "community": 7,
+      "norm_label": "handleextendstayconfirm()"
+    },
+    {
+      "label": "handleCheckOut()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L75",
+      "id": "timeline_page_handlecheckout",
+      "community": 7,
+      "norm_label": "handlecheckout()"
+    },
+    {
+      "label": "handleCheckOutConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L80",
+      "id": "timeline_page_handlecheckoutconfirm",
+      "community": 7,
+      "norm_label": "handlecheckoutconfirm()"
+    },
+    {
+      "label": "handleMoveRoom()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L87",
+      "id": "timeline_page_handlemoveroom",
+      "community": 7,
+      "norm_label": "handlemoveroom()"
+    },
+    {
+      "label": "handleMoveRoomConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L92",
+      "id": "timeline_page_handlemoveroomconfirm",
+      "community": 7,
+      "norm_label": "handlemoveroomconfirm()"
+    },
+    {
+      "label": "handleAddCharge()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L103",
+      "id": "timeline_page_handleaddcharge",
+      "community": 7,
+      "norm_label": "handleaddcharge()"
+    },
+    {
+      "label": "handleAddChargeConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L108",
+      "id": "timeline_page_handleaddchargeconfirm",
+      "community": 7,
+      "norm_label": "handleaddchargeconfirm()"
+    },
+    {
+      "label": "handlePostPayment()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L119",
+      "id": "timeline_page_handlepostpayment",
+      "community": 7,
+      "norm_label": "handlepostpayment()"
+    },
+    {
+      "label": "handlePostPaymentConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L124",
+      "id": "timeline_page_handlepostpaymentconfirm",
+      "community": 7,
+      "norm_label": "handlepostpaymentconfirm()"
+    },
+    {
+      "label": "handleAddTrace()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L135",
+      "id": "timeline_page_handleaddtrace",
+      "community": 7,
+      "norm_label": "handleaddtrace()"
+    },
+    {
+      "label": "handleAddTraceConfirm()",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L140",
+      "id": "timeline_page_handleaddtraceconfirm",
+      "community": 7,
+      "norm_label": "handleaddtraceconfirm()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L1",
+      "id": "app_api_analytics_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "buildDailyMap()",
+      "file_type": "code",
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L12",
+      "id": "analytics_route_builddailymap",
+      "community": 0,
+      "norm_label": "builddailymap()"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L58",
+      "id": "analytics_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/auth/login/route.ts",
+      "source_location": "L1",
+      "id": "app_api_auth_login_route_ts",
+      "community": 14,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/auth/login/route.ts",
+      "source_location": "L4",
+      "id": "login_route_post",
+      "community": 14,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/auth/[...nextauth]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_auth_nextauth_route_ts",
+      "community": 28,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L1",
+      "id": "app_api_charge_codes_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L5",
+      "id": "charge_codes_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L24",
+      "id": "charge_codes_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/charge-codes/[id]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_charge_codes_id_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "PUT()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/route.ts",
+      "source_location": "L45",
+      "id": "id_route_put",
+      "community": 0,
+      "norm_label": "put()"
+    },
+    {
+      "label": "DELETE()",
+      "file_type": "code",
+      "source_file": "app/api/companies/[id]/route.ts",
+      "source_location": "L64",
+      "id": "id_route_delete",
+      "community": 0,
+      "norm_label": "delete()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L1",
+      "id": "app_api_companies_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L5",
+      "id": "companies_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L21",
+      "id": "companies_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/companies/[id]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_companies_id_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/route.ts",
+      "source_location": "L17",
+      "id": "id_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L1",
+      "id": "app_api_companies_id_credit_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L5",
+      "id": "credit_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L49",
+      "id": "credit_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/companies/[id]/credit/[txId]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_companies_id_credit_txid_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "PUT()",
+      "file_type": "code",
+      "source_file": "app/api/companies/[id]/credit/[txId]/route.ts",
+      "source_location": "L5",
+      "id": "txid_route_put",
+      "community": 0,
+      "norm_label": "put()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/dashboard/route.ts",
+      "source_location": "L1",
+      "id": "app_api_dashboard_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/dashboard/route.ts",
+      "source_location": "L5",
+      "id": "dashboard_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/guests/route.ts",
+      "source_location": "L1",
+      "id": "app_api_guests_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/guests/route.ts",
+      "source_location": "L5",
+      "id": "guests_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/guests/[id]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_guests_id_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "PATCH()",
+      "file_type": "code",
+      "source_file": "app/api/rooms/[id]/route.ts",
+      "source_location": "L7",
+      "id": "id_route_patch",
+      "community": 0,
+      "norm_label": "patch()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_route_ts",
+      "community": 4,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L29",
+      "id": "reservations_route_get",
+      "community": 4,
+      "norm_label": "get()"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L55",
+      "id": "reservations_route_post",
+      "community": 4,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/cancel/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_cancel_route_ts",
+      "community": 5,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/cancel/route.ts",
+      "source_location": "L6",
+      "id": "cancel_route_post",
+      "community": 5,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/charges/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_charges_route_ts",
+      "community": 5,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/charges/route.ts",
+      "source_location": "L8",
+      "id": "charges_route_post",
+      "community": 5,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/charges/package/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_charges_package_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "DELETE()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/charges/package/route.ts",
+      "source_location": "L5",
+      "id": "package_route_delete",
+      "community": 0,
+      "norm_label": "delete()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/checkin/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_checkin_route_ts",
+      "community": 5,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/checkin/route.ts",
+      "source_location": "L6",
+      "id": "checkin_route_post",
+      "community": 5,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/checkout/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_checkout_route_ts",
+      "community": 5,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/checkout/route.ts",
+      "source_location": "L6",
+      "id": "checkout_route_post",
+      "community": 5,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/extend/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_extend_route_ts",
+      "community": 5,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/extend/route.ts",
+      "source_location": "L6",
+      "id": "extend_route_post",
+      "community": 5,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_folios_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L5",
+      "id": "folios_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L33",
+      "id": "folios_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/init/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_folios_init_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/init/route.ts",
+      "source_location": "L6",
+      "id": "init_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_folios_folioid_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "PUT()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/route.ts",
+      "source_location": "L5",
+      "id": "folioid_route_put",
+      "community": 0,
+      "norm_label": "put()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_folios_folioid_assign_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L6",
+      "id": "assign_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "DELETE()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L51",
+      "id": "assign_route_delete",
+      "community": 0,
+      "norm_label": "delete()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_master_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L6",
+      "id": "master_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "DELETE()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L44",
+      "id": "master_route_delete",
+      "community": 0,
+      "norm_label": "delete()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_move_route_ts",
+      "community": 4,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L8",
+      "id": "move_route_post",
+      "community": 4,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/noshow/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_noshow_route_ts",
+      "community": 5,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/noshow/route.ts",
+      "source_location": "L6",
+      "id": "noshow_route_post",
+      "community": 5,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/payment/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_payment_route_ts",
+      "community": 5,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/payment/route.ts",
+      "source_location": "L8",
+      "id": "payment_route_post",
+      "community": 5,
+      "norm_label": "post()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/preferences/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_preferences_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "PUT()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/preferences/route.ts",
+      "source_location": "L5",
+      "id": "preferences_route_put",
+      "community": 0,
+      "norm_label": "put()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L1",
+      "id": "app_api_reservations_id_traces_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "POST()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L5",
+      "id": "traces_route_post",
+      "community": 0,
+      "norm_label": "post()"
+    },
+    {
+      "label": "PUT()",
+      "file_type": "code",
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L46",
+      "id": "traces_route_put",
+      "community": 0,
+      "norm_label": "put()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/rooms/route.ts",
+      "source_location": "L1",
+      "id": "app_api_rooms_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "GET()",
+      "file_type": "code",
+      "source_file": "app/api/rooms/route.ts",
+      "source_location": "L5",
+      "id": "rooms_route_get",
+      "community": 0,
+      "norm_label": "get()"
+    },
+    {
+      "label": "route.ts",
+      "file_type": "code",
+      "source_file": "app/api/rooms/[id]/route.ts",
+      "source_location": "L1",
+      "id": "app_api_rooms_id_route_ts",
+      "community": 0,
+      "norm_label": "route.ts"
+    },
+    {
+      "label": "AnalyticsView.tsx",
+      "file_type": "code",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L1",
+      "id": "components_analyticsview_tsx",
+      "community": 13,
+      "norm_label": "analyticsview.tsx"
+    },
+    {
+      "label": "KpiCard()",
+      "file_type": "code",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L49",
+      "id": "components_analyticsview_kpicard",
+      "community": 13,
+      "norm_label": "kpicard()"
+    },
+    {
+      "label": "load()",
+      "file_type": "code",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L431",
+      "id": "components_analyticsview_load",
+      "community": 13,
+      "norm_label": "load()"
+    },
+    {
+      "label": "applyPreset()",
+      "file_type": "code",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L455",
+      "id": "components_analyticsview_applypreset",
+      "community": 13,
+      "norm_label": "applypreset()"
+    },
+    {
+      "label": "handleToggleCompare()",
+      "file_type": "code",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L462",
+      "id": "components_analyticsview_handletogglecompare",
+      "community": 13,
+      "norm_label": "handletogglecompare()"
+    },
+    {
+      "label": "CheckInModal.tsx",
+      "file_type": "code",
+      "source_file": "components/CheckInModal.tsx",
+      "source_location": "L1",
+      "id": "components_checkinmodal_tsx",
+      "community": 1,
+      "norm_label": "checkinmodal.tsx"
+    },
+    {
+      "label": "CheckInModal()",
+      "file_type": "code",
+      "source_file": "components/CheckInModal.tsx",
+      "source_location": "L21",
+      "id": "components_checkinmodal_checkinmodal",
+      "community": 1,
+      "norm_label": "checkinmodal()"
+    },
+    {
+      "label": "CheckOutModal.tsx",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L1",
+      "id": "components_checkoutmodal_tsx",
+      "community": 4,
+      "norm_label": "checkoutmodal.tsx"
+    },
+    {
+      "label": "folioBalance()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L24",
+      "id": "components_checkoutmodal_foliobalance",
+      "community": 4,
+      "norm_label": "foliobalance()"
+    },
+    {
+      "label": "init()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L91",
+      "id": "components_checkoutmodal_init",
+      "community": 4,
+      "norm_label": "init()"
+    },
+    {
+      "label": "onDown()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L108",
+      "id": "components_checkoutmodal_ondown",
+      "community": 4,
+      "norm_label": "ondown()"
+    },
+    {
+      "label": "handleAssignCharge()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L125",
+      "id": "components_checkoutmodal_handleassigncharge",
+      "community": 4,
+      "norm_label": "handleassigncharge()"
+    },
+    {
+      "label": "handleSettleFolio()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L135",
+      "id": "components_checkoutmodal_handlesettlefolio",
+      "community": 4,
+      "norm_label": "handlesettlefolio()"
+    },
+    {
+      "label": "handleReopenFolio()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L176",
+      "id": "components_checkoutmodal_handlereopenfolio",
+      "community": 4,
+      "norm_label": "handlereopenfolio()"
+    },
+    {
+      "label": "handleAddFolio()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L186",
+      "id": "components_checkoutmodal_handleaddfolio",
+      "community": 4,
+      "norm_label": "handleaddfolio()"
+    },
+    {
+      "label": "handleConfirm()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L203",
+      "id": "components_checkoutmodal_handleconfirm",
+      "community": 4,
+      "norm_label": "handleconfirm()"
+    },
+    {
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L223",
+      "id": "components_checkoutmodal_formatdate",
+      "community": 4,
+      "norm_label": "formatdate()"
+    },
+    {
+      "label": "CompaniesView.tsx",
+      "file_type": "code",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L1",
+      "id": "components_companiesview_tsx",
+      "community": 10,
+      "norm_label": "companiesview.tsx"
+    },
+    {
+      "label": "load()",
+      "file_type": "code",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L37",
+      "id": "components_companiesview_load",
+      "community": 10,
+      "norm_label": "load()"
+    },
+    {
+      "label": "loadCredit()",
+      "file_type": "code",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L52",
+      "id": "components_companiesview_loadcredit",
+      "community": 10,
+      "norm_label": "loadcredit()"
+    },
+    {
+      "label": "toggleExpand()",
+      "file_type": "code",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L63",
+      "id": "components_companiesview_toggleexpand",
+      "community": 10,
+      "norm_label": "toggleexpand()"
+    },
+    {
+      "label": "handleMarkPaid()",
+      "file_type": "code",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L72",
+      "id": "components_companiesview_handlemarkpaid",
+      "community": 10,
+      "norm_label": "handlemarkpaid()"
+    },
+    {
+      "label": "handleSave()",
+      "file_type": "code",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L77",
+      "id": "components_companiesview_handlesave",
+      "community": 10,
+      "norm_label": "handlesave()"
+    },
+    {
+      "label": "handleDelete()",
+      "file_type": "code",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L96",
+      "id": "components_companiesview_handledelete",
+      "community": 10,
+      "norm_label": "handledelete()"
+    },
+    {
+      "label": "CompanyForm.tsx",
+      "file_type": "code",
+      "source_file": "components/CompanyForm.tsx",
+      "source_location": "L1",
+      "id": "components_companyform_tsx",
+      "community": 18,
+      "norm_label": "companyform.tsx"
+    },
+    {
+      "label": "Field()",
+      "file_type": "code",
+      "source_file": "components/CompanyForm.tsx",
+      "source_location": "L11",
+      "id": "components_companyform_field",
+      "community": 18,
+      "norm_label": "field()"
+    },
+    {
+      "label": "CompanyForm()",
+      "file_type": "code",
+      "source_file": "components/CompanyForm.tsx",
+      "source_location": "L35",
+      "id": "components_companyform_companyform",
+      "community": 18,
+      "norm_label": "companyform()"
+    },
+    {
+      "label": "DashboardView.tsx",
+      "file_type": "code",
+      "source_file": "components/DashboardView.tsx",
+      "source_location": "L1",
+      "id": "components_dashboardview_tsx",
+      "community": 1,
+      "norm_label": "dashboardview.tsx"
+    },
+    {
+      "label": "StatCard()",
+      "file_type": "code",
+      "source_file": "components/DashboardView.tsx",
+      "source_location": "L25",
+      "id": "components_dashboardview_statcard",
+      "community": 1,
+      "norm_label": "statcard()"
+    },
+    {
+      "label": "getNationalityFlag()",
+      "file_type": "code",
+      "source_file": "components/DashboardView.tsx",
+      "source_location": "L56",
+      "id": "components_dashboardview_getnationalityflag",
+      "community": 1,
+      "norm_label": "getnationalityflag()"
+    },
+    {
+      "label": "GuestHistoryView.tsx",
+      "file_type": "code",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L1",
+      "id": "components_guesthistoryview_tsx",
+      "community": 1,
+      "norm_label": "guesthistoryview.tsx"
+    },
+    {
+      "label": "deriveGuests()",
+      "file_type": "code",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L21",
+      "id": "components_guesthistoryview_deriveguests",
+      "community": 1,
+      "norm_label": "deriveguests()"
+    },
+    {
+      "label": "save()",
+      "file_type": "code",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L82",
+      "id": "components_guesthistoryview_save",
+      "community": 1,
+      "norm_label": "save()"
+    },
+    {
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L165",
+      "id": "components_guesthistoryview_formatdate",
+      "community": 1,
+      "norm_label": "formatdate()"
+    },
+    {
+      "label": "savePrefNotes()",
+      "file_type": "code",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L196",
+      "id": "components_guesthistoryview_saveprefnotes",
+      "community": 1,
+      "norm_label": "saveprefnotes()"
+    },
+    {
+      "label": "Modals.tsx",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L1",
+      "id": "components_modals_tsx",
+      "community": 8,
+      "norm_label": "modals.tsx"
+    },
+    {
+      "label": "ModalShell()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L14",
+      "id": "components_modals_modalshell",
+      "community": 8,
+      "norm_label": "modalshell()"
+    },
+    {
+      "label": "FormField()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L53",
+      "id": "components_modals_formfield",
+      "community": 8,
+      "norm_label": "formfield()"
+    },
+    {
+      "label": "set()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L140",
+      "id": "components_modals_set",
+      "community": 8,
+      "norm_label": "set()"
+    },
+    {
+      "label": "applyContractRate()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L159",
+      "id": "components_modals_applycontractrate",
+      "community": 8,
+      "norm_label": "applycontractrate()"
+    },
+    {
+      "label": "handleCompanyChange()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L167",
+      "id": "components_modals_handlecompanychange",
+      "community": 8,
+      "norm_label": "handlecompanychange()"
+    },
+    {
+      "label": "handleSubmit()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L194",
+      "id": "components_modals_handlesubmit",
+      "community": 8,
+      "norm_label": "handlesubmit()"
+    },
+    {
+      "label": "handleConfirm()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L387",
+      "id": "components_modals_handleconfirm",
+      "community": 8,
+      "norm_label": "handleconfirm()"
+    },
+    {
+      "label": "selectCode()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L598",
+      "id": "components_modals_selectcode",
+      "community": 8,
+      "norm_label": "selectcode()"
+    },
+    {
+      "label": "clearCode()",
+      "file_type": "code",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L607",
+      "id": "components_modals_clearcode",
+      "community": 8,
+      "norm_label": "clearcode()"
+    },
+    {
+      "label": "ReservationDetailPanel.tsx",
+      "file_type": "code",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L1",
+      "id": "components_reservationdetailpanel_tsx",
+      "community": 1,
+      "norm_label": "reservationdetailpanel.tsx"
+    },
+    {
+      "label": "handleKeyDown()",
+      "file_type": "code",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L171",
+      "id": "components_reservationdetailpanel_handlekeydown",
+      "community": 1,
+      "norm_label": "handlekeydown()"
+    },
+    {
+      "label": "handleFieldSave()",
+      "file_type": "code",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L194",
+      "id": "components_reservationdetailpanel_handlefieldsave",
+      "community": 1,
+      "norm_label": "handlefieldsave()"
+    },
+    {
+      "label": "onConfirmCheckIn()",
+      "file_type": "code",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L201",
+      "id": "components_reservationdetailpanel_onconfirmcheckin",
+      "community": 1,
+      "norm_label": "onconfirmcheckin()"
+    },
+    {
+      "label": "togglePackage()",
+      "file_type": "code",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L224",
+      "id": "components_reservationdetailpanel_togglepackage",
+      "community": 1,
+      "norm_label": "togglepackage()"
+    },
+    {
+      "label": "handlePreferenceSave()",
+      "file_type": "code",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L281",
+      "id": "components_reservationdetailpanel_handlepreferencesave",
+      "community": 1,
+      "norm_label": "handlepreferencesave()"
+    },
+    {
+      "label": "EditableField()",
+      "file_type": "code",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L291",
+      "id": "components_reservationdetailpanel_editablefield",
+      "community": 1,
+      "norm_label": "editablefield()"
+    },
+    {
+      "label": "ReservationsView.tsx",
+      "file_type": "code",
+      "source_file": "components/ReservationsView.tsx",
+      "source_location": "L1",
+      "id": "components_reservationsview_tsx",
+      "community": 1,
+      "norm_label": "reservationsview.tsx"
+    },
+    {
+      "label": "getNationalityFlag()",
+      "file_type": "code",
+      "source_file": "components/ReservationsView.tsx",
+      "source_location": "L25",
+      "id": "components_reservationsview_getnationalityflag",
+      "community": 1,
+      "norm_label": "getnationalityflag()"
+    },
+    {
+      "label": "RoomGridView.tsx",
+      "file_type": "code",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L1",
+      "id": "components_roomgridview_tsx",
+      "community": 11,
+      "norm_label": "roomgridview.tsx"
+    },
+    {
+      "label": "groupByFloor()",
+      "file_type": "code",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L15",
+      "id": "components_roomgridview_groupbyfloor",
+      "community": 11,
+      "norm_label": "groupbyfloor()"
+    },
+    {
+      "label": "patchRoomStatus()",
+      "file_type": "code",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L63",
+      "id": "components_roomgridview_patchroomstatus",
+      "community": 11,
+      "norm_label": "patchroomstatus()"
+    },
+    {
+      "label": "getActiveReservation()",
+      "file_type": "code",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L77",
+      "id": "components_roomgridview_getactivereservation",
+      "community": 11,
+      "norm_label": "getactivereservation()"
+    },
+    {
+      "label": "getConfirmedReservation()",
+      "file_type": "code",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L81",
+      "id": "components_roomgridview_getconfirmedreservation",
+      "community": 11,
+      "norm_label": "getconfirmedreservation()"
+    },
+    {
+      "label": "getRoomTypeName()",
+      "file_type": "code",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L85",
+      "id": "components_roomgridview_getroomtypename",
+      "community": 11,
+      "norm_label": "getroomtypename()"
+    },
+    {
+      "label": "RoomTimelineView.tsx",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L1",
+      "id": "components_roomtimelineview_tsx",
+      "community": 9,
+      "norm_label": "roomtimelineview.tsx"
+    },
+    {
+      "label": "getDays()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L16",
+      "id": "components_roomtimelineview_getdays",
+      "community": 9,
+      "norm_label": "getdays()"
+    },
+    {
+      "label": "toDateStr()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L28",
+      "id": "components_roomtimelineview_todatestr",
+      "community": 9,
+      "norm_label": "todatestr()"
+    },
+    {
+      "label": "getResStatusColor()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L32",
+      "id": "components_roomtimelineview_getresstatuscolor",
+      "community": 9,
+      "norm_label": "getresstatuscolor()"
+    },
+    {
+      "label": "getSpan()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L80",
+      "id": "components_roomtimelineview_getspan",
+      "community": 9,
+      "norm_label": "getspan()"
+    },
+    {
+      "label": "hasDateConflict()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L89",
+      "id": "components_roomtimelineview_hasdateconflict",
+      "community": 9,
+      "norm_label": "hasdateconflict()"
+    },
+    {
+      "label": "flashError()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L100",
+      "id": "components_roomtimelineview_flasherror",
+      "community": 9,
+      "norm_label": "flasherror()"
+    },
+    {
+      "label": "handleDrop()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L105",
+      "id": "components_roomtimelineview_handledrop",
+      "community": 9,
+      "norm_label": "handledrop()"
+    },
+    {
+      "label": "getRowHighlight()",
+      "file_type": "code",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L172",
+      "id": "components_roomtimelineview_getrowhighlight",
+      "community": 9,
+      "norm_label": "getrowhighlight()"
+    },
+    {
+      "label": "auth.ts",
+      "file_type": "code",
+      "source_file": "lib/auth.ts",
+      "source_location": "L1",
+      "id": "lib_auth_ts",
+      "community": 29,
+      "norm_label": "auth.ts"
+    },
+    {
+      "label": "constants.ts",
+      "file_type": "code",
+      "source_file": "lib/constants.ts",
+      "source_location": "L1",
+      "id": "lib_constants_ts",
+      "community": 30,
+      "norm_label": "constants.ts"
+    },
+    {
+      "label": "prisma.ts",
+      "file_type": "code",
+      "source_file": "lib/prisma.ts",
+      "source_location": "L1",
+      "id": "lib_prisma_ts",
+      "community": 31,
+      "norm_label": "prisma.ts"
+    },
+    {
+      "label": "ratelimit.ts",
+      "file_type": "code",
+      "source_file": "lib/ratelimit.ts",
+      "source_location": "L1",
+      "id": "lib_ratelimit_ts",
+      "community": 14,
+      "norm_label": "ratelimit.ts"
+    },
+    {
+      "label": "checkLoginRateLimit()",
+      "file_type": "code",
+      "source_file": "lib/ratelimit.ts",
+      "source_location": "L3",
+      "id": "lib_ratelimit_checkloginratelimit",
+      "community": 14,
+      "norm_label": "checkloginratelimit()"
+    },
+    {
+      "label": "resetLoginAttempts()",
+      "file_type": "code",
+      "source_file": "lib/ratelimit.ts",
+      "source_location": "L26",
+      "id": "lib_ratelimit_resetloginattempts",
+      "community": 14,
+      "norm_label": "resetloginattempts()"
+    },
+    {
+      "label": "rbac.ts",
+      "file_type": "code",
+      "source_file": "lib/rbac.ts",
+      "source_location": "L1",
+      "id": "lib_rbac_ts",
+      "community": 5,
+      "norm_label": "rbac.ts"
+    },
+    {
+      "label": "hasPermission()",
+      "file_type": "code",
+      "source_file": "lib/rbac.ts",
+      "source_location": "L18",
+      "id": "lib_rbac_haspermission",
+      "community": 5,
+      "norm_label": "haspermission()"
+    },
+    {
+      "label": "requirePermission()",
+      "file_type": "code",
+      "source_file": "lib/rbac.ts",
+      "source_location": "L25",
+      "id": "lib_rbac_requirepermission",
+      "community": 5,
+      "norm_label": "requirepermission()"
+    },
+    {
+      "label": "session.ts",
+      "file_type": "code",
+      "source_file": "lib/session.ts",
+      "source_location": "L1",
+      "id": "lib_session_ts",
+      "community": 0,
+      "norm_label": "session.ts"
+    },
+    {
+      "label": "getSessionOrUnauthorized()",
+      "file_type": "code",
+      "source_file": "lib/session.ts",
+      "source_location": "L5",
+      "id": "lib_session_getsessionorunauthorized",
+      "community": 0,
+      "norm_label": "getsessionorunauthorized()"
+    },
+    {
+      "label": "utils.ts",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L1",
+      "id": "lib_utils_ts",
+      "community": 1,
+      "norm_label": "utils.ts"
+    },
+    {
+      "label": "cn()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L5",
+      "id": "lib_utils_cn",
+      "community": 1,
+      "norm_label": "cn()"
+    },
+    {
+      "label": "getStatusColor()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L9",
+      "id": "lib_utils_getstatuscolor",
+      "community": 1,
+      "norm_label": "getstatuscolor()"
+    },
+    {
+      "label": "getStatusBgColor()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L26",
+      "id": "lib_utils_getstatusbgcolor",
+      "community": 1,
+      "norm_label": "getstatusbgcolor()"
+    },
+    {
+      "label": "getResStatusBadge()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L43",
+      "id": "lib_utils_getresstatusbadge",
+      "community": 1,
+      "norm_label": "getresstatusbadge()"
+    },
+    {
+      "label": "getResStatusLabel()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L60",
+      "id": "lib_utils_getresstatuslabel",
+      "community": 1,
+      "norm_label": "getresstatuslabel()"
+    },
+    {
+      "label": "calculateNights()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L77",
+      "id": "lib_utils_calculatenights",
+      "community": 4,
+      "norm_label": "calculatenights()"
+    },
+    {
+      "label": "formatDate()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L84",
+      "id": "lib_utils_formatdate",
+      "community": 1,
+      "norm_label": "formatdate()"
+    },
+    {
+      "label": "formatCurrency()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L93",
+      "id": "lib_utils_formatcurrency",
+      "community": 1,
+      "norm_label": "formatcurrency()"
+    },
+    {
+      "label": "generateReservationNumber()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L101",
+      "id": "lib_utils_generatereservationnumber",
+      "community": 4,
+      "norm_label": "generatereservationnumber()"
+    },
+    {
+      "label": "maskPassport()",
+      "file_type": "code",
+      "source_file": "lib/utils.ts",
+      "source_location": "L110",
+      "id": "lib_utils_maskpassport",
+      "community": 4,
+      "norm_label": "maskpassport()"
+    },
+    {
+      "label": "seed.ts",
+      "file_type": "code",
+      "source_file": "prisma/seed.ts",
+      "source_location": "L1",
+      "id": "prisma_seed_ts",
+      "community": 23,
+      "norm_label": "seed.ts"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "prisma/seed.ts",
+      "source_location": "L6",
+      "id": "prisma_seed_main",
+      "community": 23,
+      "norm_label": "main()"
+    },
+    {
+      "label": "index.ts",
+      "file_type": "code",
+      "source_file": "types/index.ts",
+      "source_location": "L1",
+      "id": "types_index_ts",
+      "community": 32,
+      "norm_label": "index.ts"
+    },
+    {
+      "label": "next-auth.d.ts",
+      "file_type": "code",
+      "source_file": "types/next-auth.d.ts",
+      "source_location": "L1",
+      "id": "types_next_auth_d_ts",
+      "community": 33,
+      "norm_label": "next-auth.d.ts"
+    }
+  ],
+  "links": [
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/layout.tsx",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_layout_tsx",
+      "target": "app_providers_providers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/layout.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "app_layout_tsx",
+      "target": "app_layout_rootlayout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/providers.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_providers_tsx",
+      "target": "app_providers_providers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(auth)/login/page.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "app_auth_login_page_tsx",
+      "target": "login_page_handlesubmit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/DashboardShell.tsx",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "app_dashboard_dashboardshell_tsx",
+      "target": "dashboard_dashboardshell_nightauditclock",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/DashboardShell.tsx",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "app_dashboard_dashboardshell_tsx",
+      "target": "dashboard_dashboardshell_isactive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/layout.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_dashboard_layout_tsx",
+      "target": "dashboard_layout_dashboardlayout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L71",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlecheckin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlecheckinconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L86",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlecheckout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlecheckoutconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L98",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlecancel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlenoshow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L112",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlemoveroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L117",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlemoveroomconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L128",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleextendstay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L133",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleextendstayconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L144",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleaddcharge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L149",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleaddchargeconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L160",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlepostpayment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlepostpaymentconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleaddtrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L181",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleaddtraceconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L192",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleresolvetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L201",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handleupdatereservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/page.tsx",
+      "source_location": "L210",
+      "weight": 1.0,
+      "source": "app_dashboard_page_tsx",
+      "target": "dashboard_page_handlenewreservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/analytics/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_dashboard_analytics_page_tsx",
+      "target": "analytics_page_analyticspage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/companies/page.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_dashboard_companies_page_tsx",
+      "target": "companies_page_companiespage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/guests/page.tsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "app_dashboard_guests_page_tsx",
+      "target": "guests_page_handleresolvetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/guests/page.tsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "app_dashboard_guests_page_tsx",
+      "target": "guests_page_handleupdatereservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlecheckin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlecheckinconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlecheckout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlecheckoutconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlecancel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlenoshow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlemoveroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlemoveroomconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L111",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleextendstay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleextendstayconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L127",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleaddcharge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L132",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleaddchargeconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L143",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlepostpayment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L148",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlepostpaymentconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleaddtrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleaddtraceconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleresolvetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L184",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handleupdatereservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/reservations/page.tsx",
+      "source_location": "L193",
+      "weight": 1.0,
+      "source": "app_dashboard_reservations_page_tsx",
+      "target": "reservations_page_handlenewreservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleresolvetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleupdatereservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handlenewreservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleextendstay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleextendstayconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handlecheckout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handlecheckoutconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L103",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handlemoveroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handlemoveroomconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleaddcharge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L124",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleaddchargeconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handlepostpayment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handlepostpaymentconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L151",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleaddtrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/rooms/page.tsx",
+      "source_location": "L156",
+      "weight": 1.0,
+      "source": "app_dashboard_rooms_page_tsx",
+      "target": "rooms_page_handleaddtraceconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "app_dashboard_settings_page_tsx",
+      "target": "settings_page_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "app_dashboard_settings_page_tsx",
+      "target": "settings_page_handleadd",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "app_dashboard_settings_page_tsx",
+      "target": "settings_page_handleedit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "app_dashboard_settings_page_tsx",
+      "target": "settings_page_handletoggle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "settings_page_handleadd",
+      "target": "settings_page_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "settings_page_handleedit",
+      "target": "settings_page_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/settings/page.tsx",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "settings_page_handletoggle",
+      "target": "settings_page_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleresolvetrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleupdatereservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleextendstay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleextendstayconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L75",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handlecheckout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handlecheckoutconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L87",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handlemoveroom",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handlemoveroomconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L103",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleaddcharge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleaddchargeconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L119",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handlepostpayment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L124",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handlepostpaymentconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleaddtrace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/(dashboard)/timeline/page.tsx",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "app_dashboard_timeline_page_tsx",
+      "target": "timeline_page_handleaddtraceconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_analytics_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "app_api_analytics_route_ts",
+      "target": "analytics_route_builddailymap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "app_api_analytics_route_ts",
+      "target": "analytics_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "analytics_route_get",
+      "target": "analytics_route_builddailymap",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/analytics/route.ts",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "analytics_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/auth/login/route.ts",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "app_api_auth_login_route_ts",
+      "target": "lib_ratelimit_checkloginratelimit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/auth/login/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_auth_login_route_ts",
+      "target": "login_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/auth/login/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "login_route_post",
+      "target": "lib_ratelimit_checkloginratelimit"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_charge_codes_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_charge_codes_route_ts",
+      "target": "charge_codes_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "app_api_charge_codes_route_ts",
+      "target": "charge_codes_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "charge_codes_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/charge-codes/route.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "charge_codes_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/charge-codes/[id]/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_charge_codes_id_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/charge-codes/[id]/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_charge_codes_id_route_ts",
+      "target": "id_route_put",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/charge-codes/[id]/route.ts",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "app_api_charge_codes_id_route_ts",
+      "target": "id_route_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/route.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "app_api_companies_id_route_ts",
+      "target": "id_route_put",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/route.ts",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_route_ts",
+      "target": "id_route_put",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/charge-codes/[id]/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "id_route_put",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/route.ts",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "app_api_companies_id_route_ts",
+      "target": "id_route_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/charge-codes/[id]/route.ts",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "id_route_delete",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_companies_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_companies_route_ts",
+      "target": "companies_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "app_api_companies_route_ts",
+      "target": "companies_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "companies_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/companies/route.ts",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "companies_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_companies_id_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_companies_id_route_ts",
+      "target": "id_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/route.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_route_ts",
+      "target": "id_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/companies/[id]/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "id_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_companies_id_credit_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_companies_id_credit_route_ts",
+      "target": "credit_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "app_api_companies_id_credit_route_ts",
+      "target": "credit_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "credit_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/companies/[id]/credit/route.ts",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "credit_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/credit/[txId]/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_companies_id_credit_txid_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/companies/[id]/credit/[txId]/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_companies_id_credit_txid_route_ts",
+      "target": "txid_route_put",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/companies/[id]/credit/[txId]/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "txid_route_put",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/dashboard/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_dashboard_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/dashboard/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_dashboard_route_ts",
+      "target": "dashboard_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/dashboard/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "dashboard_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/guests/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_guests_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/guests/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_guests_route_ts",
+      "target": "guests_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/guests/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "guests_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/guests/[id]/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_guests_id_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/guests/[id]/route.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "app_api_guests_id_route_ts",
+      "target": "id_route_patch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/rooms/[id]/route.ts",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "app_api_rooms_id_route_ts",
+      "target": "id_route_patch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/guests/[id]/route.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "id_route_patch",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_route_ts",
+      "target": "lib_utils_generatereservationnumber",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_route_ts",
+      "target": "lib_utils_calculatenights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_route_ts",
+      "target": "lib_utils_maskpassport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "app_api_reservations_route_ts",
+      "target": "reservations_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "app_api_reservations_route_ts",
+      "target": "reservations_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "reservations_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "reservations_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L59",
+      "weight": 1.0,
+      "source": "reservations_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "reservations_route_post",
+      "target": "lib_utils_calculatenights"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/route.ts",
+      "source_location": "L147",
+      "weight": 1.0,
+      "source": "reservations_route_post",
+      "target": "lib_utils_generatereservationnumber"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/cancel/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_cancel_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/cancel/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_cancel_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/cancel/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_cancel_route_ts",
+      "target": "cancel_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/cancel/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "cancel_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/cancel/route.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "cancel_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/charges/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_charges_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/charges/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_charges_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/charges/route.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_charges_route_ts",
+      "target": "charges_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/charges/route.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "charges_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/charges/route.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "charges_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/charges/package/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_charges_package_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/charges/package/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_charges_package_route_ts",
+      "target": "package_route_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/charges/package/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "package_route_delete",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/checkin/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_checkin_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/checkin/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_checkin_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/checkin/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_checkin_route_ts",
+      "target": "checkin_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/checkin/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "checkin_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/checkin/route.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "checkin_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/checkout/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_checkout_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/checkout/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_checkout_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/checkout/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_checkout_route_ts",
+      "target": "checkout_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/checkout/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "checkout_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/checkout/route.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "checkout_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/extend/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_extend_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/extend/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_extend_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/extend/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_extend_route_ts",
+      "target": "extend_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/extend/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "extend_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/extend/route.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "extend_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_route_ts",
+      "target": "folios_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_route_ts",
+      "target": "folios_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "folios_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/folios/route.ts",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "folios_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/init/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_init_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/init/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_init_route_ts",
+      "target": "init_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/folios/init/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "init_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_folioid_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_folioid_route_ts",
+      "target": "folioid_route_put",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "folioid_route_put",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_folioid_assign_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_folioid_assign_route_ts",
+      "target": "assign_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_folios_folioid_assign_route_ts",
+      "target": "assign_route_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "assign_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/folios/[folioId]/assign/route.ts",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "assign_route_delete",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_master_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_master_route_ts",
+      "target": "master_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_master_route_ts",
+      "target": "master_route_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "master_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/master/route.ts",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "master_route_delete",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_move_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_move_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_move_route_ts",
+      "target": "lib_utils_calculatenights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_move_route_ts",
+      "target": "move_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "move_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "move_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/move/route.ts",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "move_route_post",
+      "target": "lib_utils_calculatenights"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/noshow/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_noshow_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/noshow/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_noshow_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/noshow/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_noshow_route_ts",
+      "target": "noshow_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/noshow/route.ts",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "noshow_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/noshow/route.ts",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "noshow_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/payment/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_payment_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/payment/route.ts",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_payment_route_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/payment/route.ts",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_payment_route_ts",
+      "target": "payment_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/payment/route.ts",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "payment_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/payment/route.ts",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "payment_route_post",
+      "target": "lib_rbac_haspermission"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/preferences/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_preferences_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/preferences/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_preferences_route_ts",
+      "target": "preferences_route_put",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/preferences/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "preferences_route_put",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_traces_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_traces_route_ts",
+      "target": "traces_route_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "app_api_reservations_id_traces_route_ts",
+      "target": "traces_route_put",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "traces_route_post",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/reservations/[id]/traces/route.ts",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "traces_route_put",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/rooms/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_rooms_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/rooms/route.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "app_api_rooms_route_ts",
+      "target": "rooms_route_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "app/api/rooms/route.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "rooms_route_get",
+      "target": "lib_session_getsessionorunauthorized"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "app/api/rooms/[id]/route.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "app_api_rooms_id_route_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "components_analyticsview_tsx",
+      "target": "components_analyticsview_kpicard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L431",
+      "weight": 1.0,
+      "source": "components_analyticsview_tsx",
+      "target": "components_analyticsview_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L455",
+      "weight": 1.0,
+      "source": "components_analyticsview_tsx",
+      "target": "components_analyticsview_applypreset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L462",
+      "weight": 1.0,
+      "source": "components_analyticsview_tsx",
+      "target": "components_analyticsview_handletogglecompare",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L459",
+      "weight": 1.0,
+      "source": "components_analyticsview_applypreset",
+      "target": "components_analyticsview_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/AnalyticsView.tsx",
+      "source_location": "L465",
+      "weight": 1.0,
+      "source": "components_analyticsview_handletogglecompare",
+      "target": "components_analyticsview_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckInModal.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_checkinmodal_tsx",
+      "target": "lib_utils_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckInModal.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "components_checkinmodal_tsx",
+      "target": "components_checkinmodal_checkinmodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "lib_utils_formatcurrency",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "lib_utils_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "lib_utils_calculatenights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_foliobalance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_ondown",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L125",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_handleassigncharge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_handlesettlefolio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_handlereopenfolio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L186",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_handleaddfolio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L203",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_handleconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L279",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_tsx",
+      "target": "components_checkoutmodal_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L145",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_handlesettlefolio",
+      "target": "components_checkoutmodal_foliobalance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "components/CheckOutModal.tsx",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "components_checkoutmodal_foliobalance",
+      "target": "lib_utils_calculatenights"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "components_companiesview_tsx",
+      "target": "components_companiesview_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "components_companiesview_tsx",
+      "target": "components_companiesview_loadcredit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "components_companiesview_tsx",
+      "target": "components_companiesview_toggleexpand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "components_companiesview_tsx",
+      "target": "components_companiesview_handlemarkpaid",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "components_companiesview_tsx",
+      "target": "components_companiesview_handlesave",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "components_companiesview_tsx",
+      "target": "components_companiesview_handledelete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "components_companiesview_handlesave",
+      "target": "components_companiesview_load",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "components_companiesview_toggleexpand",
+      "target": "components_companiesview_loadcredit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompaniesView.tsx",
+      "source_location": "L74",
+      "weight": 1.0,
+      "source": "components_companiesview_handlemarkpaid",
+      "target": "components_companiesview_loadcredit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompanyForm.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "components_companyform_tsx",
+      "target": "components_companyform_field",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/CompanyForm.tsx",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "components_companyform_tsx",
+      "target": "components_companyform_companyform",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/DashboardView.tsx",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "components_dashboardview_tsx",
+      "target": "lib_utils_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/DashboardView.tsx",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "components_dashboardview_tsx",
+      "target": "components_dashboardview_statcard",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/DashboardView.tsx",
+      "source_location": "L317",
+      "weight": 1.0,
+      "source": "components_dashboardview_tsx",
+      "target": "components_dashboardview_getnationalityflag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_guesthistoryview_tsx",
+      "target": "lib_utils_getresstatusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_guesthistoryview_tsx",
+      "target": "lib_utils_getresstatuslabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_guesthistoryview_tsx",
+      "target": "lib_utils_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "components_guesthistoryview_tsx",
+      "target": "components_guesthistoryview_deriveguests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L82",
+      "weight": 1.0,
+      "source": "components_guesthistoryview_tsx",
+      "target": "components_guesthistoryview_save",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L398",
+      "weight": 1.0,
+      "source": "components_guesthistoryview_tsx",
+      "target": "components_guesthistoryview_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/GuestHistoryView.tsx",
+      "source_location": "L196",
+      "weight": 1.0,
+      "source": "components_guesthistoryview_tsx",
+      "target": "components_guesthistoryview_saveprefnotes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "lib_utils_calculatenights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_modalshell",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_formfield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_set",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_applycontractrate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L167",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_handlecompanychange",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L194",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_handlesubmit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L805",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_handleconfirm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L598",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_selectcode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L607",
+      "weight": 1.0,
+      "source": "components_modals_tsx",
+      "target": "components_modals_clearcode",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/Modals.tsx",
+      "source_location": "L170",
+      "weight": 1.0,
+      "source": "components_modals_handlecompanychange",
+      "target": "components_modals_set",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "lib_utils_getresstatusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "lib_utils_getresstatuslabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "lib_utils_calculatenights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "lib_utils_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "lib_utils_formatcurrency",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L171",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "components_reservationdetailpanel_handlekeydown",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L194",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "components_reservationdetailpanel_handlefieldsave",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L201",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "components_reservationdetailpanel_onconfirmcheckin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L224",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "components_reservationdetailpanel_togglepackage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L281",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "components_reservationdetailpanel_handlepreferencesave",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationDetailPanel.tsx",
+      "source_location": "L291",
+      "weight": 1.0,
+      "source": "components_reservationdetailpanel_tsx",
+      "target": "components_reservationdetailpanel_editablefield",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationsView.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_reservationsview_tsx",
+      "target": "lib_utils_getresstatusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationsView.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_reservationsview_tsx",
+      "target": "lib_utils_getresstatuslabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationsView.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_reservationsview_tsx",
+      "target": "lib_utils_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationsView.tsx",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "components_reservationsview_tsx",
+      "target": "lib_utils_formatcurrency",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/ReservationsView.tsx",
+      "source_location": "L151",
+      "weight": 1.0,
+      "source": "components_reservationsview_tsx",
+      "target": "components_reservationsview_getnationalityflag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "components_roomgridview_tsx",
+      "target": "components_roomgridview_groupbyfloor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "components_roomgridview_tsx",
+      "target": "components_roomgridview_patchroomstatus",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "components_roomgridview_tsx",
+      "target": "components_roomgridview_getactivereservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "components_roomgridview_tsx",
+      "target": "components_roomgridview_getconfirmedreservation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomGridView.tsx",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "components_roomgridview_tsx",
+      "target": "components_roomgridview_getroomtypename",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "lib_utils_calculatenights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_getdays",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_todatestr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_getresstatuscolor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_getspan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_hasdateconflict",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_flasherror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L105",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_handledrop",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L172",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_tsx",
+      "target": "components_roomtimelineview_getrowhighlight",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_getspan",
+      "target": "components_roomtimelineview_todatestr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L112",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_handledrop",
+      "target": "components_roomtimelineview_todatestr",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_handledrop",
+      "target": "components_roomtimelineview_hasdateconflict",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "components/RoomTimelineView.tsx",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "components_roomtimelineview_handledrop",
+      "target": "components_roomtimelineview_flasherror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/ratelimit.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "lib_ratelimit_ts",
+      "target": "lib_ratelimit_checkloginratelimit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/ratelimit.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "lib_ratelimit_ts",
+      "target": "lib_ratelimit_resetloginattempts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rbac.ts",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "lib_rbac_ts",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rbac.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "lib_rbac_ts",
+      "target": "lib_rbac_requirepermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/rbac.ts",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "lib_rbac_requirepermission",
+      "target": "lib_rbac_haspermission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/session.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "lib_session_ts",
+      "target": "lib_session_getsessionorunauthorized",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_cn",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_getstatuscolor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_getstatusbgcolor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_getresstatusbadge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_getresstatuslabel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_calculatenights",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_formatdate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_formatcurrency",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_generatereservationnumber",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "lib/utils.ts",
+      "source_location": "L110",
+      "weight": 1.0,
+      "source": "lib_utils_ts",
+      "target": "lib_utils_maskpassport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "prisma/seed.ts",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "prisma_seed_ts",
+      "target": "prisma_seed_main",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "1bf7c65064afe5410c5a83aa563b157e24ec0a1a"
+}

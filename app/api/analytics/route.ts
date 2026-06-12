@@ -1,224 +1,217 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
+import { hasPermission } from '@/lib/rbac'
 
-function daysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate()
+type DailyMapReservation = {
+  checkIn: string; checkOut: string; rate: number; totalNights: number; totalAmount: number
+  roomTypeId: string; source: string | null; companyId: string | null
+  company: { id: string; name: string; type: string } | null
+  charges: { date: string; amount: number }[]
 }
 
-function dateInRange(dateStr: string, startStr: string, endStr: string) {
-  return dateStr >= startStr && dateStr <= endStr
-}
+function buildDailyMap(rangeFrom: string, rangeTo: string, rsvs: DailyMapReservation[]) {
+  const days: Record<string, {
+    date: string; roomRevenue: number; extraCharges: number; payments: number; netTotal: number
+    occupied: number; arrivals: number; departures: number
+  }> = {}
+  const cur = new Date(rangeFrom)
+  const end = new Date(rangeTo)
+  while (cur <= end) {
+    const d = cur.toISOString().split('T')[0]
+    days[d] = { date: d, roomRevenue: 0, extraCharges: 0, payments: 0, netTotal: 0, occupied: 0, arrivals: 0, departures: 0 }
+    cur.setDate(cur.getDate() + 1)
+  }
 
-function overlapsMonth(checkIn: string, checkOut: string, startStr: string, endStr: string) {
-  return checkIn <= endStr && checkOut > startStr
+  for (const res of rsvs) {
+    const ciDate = new Date(res.checkIn)
+    const coDate = new Date(res.checkOut)
+    if (days[res.checkIn]) days[res.checkIn].arrivals++
+    if (days[res.checkOut]) days[res.checkOut].departures++
+
+    const nightStart = ciDate < new Date(rangeFrom) ? new Date(rangeFrom) : ciDate
+    const nightEnd = coDate > new Date(rangeTo) ? new Date(rangeTo) : coDate
+    let nc = new Date(nightStart)
+    while (nc < nightEnd) {
+      const dk = nc.toISOString().split('T')[0]
+      if (days[dk]) {
+        days[dk].roomRevenue += res.rate
+        days[dk].occupied++
+      }
+      nc.setDate(nc.getDate() + 1)
+    }
+
+    // Extra charges and payments by date
+    for (const charge of res.charges) {
+      if (days[charge.date]) {
+        if (charge.amount > 0) days[charge.date].extraCharges += charge.amount
+        else days[charge.date].payments += Math.abs(charge.amount)
+      }
+    }
+  }
+
+  for (const d of Object.values(days)) {
+    d.netTotal = d.roomRevenue + d.extraCharges - d.payments
+  }
+  return days
 }
 
 export async function GET(req: NextRequest) {
-  const { hotelId, error } = await getSessionOrUnauthorized()
+  const { hotelId, role, error } = await getSessionOrUnauthorized()
   if (error) return error
+  if (!hasPermission(role!, 'VIEW_FINANCIALS')) {
+    return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
+  }
 
   const { searchParams } = new URL(req.url)
-  const now = new Date()
-  const year = parseInt(searchParams.get('year') || String(now.getFullYear()))
-  const month = parseInt(searchParams.get('month') || String(now.getMonth() + 1))
+  const from = searchParams.get('from') ?? new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
+  const to = searchParams.get('to') ?? new Date().toISOString().split('T')[0]
+  const compareYear = searchParams.get('compareYear')
 
-  const totalDays = daysInMonth(year, month)
-  const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
-  const monthEnd = `${year}-${String(month).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`
-
-  const [reservations, rooms, companies] = await Promise.all([
-    prisma.reservation.findMany({
+  try {
+    const reservations = await prisma.reservation.findMany({
       where: {
         hotelId: hotelId!,
-        status: { notIn: ['cancelled', 'no_show'] },
+        status: { in: ['checked_in', 'checked_out'] },
+        checkIn: { lte: to },
+        checkOut: { gte: from },
       },
-      include: { charges: true },
-    }),
-    prisma.room.findMany({ where: { hotelId: hotelId! } }),
-    prisma.company.findMany({ where: { hotelId: hotelId! } }),
-  ])
-
-  const totalRooms = rooms.length
-
-  // Filter reservations that overlap with the selected month
-  const monthRes = reservations.filter((r) =>
-    overlapsMonth(r.checkIn, r.checkOut, monthStart, monthEnd)
-  )
-
-  // For each reservation, compute room-nights actually in the month
-  function nightsInMonth(checkIn: string, checkOut: string): number {
-    const start = checkIn < monthStart ? monthStart : checkIn
-    const end = checkOut > monthEnd ? monthEnd : checkOut
-    if (start >= end) return 0
-    const s = new Date(start)
-    const e = new Date(end)
-    return Math.round((e.getTime() - s.getTime()) / 86400000)
-  }
-
-  // KPIs
-  let totalRevenue = 0
-  let totalNightsSold = 0
-
-  for (const r of monthRes) {
-    const nights = nightsInMonth(r.checkIn, r.checkOut)
-    totalRevenue += r.rate * nights
-    totalNightsSold += nights
-  }
-
-  const totalAvailableNights = totalRooms * totalDays
-  const adr = totalNightsSold > 0 ? totalRevenue / totalNightsSold : 0
-  const revpar = totalAvailableNights > 0 ? totalRevenue / totalAvailableNights : 0
-  const occupancyPct = totalAvailableNights > 0 ? (totalNightsSold / totalAvailableNights) * 100 : 0
-
-  // Revenue by source
-  const sourceMap = new Map<string, { reservations: number; roomNights: number; revenue: number }>()
-  for (const r of monthRes) {
-    const src = r.source || 'Direct'
-    const nights = nightsInMonth(r.checkIn, r.checkOut)
-    const rev = r.rate * nights
-    const entry = sourceMap.get(src) || { reservations: 0, roomNights: 0, revenue: 0 }
-    entry.reservations += 1
-    entry.roomNights += nights
-    entry.revenue += rev
-    sourceMap.set(src, entry)
-  }
-  const bySource = Array.from(sourceMap.entries())
-    .map(([source, data]) => ({
-      source,
-      ...data,
-      pct: totalRevenue > 0 ? (data.revenue / totalRevenue) * 100 : 0,
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-
-  // Corporate account performance
-  const companyMap = new Map<
-    string,
-    { name: string; stays: number; roomNights: number; revenue: number }
-  >()
-  for (const r of monthRes) {
-    const key = r.companyId || '__direct__'
-    const name =
-      r.companyId
-        ? companies.find((c) => c.id === r.companyId)?.name || r.company || 'Unknown'
-        : r.company || 'Walk-in / Direct'
-    const nights = nightsInMonth(r.checkIn, r.checkOut)
-    const rev = r.rate * nights
-    const entry = companyMap.get(key) || { name, stays: 0, roomNights: 0, revenue: 0 }
-    entry.stays += 1
-    entry.roomNights += nights
-    entry.revenue += rev
-    companyMap.set(key, entry)
-  }
-  const byCorporate = Array.from(companyMap.values())
-    .map((d) => ({
-      ...d,
-      avgRate: d.roomNights > 0 ? d.revenue / d.roomNights : 0,
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-
-  // Nationality breakdown
-  const natMap = new Map<string, number>()
-  for (const r of monthRes) {
-    const nat = r.nationality || 'Unknown'
-    natMap.set(nat, (natMap.get(nat) || 0) + 1)
-  }
-  const totalGuests = monthRes.length
-  const byNationality = Array.from(natMap.entries())
-    .map(([nationality, count]) => ({
-      nationality,
-      count,
-      pct: totalGuests > 0 ? (count / totalGuests) * 100 : 0,
-    }))
-    .sort((a, b) => b.count - a.count)
-
-  // Room type performance
-  const rtMap = new Map<
-    string,
-    { roomsAvailable: number; nightsSold: number; revenue: number }
-  >()
-  const roomTypeCountMap = new Map<string, number>()
-  for (const room of rooms) {
-    roomTypeCountMap.set(room.type, (roomTypeCountMap.get(room.type) || 0) + 1)
-  }
-  for (const r of monthRes) {
-    const rt = r.roomTypeId
-    const nights = nightsInMonth(r.checkIn, r.checkOut)
-    const rev = r.rate * nights
-    const entry = rtMap.get(rt) || {
-      roomsAvailable: (roomTypeCountMap.get(rt) || 0) * totalDays,
-      nightsSold: 0,
-      revenue: 0,
-    }
-    entry.nightsSold += nights
-    entry.revenue += rev
-    rtMap.set(rt, entry)
-  }
-  // ensure all room types appear
-  for (const [rt, count] of Array.from(roomTypeCountMap.entries())) {
-    if (!rtMap.has(rt)) {
-      rtMap.set(rt, { roomsAvailable: count * totalDays, nightsSold: 0, revenue: 0 })
-    }
-  }
-  const byRoomType = Array.from(rtMap.entries())
-    .map(([roomType, data]) => ({
-      roomType,
-      roomsAvailable: roomTypeCountMap.get(roomType) || 0,
-      totalAvailableNights: data.roomsAvailable,
-      nightsSold: data.nightsSold,
-      occupancyPct: data.roomsAvailable > 0 ? (data.nightsSold / data.roomsAvailable) * 100 : 0,
-      revenue: data.revenue,
-      adr: data.nightsSold > 0 ? data.revenue / data.nightsSold : 0,
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-
-  // Last 30 days trend
-  const today = new Date()
-  const trend: Array<{
-    date: string
-    roomsOccupied: number
-    occupancyPct: number
-    revenue: number
-  }> = []
-
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today)
-    d.setDate(d.getDate() - i)
-    const dateStr = d.toISOString().split('T')[0]
-
-    let occupied = 0
-    let dayRevenue = 0
-
-    for (const r of reservations) {
-      if (r.checkIn <= dateStr && r.checkOut > dateStr) {
-        occupied += 1
-        dayRevenue += r.rate
-      }
-    }
-
-    trend.push({
-      date: dateStr,
-      roomsOccupied: occupied,
-      occupancyPct: totalRooms > 0 ? (occupied / totalRooms) * 100 : 0,
-      revenue: dayRevenue,
+      include: {
+        charges: true,
+        company: { select: { id: true, name: true, type: true } },
+      },
     })
-  }
 
-  return NextResponse.json({
-    month,
-    year,
-    kpi: {
-      totalRevenue,
-      adr,
-      revpar,
-      occupancyPct,
-      totalNightsSold,
-      totalRooms,
-    },
-    bySource,
-    byCorporate,
-    byNationality,
-    byRoomType,
-    trend,
-  })
+    const totalRooms = await prisma.room.count({ where: { hotelId: hotelId! } })
+
+    const days = buildDailyMap(from, to, reservations)
+
+    let totalRevenue = 0
+    let totalRoomNights = 0
+    const sourceMap: Record<string, number> = {}
+    const companyMap: Record<string, {
+      id: string; name: string; type: string; revenue: number; nights: number
+      reservationCount: number; lastStay: string
+    }> = {}
+    const roomTypeMap: Record<string, { revenue: number; nights: number }> = {}
+
+    const sourceRevMap: Record<string, { count: number; revenue: number }> = {}
+    const losMap: Record<string, number> = {}
+
+    for (const res of reservations) {
+      const ciDate = new Date(res.checkIn)
+      const coDate = new Date(res.checkOut)
+      const resSource = res.source ?? 'Direct'
+      sourceMap[resSource] = (sourceMap[resSource] ?? 0) + 1
+
+      if (res.companyId && res.company) {
+        if (!companyMap[res.companyId]) {
+          companyMap[res.companyId] = {
+            id: res.companyId,
+            name: res.company.name,
+            type: res.company.type,
+            revenue: 0, nights: 0, reservationCount: 0, lastStay: '',
+          }
+        }
+        companyMap[res.companyId].revenue += res.totalAmount
+        companyMap[res.companyId].nights += res.totalNights
+        companyMap[res.companyId].reservationCount++
+        if (!companyMap[res.companyId].lastStay || res.checkOut > companyMap[res.companyId].lastStay) {
+          companyMap[res.companyId].lastStay = res.checkOut
+        }
+      }
+
+      const rt = res.roomTypeId
+      if (!roomTypeMap[rt]) roomTypeMap[rt] = { revenue: 0, nights: 0 }
+      roomTypeMap[rt].revenue += res.totalAmount
+      roomTypeMap[rt].nights += res.totalNights
+
+      const nightStart = ciDate < new Date(from) ? new Date(from) : ciDate
+      const nightEnd = coDate > new Date(to) ? new Date(to) : coDate
+      let nc = new Date(nightStart)
+      while (nc < nightEnd) {
+        totalRevenue += res.rate
+        totalRoomNights++
+        nc.setDate(nc.getDate() + 1)
+      }
+
+      sourceRevMap[resSource] = sourceRevMap[resSource] ?? { count: 0, revenue: 0 }
+      sourceRevMap[resSource].count++
+      sourceRevMap[resSource].revenue += res.totalAmount
+
+      const los = res.totalNights
+      const bucket = los >= 7 ? '7+' : los >= 5 ? '5-6' : String(los)
+      losMap[bucket] = (losMap[bucket] ?? 0) + 1
+    }
+
+    const dayCount = Object.keys(days).length || 1
+    const avgOccupancy = totalRoomNights / (totalRooms * dayCount)
+    const avgRate = totalRoomNights > 0 ? totalRevenue / totalRoomNights : 0
+    const revPar = totalRevenue / (totalRooms * dayCount)
+
+    const allCompanies = Object.values(companyMap)
+    const companiesRevenue = allCompanies
+      .filter((c) => c.type === 'COMPANY')
+      .map((c) => ({ ...c, avgRate: c.nights > 0 ? Math.round(c.revenue / c.nights) : 0 }))
+      .sort((a, b) => b.revenue - a.revenue)
+    const agentsRevenue = allCompanies
+      .filter((c) => c.type === 'AGENT')
+      .map((c) => ({ ...c, avgRate: c.nights > 0 ? Math.round(c.revenue / c.nights) : 0 }))
+      .sort((a, b) => b.revenue - a.revenue)
+
+    // Compare year support
+    let lastYearDaily: Array<{ date: string; roomRevenue: number; extraCharges: number; payments: number; netTotal: number }> | null = null
+    if (compareYear) {
+      const yearDiff = new Date(from).getFullYear() - parseInt(compareYear)
+      const lyFrom = new Date(from)
+      lyFrom.setFullYear(lyFrom.getFullYear() - yearDiff)
+      const lyTo = new Date(to)
+      lyTo.setFullYear(lyTo.getFullYear() - yearDiff)
+      const lyFromStr = lyFrom.toISOString().split('T')[0]
+      const lyToStr = lyTo.toISOString().split('T')[0]
+
+      const lyReservations = await prisma.reservation.findMany({
+        where: {
+          hotelId: hotelId!,
+          status: { in: ['checked_in', 'checked_out'] },
+          checkIn: { lte: lyToStr },
+          checkOut: { gte: lyFromStr },
+        },
+        include: { charges: true },
+      })
+
+      const lyDays = buildDailyMap(lyFromStr, lyToStr, lyReservations as any)
+      lastYearDaily = Object.values(lyDays)
+    }
+
+    const losOrder = ['1', '2', '3', '4', '5-6', '7+']
+
+    return NextResponse.json({
+      summary: {
+        totalRevenue,
+        totalReservations: reservations.length,
+        avgOccupancy: Math.round(avgOccupancy * 100),
+        avgRate: Math.round(avgRate),
+        revPar: Math.round(revPar),
+        totalRoomNights,
+        totalRooms,
+      },
+      daily: Object.values(days),
+      bySource: Object.entries(sourceMap).map(([source, count]) => ({ source, count })).sort((a, b) => b.count - a.count),
+      bySourceRevenue: Object.entries(sourceRevMap)
+        .map(([source, v]) => ({ source, ...v }))
+        .sort((a, b) => b.revenue - a.revenue),
+      byCompany: allCompanies.sort((a, b) => b.revenue - a.revenue),
+      byRoomType: Object.entries(roomTypeMap).map(([type, v]) => ({ type, ...v })).sort((a, b) => b.revenue - a.revenue),
+      companiesRevenue,
+      agentsRevenue,
+      losDistribution: Object.entries(losMap)
+        .map(([nights, count]) => ({ nights, count }))
+        .sort((a, b) => losOrder.indexOf(a.nights) - losOrder.indexOf(b.nights)),
+      ...(lastYearDaily !== null ? { lastYearDaily } : {}),
+    })
+  } catch (err) {
+    console.error('[GET /api/analytics] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
 }

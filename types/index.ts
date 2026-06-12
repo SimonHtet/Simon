@@ -10,6 +10,7 @@ export interface Room {
   id: string
   floor: number
   type: string
+  rate: number
   status: RoomStatus
   resId?: string | null
   hotelId?: string
@@ -20,13 +21,40 @@ export interface Guest {
   name: string
   firstName?: string | null
   lastName?: string | null
+  preferredName?: string | null
+  birthday?: string | null
   nationality?: string | null
   email?: string | null
   phone?: string | null
   passportNumber?: string | null
+  passportExpiry?: string | null
+  language?: string | null
+  memberNumber?: string | null
   vipStatus?: string | null
   company?: string | null
+  city?: string | null
+  country?: string | null
   hotelId?: string
+  preferenceNotes?: string | null
+  specialRequests?: string | null
+  smokingPref?: string | null
+  bedPref?: string | null
+  pillowPref?: string | null
+  floorPref?: string | null
+  viewPref?: string | null
+  temperaturePref?: string | null
+  allergiesPref?: string | null
+}
+
+export interface ChargeCode {
+  id: number
+  code: string
+  category: string
+  description: string
+  price: number
+  active: boolean
+  hotelId?: string
+  parentCode?: string | null
 }
 
 export interface Charge {
@@ -36,6 +64,25 @@ export interface Charge {
   amount: number
   date: string
   category?: string | null
+  folioCharge?: { folioId: number } | null
+}
+
+export interface FolioCharge {
+  id: number
+  folioId: number
+  chargeId: number
+  charge: Charge
+}
+
+export interface Folio {
+  id: number
+  reservationId: string
+  name: string
+  paymentMethod?: string | null
+  status: string
+  settledAt?: string | Date | null
+  createdAt?: string | Date
+  charges: FolioCharge[]
 }
 
 export type TraceStatus = 'pending' | 'resolved'
@@ -65,6 +112,20 @@ export type ReservationStatus =
   | 'cancelled'
   | 'no_show'
 
+export interface Preferences {
+  id?: number
+  reservationId?: string
+  smoking?: string | null
+  bed?: string | null
+  pillow?: string | null
+  floor?: string | null
+  view?: string | null
+  temperature?: string | null
+  allergies?: string | null
+  amenities?: string | null
+  notes?: string | null
+}
+
 export interface Reservation {
   id: string
   reservationNumber: string
@@ -88,12 +149,21 @@ export interface Reservation {
   bookingReference?: string | null
   vipStatus?: string | null
   passportNumber?: string | null
-  company?: string | null
+  passportExpiry?: string | null
   companyId?: string | null
+  company?: Company | null
   specials?: string | null
   eta?: string | null
   flightNumber?: string | null
   visaDetails?: string | null
+  preferredName?: string | null
+  birthday?: string | null
+  language?: string | null
+  memberNumber?: string | null
+  city?: string | null
+  country?: string | null
+  createdBy?: string | null
+  notes?: string | null
   turndown: boolean
   dnm: boolean
   actualCheckIn?: string | Date | null
@@ -103,30 +173,100 @@ export interface Reservation {
   moveReason?: string | null
   isMaster: boolean
   masterResId?: string | null
+  masterReservation?: Reservation | null
+  linkedReservations?: Reservation[]
   charges: Charge[]
   traces: Trace[]
   packages: Package[]
+  preferences?: Preferences | null
+  folios?: Folio[]
   createdAt?: string | Date
   updatedAt?: string | Date
 }
 
-export interface CompanyRate {
+export interface CreditTransaction {
   id: number
   companyId: string
-  roomType: string
-  contractRate: number
+  hotelId?: string
+  reservationId?: string | null
+  folioId?: number | null
+  amount: number
+  description: string
+  status: string
+  paidAt?: string | Date | null
+  createdAt?: string | Date
 }
 
 export interface Company {
   id: string
+  hotelId?: string
   name: string
   contactName?: string | null
   contactEmail?: string | null
   contactPhone?: string | null
-  hotelId?: string
-  contractRates: CompanyRate[]
+  address?: string | null
+  taxId?: string | null
+  notes?: string | null
+  type: 'COMPANY' | 'AGENT'
+  contractRates: {
+    STANDARD?: number
+    DELUXE?: number
+    SUITE?: number
+    POOL_VILLA?: number
+  }
+  blackoutStart?: string | null
+  blackoutEnd?: string | null
+  active: boolean
+  creditLimit: number
+  creditUsed: number
+  creditResetDay: number
+  lastCreditReset?: string | null
+  bankName?: string | null
+  bankAccountName?: string | null
+  bankAccountNumber?: string | null
+  creditTransactions?: CreditTransaction[]
   createdAt?: string | Date
-  _count?: { reservations: number }
+  updatedAt?: string | Date
+}
+
+export interface TaxInvoiceLineItem {
+  description: string
+  quantity: number
+  unitPrice: number
+  amount: number
+}
+
+export interface TaxInvoice {
+  id: string
+  invoiceNumber: string
+  hotelId?: string
+  companyId?: string | null
+  company?: Company | null
+  reservationId?: string | null
+  billTo: string
+  billTaxId?: string | null
+  billAddress?: string | null
+  lineItems: TaxInvoiceLineItem[]
+  subtotal: number
+  vatRate: number
+  vatAmount: number
+  totalAmount: number
+  status: 'draft' | 'issued' | 'paid' | 'void'
+  issuedAt?: string | Date | null
+  dueDate?: string | null
+  notes?: string | null
+  createdBy?: string | null
+  createdAt?: string | Date
+  updatedAt?: string | Date
+}
+
+export interface StaffUser {
+  id: string
+  name: string | null
+  email: string
+  role: string
+  hotelId: string
+  createdAt: string | Date
 }
 
 export interface DashboardStats {

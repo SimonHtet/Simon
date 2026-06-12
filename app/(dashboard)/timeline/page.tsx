@@ -4,14 +4,31 @@ import { useState, useEffect, useCallback } from 'react'
 import { Room, Reservation } from '@/types'
 import RoomTimelineView from '@/components/RoomTimelineView'
 import ReservationDetailPanel from '@/components/ReservationDetailPanel'
+import CheckOutModal from '@/components/CheckOutModal'
+import {
+  MoveRoomModal,
+  ExtendStayModal,
+  AddChargeModal,
+  PostPaymentModal,
+  AddTraceModal,
+} from '@/components/Modals'
 
 export default function TimelinePage() {
   const [rooms, setRooms] = useState<Room[]>([])
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null)
+  const [activeModal, setActiveModal] = useState<'extendStay' | 'moveRoom' | 'addCharge' | 'postPayment' | 'addTrace' | 'checkout' | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const fetchDetail = useCallback(async (id: string): Promise<Reservation | null> => {
+    const res = await fetch(`/api/reservations/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, [])
+
   const refreshData = useCallback(async () => {
+    // Refresh selected reservation detail in parallel with the list fetches
+    const detailPromise = selectedRes ? fetchDetail(selectedRes.id) : null
     const [roomsRes, resRes] = await Promise.all([
       fetch('/api/rooms'),
       fetch('/api/reservations'),
@@ -19,11 +36,30 @@ export default function TimelinePage() {
     const [roomsData, resData] = await Promise.all([roomsRes.json(), resRes.json()])
     setRooms(roomsData)
     setReservations(resData)
-    if (selectedRes) {
-      const updated = resData.find((r: Reservation) => r.id === selectedRes.id)
+    if (detailPromise) {
+      const updated = await detailPromise
       if (updated) setSelectedRes(updated)
     }
-  }, [selectedRes?.id])
+  }, [selectedRes?.id, fetchDetail])
+
+  // Lean refresh for drag-and-drop — skips fetchDetail since timeline doesn't need panel detail post-move
+  const refreshAfterMove = useCallback(async () => {
+    const [roomsRes, resRes] = await Promise.all([
+      fetch('/api/rooms'),
+      fetch('/api/reservations'),
+    ])
+    const [roomsData, resData] = await Promise.all([roomsRes.json(), resRes.json()])
+    setRooms(Array.isArray(roomsData) ? roomsData : [])
+    setReservations(Array.isArray(resData) ? resData : [])
+  }, [])
+
+  // Open the panel immediately with the list data, hydrate full detail in background
+  function handleSelectReservation(res: Reservation) {
+    setSelectedRes(res)
+    fetchDetail(res.id).then((detail) => {
+      if (detail) setSelectedRes((prev) => (prev?.id === res.id ? detail : prev))
+    })
+  }
 
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
@@ -47,6 +83,110 @@ export default function TimelinePage() {
     await refreshData()
   }
 
+  async function handleExtendStay(res: Reservation) {
+    setSelectedRes(res)
+    setActiveModal('extendStay')
+  }
+
+  async function handleExtendStayConfirm(extraNights: number) {
+    if (!selectedRes) return
+    await fetch(`/api/reservations/${selectedRes.id}/extend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ extraNights }),
+    })
+    setActiveModal(null)
+    await refreshData()
+  }
+
+  async function handleCheckOut(res: Reservation) {
+    const alreadyHaveDetail = selectedRes?.id === res.id
+    setSelectedRes(alreadyHaveDetail ? selectedRes! : res)
+    setActiveModal('checkout')
+    if (!alreadyHaveDetail) {
+      const id = res.id
+      fetchDetail(id).then(detail => {
+        if (detail) setSelectedRes(prev => prev?.id === id ? detail : prev)
+      })
+    }
+  }
+
+  async function handleCheckOutConfirm() {
+    if (!selectedRes) return
+    const res = await fetch(`/api/reservations/${selectedRes.id}/checkout`, { method: 'POST' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      alert(data.error ?? 'Check-out failed')
+      return
+    }
+    setActiveModal(null)
+    await refreshData()
+  }
+
+  async function handleMoveRoom(res: Reservation) {
+    setSelectedRes(res)
+    setActiveModal('moveRoom')
+  }
+
+  async function handleMoveRoomConfirm(newRoomId: string, reason: string, pricingAction: string) {
+    if (!selectedRes) return
+    await fetch(`/api/reservations/${selectedRes.id}/move`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newRoomId, reason, pricingAction }),
+    })
+    setActiveModal(null)
+    await refreshData()
+  }
+
+  async function handleAddCharge(res: Reservation) {
+    setSelectedRes(res)
+    setActiveModal('addCharge')
+  }
+
+  async function handleAddChargeConfirm(data: { item: string; amount: number; date: string; category?: string }) {
+    if (!selectedRes) return
+    await fetch(`/api/reservations/${selectedRes.id}/charges`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    setActiveModal(null)
+    await refreshData()
+  }
+
+  async function handlePostPayment(res: Reservation) {
+    setSelectedRes(res)
+    setActiveModal('postPayment')
+  }
+
+  async function handlePostPaymentConfirm(data: { item: string; amount: number; date: string }) {
+    if (!selectedRes) return
+    await fetch(`/api/reservations/${selectedRes.id}/payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    setActiveModal(null)
+    await refreshData()
+  }
+
+  async function handleAddTrace(res: Reservation) {
+    setSelectedRes(res)
+    setActiveModal('addTrace')
+  }
+
+  async function handleAddTraceConfirm(data: { text: string; date: string; department: string }) {
+    if (!selectedRes) return
+    await fetch(`/api/reservations/${selectedRes.id}/traces`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    setActiveModal(null)
+    await refreshData()
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -60,26 +200,46 @@ export default function TimelinePage() {
       <RoomTimelineView
         rooms={rooms}
         reservations={reservations}
-        onSelectReservation={setSelectedRes}
+        onSelectReservation={handleSelectReservation}
+        onRefresh={refreshAfterMove}
       />
 
-      {selectedRes && (
+      {selectedRes && !activeModal && (
         <ReservationDetailPanel
           reservation={selectedRes}
           rooms={rooms}
           onClose={() => setSelectedRes(null)}
           onCheckIn={() => {}}
-          onCheckOut={() => {}}
+          onCheckOut={handleCheckOut}
           onCancel={() => {}}
           onNoShow={() => {}}
-          onMoveRoom={() => {}}
-          onExtendStay={() => {}}
-          onAddCharge={() => {}}
-          onPostPayment={() => {}}
-          onAddTrace={() => {}}
+          onMoveRoom={handleMoveRoom}
+          onExtendStay={handleExtendStay}
+          onAddCharge={handleAddCharge}
+          onPostPayment={handlePostPayment}
+          onAddTrace={handleAddTrace}
           onResolveTrace={handleResolveTrace}
           onUpdateReservation={handleUpdateReservation}
         />
+      )}
+
+      {activeModal === 'checkout' && selectedRes && (
+        <CheckOutModal reservation={selectedRes} onConfirm={handleCheckOutConfirm} onClose={() => setActiveModal(null)} />
+      )}
+      {activeModal === 'extendStay' && selectedRes && (
+        <ExtendStayModal reservation={selectedRes} onConfirm={handleExtendStayConfirm} onClose={() => setActiveModal(null)} />
+      )}
+      {activeModal === 'moveRoom' && selectedRes && (
+        <MoveRoomModal reservation={selectedRes} rooms={rooms} onConfirm={handleMoveRoomConfirm} onClose={() => setActiveModal(null)} />
+      )}
+      {activeModal === 'addCharge' && selectedRes && (
+        <AddChargeModal reservation={selectedRes} onConfirm={handleAddChargeConfirm} onClose={() => setActiveModal(null)} />
+      )}
+      {activeModal === 'postPayment' && selectedRes && (
+        <PostPaymentModal reservation={selectedRes} onConfirm={handlePostPaymentConfirm} onClose={() => setActiveModal(null)} />
+      )}
+      {activeModal === 'addTrace' && selectedRes && (
+        <AddTraceModal reservation={selectedRes} onConfirm={handleAddTraceConfirm} onClose={() => setActiveModal(null)} />
       )}
     </>
   )

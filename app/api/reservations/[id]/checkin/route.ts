@@ -14,51 +14,57 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
   }
 
-  const reservation = await prisma.reservation.findUnique({
-    where: { id: params.id },
-    include: { room: true },
-  })
-
-  if (!reservation) {
-    return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
-  }
-
-  if (reservation.hotelId !== hotelId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  if (reservation.room.status === 'maintenance' || reservation.room.status === 'blocked') {
-    return NextResponse.json(
-      { error: `Room ${reservation.roomId} is ${reservation.room.status}` },
-      { status: 400 }
-    )
-  }
-
-  const body = await req.json().catch(() => ({}))
-  const { eta, flightNumber } = body
-
-  const [updated] = await prisma.$transaction([
-    prisma.reservation.update({
+  try {
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
-      data: {
-        status: 'checked_in',
-        actualCheckIn: new Date(),
-        ...(eta && { eta }),
-        ...(flightNumber && { flightNumber }),
-      },
-      include: {
-        guest: true,
-        room: true,
-        charges: { orderBy: { createdAt: 'asc' } },
-        traces: { orderBy: { createdAt: 'asc' } },
-        packages: true,
-      },
-    }),
-    prisma.room.update({
-      where: { id: reservation.roomId },
-      data: { status: 'occupied', resId: params.id },
-    }),
-  ])
+      include: { room: true },
+    })
 
-  return NextResponse.json(updated)
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
+    }
+
+    if (reservation.hotelId !== hotelId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    if (reservation.room.status === 'maintenance' || reservation.room.status === 'blocked') {
+      return NextResponse.json(
+        { error: `Room ${reservation.roomId} is ${reservation.room.status}` },
+        { status: 400 }
+      )
+    }
+
+    const body = await req.json().catch(() => ({}))
+    const { eta, flightNumber } = body
+
+    const [updated] = await prisma.$transaction([
+      prisma.reservation.update({
+        where: { id: params.id },
+        data: {
+          status: 'checked_in',
+          actualCheckIn: new Date(),
+          ...(eta && { eta }),
+          ...(flightNumber && { flightNumber }),
+        },
+        include: {
+          guest: true,
+          room: true,
+          charges: { orderBy: { createdAt: 'asc' } },
+          traces: { orderBy: { createdAt: 'asc' } },
+          packages: true,
+          preferences: true,
+        },
+      }),
+      prisma.room.update({
+        where: { id: reservation.roomId },
+        data: { status: 'occupied', resId: params.id },
+      }),
+    ])
+
+    return NextResponse.json(updated)
+  } catch (err) {
+    console.error('[POST /api/reservations/[id]/checkin] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
 }

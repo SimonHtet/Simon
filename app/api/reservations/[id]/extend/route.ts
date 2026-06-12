@@ -14,19 +14,7 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
   }
 
-  const reservation = await prisma.reservation.findUnique({
-    where: { id: params.id },
-  })
-
-  if (!reservation) {
-    return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
-  }
-
-  if (reservation.hotelId !== hotelId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  const body = await req.json()
+  const body = await req.json().catch(() => ({}))
   const { extraNights } = body
 
   const nights = parseInt(extraNights)
@@ -37,45 +25,63 @@ export async function POST(
     )
   }
 
-  const currentCheckOut = new Date(reservation.checkOut)
-  currentCheckOut.setDate(currentCheckOut.getDate() + nights)
-  const newCheckOut = currentCheckOut.toISOString().split('T')[0]
+  try {
+    const reservation = await prisma.reservation.findUnique({
+      where: { id: params.id },
+    })
 
-  const overlap = await prisma.reservation.findFirst({
-    where: {
-      roomId: reservation.roomId,
-      id: { not: params.id },
-      status: { in: ['confirmed', 'checked_in'] },
-      checkIn: { lt: newCheckOut },
-      checkOut: { gt: reservation.checkOut },
-    },
-  })
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
+    }
 
-  if (overlap) {
-    return NextResponse.json(
-      { error: 'Room is not available for the requested dates. Please choose different dates.' },
-      { status: 400 }
-    )
+    if (reservation.hotelId !== hotelId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const currentCheckOut = new Date(reservation.checkOut)
+    currentCheckOut.setDate(currentCheckOut.getDate() + nights)
+    const newCheckOut = currentCheckOut.toISOString().split('T')[0]
+
+    const overlap = await prisma.reservation.findFirst({
+      where: {
+        roomId: reservation.roomId,
+        id: { not: params.id },
+        status: { in: ['confirmed', 'checked_in'] },
+        checkIn: { lt: newCheckOut },
+        checkOut: { gt: reservation.checkOut },
+      },
+    })
+
+    if (overlap) {
+      return NextResponse.json(
+        { error: 'Room is not available for the requested dates. Please choose different dates.' },
+        { status: 400 }
+      )
+    }
+
+    const newTotalNights = reservation.totalNights + nights
+    const newTotalAmount = reservation.rate * newTotalNights
+
+    const updated = await prisma.reservation.update({
+      where: { id: params.id },
+      data: {
+        checkOut: newCheckOut,
+        totalNights: newTotalNights,
+        totalAmount: newTotalAmount,
+      },
+      include: {
+        guest: true,
+        room: true,
+        charges: { orderBy: { createdAt: 'asc' } },
+        traces: { orderBy: { createdAt: 'asc' } },
+        packages: true,
+        preferences: true,
+      },
+    })
+
+    return NextResponse.json(updated)
+  } catch (err) {
+    console.error('[POST /api/reservations/[id]/extend] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
   }
-
-  const newTotalNights = reservation.totalNights + nights
-  const newTotalAmount = reservation.rate * newTotalNights
-
-  const updated = await prisma.reservation.update({
-    where: { id: params.id },
-    data: {
-      checkOut: newCheckOut,
-      totalNights: newTotalNights,
-      totalAmount: newTotalAmount,
-    },
-    include: {
-      guest: true,
-      room: true,
-      charges: { orderBy: { createdAt: 'asc' } },
-      traces: { orderBy: { createdAt: 'asc' } },
-      packages: true,
-    },
-  })
-
-  return NextResponse.json(updated)
 }

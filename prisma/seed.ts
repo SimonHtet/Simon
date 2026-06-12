@@ -47,31 +47,53 @@ async function main() {
 
   // ── Rooms ──────────────────────────────────────────────────────────────────
   const rooms = [
-    // Floor 1 - Standard
+    // ── Floor 1 (10 rooms) — Standard & Deluxe ────────────────────────────────
     { id: '101', floor: 1, type: 'STANDARD', status: 'available' },
     { id: '102', floor: 1, type: 'STANDARD', status: 'occupied' },
     { id: '103', floor: 1, type: 'STANDARD', status: 'available' },
     { id: '104', floor: 1, type: 'STANDARD', status: 'dirty' },
     { id: '105', floor: 1, type: 'STANDARD', status: 'available' },
     { id: '106', floor: 1, type: 'STANDARD', status: 'maintenance' },
-    // Floor 1 - Deluxe
-    { id: '107', floor: 1, type: 'DELUXE', status: 'occupied' },
-    { id: '108', floor: 1, type: 'DELUXE', status: 'available' },
-    // Floor 2 - Standard
-    { id: '201', floor: 2, type: 'STANDARD', status: 'occupied' },
+    { id: '107', floor: 1, type: 'DELUXE',   status: 'occupied' },
+    { id: '108', floor: 1, type: 'DELUXE',   status: 'available' },
+    { id: '109', floor: 1, type: 'DELUXE',   status: 'available' },
+    { id: '110', floor: 1, type: 'DELUXE',   status: 'dirty' },
+
+    // ── Floor 2 (10 rooms) — Standard & Deluxe ────────────────────────────────
+    { id: '201', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '202', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '203', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '204', floor: 2, type: 'STANDARD', status: 'dirty' },
     { id: '205', floor: 2, type: 'STANDARD', status: 'available' },
     { id: '206', floor: 2, type: 'STANDARD', status: 'available' },
-    // Floor 2 - Deluxe
-    { id: '207', floor: 2, type: 'DELUXE', status: 'occupied' },
-    { id: '208', floor: 2, type: 'DELUXE', status: 'available' },
-    // Floor 3 - Suites
-    { id: '301', floor: 3, type: 'SUITE', status: 'occupied' },
-    { id: '302', floor: 3, type: 'SUITE', status: 'available' },
-    { id: '303', floor: 3, type: 'SUITE', status: 'available' },
-    { id: '304', floor: 3, type: 'SUITE', status: 'blocked' },
+    { id: '207', floor: 2, type: 'DELUXE',   status: 'available' },
+    { id: '208', floor: 2, type: 'DELUXE',   status: 'available' },
+    { id: '209', floor: 2, type: 'DELUXE',   status: 'available' },
+    { id: '210', floor: 2, type: 'DELUXE',   status: 'available' },
+
+    // ── Floor 3 (10 rooms) — Deluxe & Suite ───────────────────────────────────
+    { id: '301', floor: 3, type: 'SUITE',  status: 'occupied' },
+    { id: '302', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '303', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '304', floor: 3, type: 'SUITE',  status: 'blocked' },
+    { id: '305', floor: 3, type: 'DELUXE', status: 'available' },
+    { id: '306', floor: 3, type: 'DELUXE', status: 'available' },
+    { id: '307', floor: 3, type: 'DELUXE', status: 'dirty' },
+    { id: '308', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '309', floor: 3, type: 'SUITE',  status: 'available' },
+    { id: '310', floor: 3, type: 'SUITE',  status: 'maintenance' },
+
+    // ── Floor 4 (10 rooms) — Suite & Pool Villa ───────────────────────────────
+    { id: '401', floor: 4, type: 'SUITE',      status: 'available' },
+    { id: '402', floor: 4, type: 'SUITE',      status: 'available' },
+    { id: '403', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '404', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '405', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '406', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '407', floor: 4, type: 'POOL_VILLA', status: 'dirty' },
+    { id: '408', floor: 4, type: 'POOL_VILLA', status: 'available' },
+    { id: '409', floor: 4, type: 'POOL_VILLA', status: 'blocked' },
+    { id: '410', floor: 4, type: 'POOL_VILLA', status: 'available' },
   ]
 
   for (const room of rooms) {
@@ -130,7 +152,6 @@ async function main() {
       source: 'Direct',
       vipStatus: 'VIP1',
       passportNumber: 'US123456',
-      company: 'Tech Corp',
       isMaster: false,
       actualCheckIn: addDays(today, -2),
     },
@@ -154,7 +175,6 @@ async function main() {
       source: 'Corporate',
       vipStatus: 'VVIP',
       passportNumber: 'JA345678',
-      company: 'Global Industries',
       specials: 'Ocean view room, champagne on arrival',
       isMaster: false,
       actualCheckIn: addDays(today, -1),
@@ -299,12 +319,65 @@ async function main() {
     })
   }
 
+  // ── Companies ──────────────────────────────────────────────────────────────
+  const bangkokAgency = await prisma.company.upsert({
+    where: { id: 'CO001' },
+    update: {
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Bangkok Travel Agency Co., Ltd.',
+      bankAccountNumber: '123-4-56789-0',
+    },
+    create: {
+      id: 'CO001',
+      hotelId: 'HOTEL-001',
+      name: 'Bangkok Travel Agency',
+      type: 'AGENT',
+      contactName: 'Somchai Wongthong',
+      contactEmail: 'somchai@bkktravelagency.th',
+      contactPhone: '+66 2 456 7890',
+      contractRates: { STANDARD: 15, DELUXE: 15, SUITE: 10, POOL_VILLA: 10 },
+      active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Bangkok Travel Agency Co., Ltd.',
+      bankAccountNumber: '123-4-56789-0',
+    },
+  })
+
+  await prisma.company.upsert({
+    where: { id: 'CO002' },
+    update: {
+      bankName: 'Siam Commercial Bank',
+      bankAccountName: 'Siam Corporate Group Co., Ltd.',
+      bankAccountNumber: '234-5-67890-1',
+    },
+    create: {
+      id: 'CO002',
+      hotelId: 'HOTEL-001',
+      name: 'Siam Corporate Group',
+      type: 'COMPANY',
+      contactName: 'Narinee Charoenpong',
+      contactEmail: 'narinee@siamcorporate.th',
+      contactPhone: '+66 2 789 0123',
+      contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 12, POOL_VILLA: 8 },
+      blackoutStart: '2025-12-20',
+      blackoutEnd: '2026-01-05',
+      active: true,
+      bankName: 'Siam Commercial Bank',
+      bankAccountName: 'Siam Corporate Group Co., Ltd.',
+      bankAccountNumber: '234-5-67890-1',
+    },
+  })
+
+  // Link R004 to Bangkok Travel Agency
+  await prisma.reservation.update({
+    where: { id: 'R004' },
+    data: { companyId: bangkokAgency.id },
+  })
+
   // Update room resId for occupied rooms
   const occupiedRooms: Record<string, string> = {
     '102': 'R001',
     '107': 'R003',
-    '201': 'R005',
-    '207': 'R004',
     '301': 'R002',
   }
 
@@ -314,6 +387,11 @@ async function main() {
       data: { resId },
     })
   }
+
+  // ── Charges ────────────────────────────────────────────────────────────────
+  // Delete before recreating so re-runs don't duplicate rows
+  await prisma.charge.deleteMany({ where: { reservationId: 'R001' } })
+  await prisma.charge.deleteMany({ where: { reservationId: 'R002' } })
 
   // ── Charges for R001 (James Anderson) ──────────────────────────────────────
   const r001Charges = [
@@ -336,6 +414,9 @@ async function main() {
   for (const charge of r002Charges) {
     await prisma.charge.create({ data: charge })
   }
+
+  await prisma.trace.deleteMany({ where: { reservationId: { in: ['R001', 'R002', 'R004'] } } })
+  await prisma.package.deleteMany({ where: { reservationId: { in: ['R001', 'R002'] } } })
 
   // ── Traces for R002 (Hiroshi Tanaka) ──────────────────────────────────────
   const r002Traces = [
@@ -396,104 +477,225 @@ async function main() {
     },
   })
 
-  // ── Companies with contract rates ────────────────────────────────────────────
-  const companyData = [
+  // ── Additional Companies & Agents ─────────────────────────────────────────
+  const additionalCompanies = [
     {
-      id: 'C001',
-      name: 'Thai Airways International',
-      contactName: 'Khun Somchai Phatthanachai',
-      contactEmail: 'corporate@thaiairways.com',
-      contactPhone: '+66 2 545 1000',
-      rates: [
-        { roomType: 'STANDARD', contractRate: 950 },
-        { roomType: 'DELUXE', contractRate: 1450 },
-        { roomType: 'SUITE', contractRate: 2800 },
-      ],
+      id: 'CO003',
+      name: 'Siam Business Group',
+      type: 'COMPANY' as const,
+      contactName: 'Wichai Boonmee',
+      contactEmail: 'wichai@siambusiness.th',
+      contactPhone: '+66 2 234 5678',
+      contractRates: { STANDARD: 18, DELUXE: 16, SUITE: 12, POOL_VILLA: 8 },
+      active: true,
+      bankName: 'Siam Commercial Bank',
+      bankAccountName: 'Siam Business Group Co., Ltd.',
+      bankAccountNumber: '345-6-78901-2',
     },
     {
-      id: 'C002',
-      name: 'US Embassy Bangkok',
-      contactName: 'Jennifer Walsh',
-      contactEmail: 'admin@usembassy.th',
-      contactPhone: '+66 2 205 4000',
-      rates: [
-        { roomType: 'STANDARD', contractRate: 1050 },
-        { roomType: 'DELUXE', contractRate: 1600 },
-      ],
+      id: 'CO004',
+      name: 'Bangkok Hospital Group',
+      type: 'COMPANY' as const,
+      contactName: 'Dr. Panida Srisuk',
+      contactEmail: 'panida@bangkokhospital.th',
+      contactPhone: '+66 2 345 6789',
+      contractRates: { STANDARD: 15, DELUXE: 12, SUITE: 10, POOL_VILLA: 8 },
+      active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Bangkok Hospital Group PCL',
+      bankAccountNumber: '456-7-89012-3',
     },
     {
-      id: 'C003',
-      name: 'Discovery Travel Agency',
-      contactName: 'Nattawut Siriwong',
-      contactEmail: 'bookings@discoverythai.com',
-      contactPhone: '+66 76 234 567',
-      rates: [
-        { roomType: 'STANDARD', contractRate: 980 },
-        { roomType: 'DELUXE', contractRate: 1500 },
-        { roomType: 'SUITE', contractRate: 2900 },
-      ],
+      id: 'CO005',
+      name: 'PTT Public Company',
+      type: 'COMPANY' as const,
+      contactName: 'Krit Tangcharoen',
+      contactEmail: 'krit.t@ptt.th',
+      contactPhone: '+66 2 537 2000',
+      contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 15, POOL_VILLA: 10 },
+      active: true,
+      bankName: 'Krungthai Bank',
+      bankAccountName: 'PTT Public Company Limited',
+      bankAccountNumber: '567-8-90123-4',
     },
     {
-      id: 'C004',
-      name: 'Bangkok Bank Headquarters',
-      contactName: 'Wanchai Rattanakorn',
-      contactEmail: 'travel@bangkokbank.com',
-      contactPhone: '+66 2 231 4333',
-      rates: [
-        { roomType: 'STANDARD', contractRate: 1000 },
-        { roomType: 'DELUXE', contractRate: 1550 },
-        { roomType: 'SUITE', contractRate: 3000 },
-      ],
+      id: 'CO006',
+      name: 'Central Group',
+      type: 'COMPANY' as const,
+      contactName: 'Supaporn Chirathivat',
+      contactEmail: 'supaporn@centralgroup.th',
+      contactPhone: '+66 2 101 1111',
+      contractRates: { STANDARD: 22, DELUXE: 20, SUITE: 15, POOL_VILLA: 12 },
+      active: true,
+      bankName: 'Kasikornbank',
+      bankAccountName: 'Central Group Co., Ltd.',
+      bankAccountNumber: '678-9-01234-5',
     },
     {
-      id: 'C005',
-      name: 'Asia Pacific Consulting Group',
-      contactName: 'Michael Chen',
-      contactEmail: 'm.chen@asiapacific.co',
-      contactPhone: '+65 6123 4567',
-      rates: [
-        { roomType: 'DELUXE', contractRate: 1480 },
-        { roomType: 'SUITE', contractRate: 2750 },
-      ],
+      id: 'CO007',
+      name: 'Minor Hotels Corporate',
+      type: 'COMPANY' as const,
+      contactName: 'James Davidson',
+      contactEmail: 'jdavidson@minorhotels.com',
+      contactPhone: '+66 2 365 6000',
+      contractRates: { STANDARD: 25, DELUXE: 22, SUITE: 18, POOL_VILLA: 15 },
+      active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Minor International PCL',
+      bankAccountNumber: '789-0-12345-6',
     },
     {
-      id: 'C006',
-      name: 'Pearl of the East Tours',
-      contactName: 'Supanee Kittipat',
-      contactEmail: 'contracts@pearleast.com',
-      contactPhone: '+66 76 345 678',
-      rates: [
-        { roomType: 'STANDARD', contractRate: 920 },
-        { roomType: 'DELUXE', contractRate: 1420 },
-      ],
+      id: 'CO008',
+      name: 'Asia Pacific Tours',
+      type: 'AGENT' as const,
+      contactName: 'Linh Nguyen',
+      contactEmail: 'linh@asiapacifictours.com',
+      contactPhone: '+66 2 456 7891',
+      contractRates: { STANDARD: 12, DELUXE: 12, SUITE: 8, POOL_VILLA: 8 },
+      active: true,
+      bankName: 'Kasikornbank',
+      bankAccountName: 'Asia Pacific Tours Co., Ltd.',
+      bankAccountNumber: '890-1-23456-7',
+    },
+    {
+      id: 'CO009',
+      name: 'Japan Travel Bureau',
+      type: 'AGENT' as const,
+      contactName: 'Kenji Yamamoto',
+      contactEmail: 'k.yamamoto@jtb.co.jp',
+      contactPhone: '+81 3 3276 7777',
+      contractRates: { STANDARD: 15, DELUXE: 12, SUITE: 10, POOL_VILLA: 8 },
+      active: true,
+      bankName: 'MUFG Bank, Bangkok Branch',
+      bankAccountName: 'JTB Corporation',
+      bankAccountNumber: '901-2-34567-8',
+    },
+    {
+      id: 'CO010',
+      name: 'Kuoni Travel Thailand',
+      type: 'AGENT' as const,
+      contactName: 'Sarah Mitchell',
+      contactEmail: 's.mitchell@kuoni.th',
+      contactPhone: '+66 2 632 0800',
+      contractRates: { STANDARD: 18, DELUXE: 15, SUITE: 12, POOL_VILLA: 10 },
+      active: true,
+      bankName: 'Bangkok Bank',
+      bankAccountName: 'Kuoni Travel (Thailand) Ltd.',
+      bankAccountNumber: '012-3-45678-9',
+    },
+    {
+      id: 'CO011',
+      name: 'TUI Thailand',
+      type: 'AGENT' as const,
+      contactName: 'Hans Müller',
+      contactEmail: 'h.muller@tui.th',
+      contactPhone: '+66 2 636 9000',
+      contractRates: { STANDARD: 20, DELUXE: 18, SUITE: 12, POOL_VILLA: 10 },
+      active: true,
+      bankName: 'Deutsche Bank AG, Bangkok Branch',
+      bankAccountName: 'TUI (Thailand) Co., Ltd.',
+      bankAccountNumber: '135-7-90246-8',
+    },
+    {
+      id: 'CO012',
+      name: 'Thomas Cook Asia',
+      type: 'AGENT' as const,
+      contactName: 'Priya Sharma',
+      contactEmail: 'p.sharma@thomascook.asia',
+      contactPhone: '+66 2 252 4050',
+      contractRates: { STANDARD: 15, DELUXE: 14, SUITE: 10, POOL_VILLA: 8 },
+      active: true,
+      bankName: 'Standard Chartered Bank (Thai)',
+      bankAccountName: 'Thomas Cook Asia Co., Ltd.',
+      bankAccountNumber: '246-8-13579-0',
     },
   ]
 
-  for (const co of companyData) {
-    const { id, rates, ...data } = co
+  for (const co of additionalCompanies) {
     await prisma.company.upsert({
-      where: { id },
-      update: {},
-      create: {
-        id,
-        ...data,
-        hotelId: 'HOTEL-001',
-        contractRates: {
-          create: rates,
-        },
+      where: { id: co.id },
+      update: {
+        bankName: co.bankName,
+        bankAccountName: co.bankAccountName,
+        bankAccountNumber: co.bankAccountNumber,
       },
+      create: { ...co, hotelId: 'HOTEL-001' },
     })
   }
 
-  // Link existing reservations to companies
-  await prisma.reservation.update({
-    where: { id: 'R001' },
-    data: { companyId: 'C004' },
-  })
-  await prisma.reservation.update({
-    where: { id: 'R002' },
-    data: { companyId: 'C005' },
-  })
+  // ── Charge Codes ──────────────────────────────────────────────────────────
+  const chargeCodes = [
+    // F&B (1xx)
+    { code: '101', category: 'F&B', description: 'Breakfast', price: 350 },
+    { code: '102', category: 'F&B', description: 'Lunch', price: 450 },
+    { code: '103', category: 'F&B', description: 'Dinner', price: 650 },
+    { code: '104', category: 'F&B', description: 'Room Service', price: 500 },
+    { code: '105', category: 'F&B', description: 'Beverages', price: 200 },
+    // Housekeeping (3xx)
+    { code: '301', category: 'Housekeeping', description: 'Laundry Service', price: 300 },
+    { code: '302', category: 'Housekeeping', description: 'Dry Cleaning', price: 500 },
+    { code: '303', category: 'Housekeeping', description: 'Extra Towels', price: 150 },
+    { code: '304', category: 'Housekeeping', description: 'Turndown Service', price: 200 },
+    { code: '305', category: 'Housekeeping', description: 'Extra Amenities', price: 100 },
+    // Spa (5xx)
+    { code: '501', category: 'Spa', description: 'Thai Massage (60 min)', price: 1200 },
+    { code: '502', category: 'Spa', description: 'Swedish Massage (90 min)', price: 1800 },
+    { code: '503', category: 'Spa', description: 'Facial Treatment', price: 1500 },
+    { code: '504', category: 'Spa', description: 'Aromatherapy', price: 2000 },
+    { code: '505', category: 'Spa', description: 'Body Scrub', price: 1600 },
+    // Transport (6xx)
+    { code: '601', category: 'Transport', description: 'Airport Transfer (1-way)', price: 800 },
+    { code: '602', category: 'Transport', description: 'Airport Transfer (return)', price: 1500 },
+    { code: '603', category: 'Transport', description: 'Taxi Booking', price: 300 },
+    { code: '604', category: 'Transport', description: 'Car Rental (per day)', price: 1200 },
+    // Minibar (7xx)
+    { code: '701', category: 'Minibar', description: 'Minibar Consumption', price: 450 },
+    { code: '702', category: 'Minibar', description: 'Premium Spirits', price: 800 },
+    { code: '703', category: 'Minibar', description: 'Soft Drinks & Snacks', price: 250 },
+    // Misc (9xx)
+    { code: '901', category: 'Misc', description: 'Parking (per day)', price: 200 },
+    { code: '902', category: 'Misc', description: 'Business Center', price: 150 },
+  ]
+
+  for (const cc of chargeCodes) {
+    await prisma.chargeCode.upsert({
+      where: { code: cc.code },
+      update: { category: cc.category, description: cc.description, price: cc.price },
+      create: { ...cc, active: true, hotelId: 'HOTEL-001' },
+    })
+  }
+
+  // ── Sub-Charge Codes ───────────────────────────────────────────────────────
+  const subChargeCodes = [
+    // Parent 101 — Breakfast
+    { code: '1011', category: 'F&B', description: 'Continental Set', price: 250, parentCode: '101' },
+    { code: '1012', category: 'F&B', description: 'Full English', price: 350, parentCode: '101' },
+    { code: '1013', category: 'F&B', description: 'Fruit & Yoghurt', price: 180, parentCode: '101' },
+    // Parent 102 — Lunch
+    { code: '1021', category: 'F&B', description: 'Fried Rice', price: 180, parentCode: '102' },
+    { code: '1022', category: 'F&B', description: 'Pad Thai', price: 160, parentCode: '102' },
+    { code: '1023', category: 'F&B', description: 'Green Curry', price: 200, parentCode: '102' },
+    { code: '1024', category: 'F&B', description: 'Som Tum Salad', price: 140, parentCode: '102' },
+    // Parent 103 — Dinner
+    { code: '1031', category: 'F&B', description: 'Grilled Salmon', price: 650, parentCode: '103' },
+    { code: '1032', category: 'F&B', description: 'Wagyu Beef', price: 1200, parentCode: '103' },
+    { code: '1033', category: 'F&B', description: 'Seafood Platter', price: 980, parentCode: '103' },
+    // Parent 501 — Thai Massage 60min
+    { code: '5011', category: 'Spa', description: 'Foot Massage', price: 800, parentCode: '501' },
+    { code: '5012', category: 'Spa', description: 'Head & Shoulder', price: 600, parentCode: '501' },
+    // Parent 701 — Minibar Consumption
+    { code: '7011', category: 'Minibar', description: 'Beer Chang', price: 120, parentCode: '701' },
+    { code: '7012', category: 'Minibar', description: 'Wine (glass)', price: 350, parentCode: '701' },
+    { code: '7013', category: 'Minibar', description: 'Soft Drink', price: 80, parentCode: '701' },
+  ]
+
+  for (const cc of subChargeCodes) {
+    await prisma.chargeCode.upsert({
+      where: { code: cc.code },
+      update: { category: cc.category, description: cc.description, price: cc.price, parentCode: cc.parentCode },
+      create: { ...cc, active: true, hotelId: 'HOTEL-001' },
+    })
+  }
 
   console.log('✅ Database seeded successfully!')
   console.log('   Admin: admin@staywise.com / admin1234')

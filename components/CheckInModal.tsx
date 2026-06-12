@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Reservation } from '@/types'
 import { formatDate } from '@/lib/utils'
-import { X, LogIn, BedDouble, User, Calendar, Plane, Clock } from 'lucide-react'
+import { X, Check, Car, Receipt, MapPin, Plus, CheckCircle2 } from 'lucide-react'
 
 interface Props {
   reservation: Reservation
@@ -11,15 +11,43 @@ interface Props {
   onClose: () => void
 }
 
+const PACKAGES = [
+  { id: 'PARKING', label: 'Parking (Car)', Icon: Car },
+  { id: 'BREAKFAST', label: 'Daily Breakfast', Icon: Receipt },
+  { id: 'AIRPORT', label: 'Airport Transfer', Icon: MapPin },
+  { id: 'EXTRABED', label: 'Extra Bed', Icon: Plus },
+]
+
 export default function CheckInModal({ reservation: res, onConfirm, onClose }: Props) {
-  const [eta, setEta] = useState(res.eta || '')
-  const [flightNumber, setFlightNumber] = useState(res.flightNumber || '')
+  const [step, setStep] = useState(1)
+  const [passport, setPassport] = useState(res.passportNumber || '')
+  const [phone, setPhone] = useState(res.guest?.phone || '+66 ')
+  const [verification, setVerification] = useState({
+    idVerified: false,
+    paymentConfirmed: false,
+    roomReady: false,
+  })
+  const [activePackages, setActivePackages] = useState<Set<string>>(
+    new Set(res.packages.filter((p) => p.active).map((p) => p.pkgId))
+  )
   const [loading, setLoading] = useState(false)
+
+  const canProceedStep1 =
+    passport.trim() !== '' && verification.idVerified && verification.paymentConfirmed
+
+  function togglePackage(pkgId: string) {
+    setActivePackages((prev) => {
+      const next = new Set(prev)
+      if (next.has(pkgId)) next.delete(pkgId)
+      else next.add(pkgId)
+      return next
+    })
+  }
 
   async function handleConfirm() {
     setLoading(true)
     try {
-      await onConfirm({ eta: eta || undefined, flightNumber: flightNumber || undefined })
+      await onConfirm({})
     } finally {
       setLoading(false)
     }
@@ -27,113 +55,186 @@ export default function CheckInModal({ reservation: res, onConfirm, onClose }: P
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 rounded-xl">
-              <LogIn className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-gray-900">Confirm Check-In</h2>
-              <p className="text-xs text-gray-500">{res.reservationNumber}</p>
-            </div>
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-teal-600 text-white">
+          <div>
+            <h3 className="text-xl font-black tracking-tight uppercase">Check-In Process</h3>
+            <p className="text-xs font-bold opacity-80 uppercase tracking-widest">
+              Step {step} of 3:{' '}
+              {step === 1
+                ? 'Guest Verification'
+                : step === 2
+                ? 'Packages & Services'
+                : 'Final Confirmation'}
+            </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-4 h-4 text-gray-500" />
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
-          {/* Guest info */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-            <div className="flex items-center gap-3">
-              <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-500">Guest</p>
-                <p className="font-semibold text-gray-900">{res.guestName}</p>
-                {res.nationality && (
-                  <p className="text-xs text-gray-500">{res.nationality}</p>
-                )}
+        <div className="p-8">
+          {step === 1 && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Passport / ID Number
+                  </label>
+                  <input
+                    type="text"
+                    value={passport}
+                    onChange={(e) => setPassport(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-700"
+                    placeholder="Enter Passport / ID"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Contact Number
+                  </label>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none font-bold text-slate-700"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <BedDouble className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-500">Room</p>
-                <p className="font-semibold text-gray-900">Room {res.roomId}</p>
-                <p className="text-xs text-gray-500">{res.roomTypeId}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-500">Stay</p>
-                <p className="font-semibold text-gray-900">
-                  {formatDate(res.checkIn)} → {formatDate(res.checkOut)}
+
+              <div className="space-y-3">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Verification Checklist
                 </p>
-                <p className="text-xs text-gray-500">{res.totalNights} nights · {res.adults} adult{res.adults !== 1 ? 's' : ''}</p>
+                {[
+                  { id: 'idVerified', label: 'Physical ID / Passport verified' },
+                  { id: 'paymentConfirmed', label: 'Payment method / Deposit secured' },
+                  { id: 'roomReady', label: 'Room inspection complete' },
+                ].map((item) => (
+                  <label
+                    key={item.id}
+                    className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={(verification as any)[item.id]}
+                      onChange={() =>
+                        setVerification((v) => ({ ...v, [item.id]: !(v as any)[item.id] }))
+                      }
+                      className="w-5 h-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    <span className="text-sm font-bold text-slate-700">{item.label}</span>
+                  </label>
+                ))}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* ETA */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-              <Clock className="w-3 h-3 inline mr-1" />
-              ETA (Estimated Time of Arrival)
-            </label>
-            <input
-              type="time"
-              value={eta}
-              onChange={(e) => setEta(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+          {step === 2 && (
+            <div className="space-y-6">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Select Packages & Services
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {PACKAGES.map(({ id, label, Icon }) => {
+                  const active = activePackages.has(id)
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => togglePackage(id)}
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                        active
+                          ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-md'
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="w-5 h-5" />
+                        <span className="text-sm font-black uppercase tracking-tight">{label}</span>
+                      </div>
+                      {active && <CheckCircle2 className="w-5 h-5 text-teal-500" />}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
-          {/* Flight number */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5">
-              <Plane className="w-3 h-3 inline mr-1" />
-              Flight Number
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. TG316"
-              value={flightNumber}
-              onChange={(e) => setFlightNumber(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          {/* Specials */}
-          {res.specials && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Special Requests</p>
-              <p className="text-sm text-amber-800">{res.specials}</p>
+          {step === 3 && (
+            <div className="space-y-6 text-center">
+              <div className="w-20 h-20 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto">
+                <Check className="w-10 h-10" />
+              </div>
+              <div>
+                <h4 className="text-2xl font-black text-slate-900 mb-2">Ready to Check In</h4>
+                <p className="text-slate-500 max-w-md mx-auto">
+                  All verifications complete. Room {res.roomId} is assigned and ready for{' '}
+                  {res.guestName}.
+                </p>
+              </div>
+              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-left space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    Room Number
+                  </span>
+                  <span className="text-lg font-black text-slate-900">{res.roomId}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    Room Type
+                  </span>
+                  <span className="text-sm font-bold text-slate-700">{res.roomTypeId}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    Departure Date
+                  </span>
+                  <span className="text-sm font-bold text-slate-700">{formatDate(res.checkOut)}</span>
+                </div>
+              </div>
+              {res.specials && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left">
+                  <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">
+                    Special Requests
+                  </p>
+                  <p className="text-sm text-amber-800 font-medium">{res.specials}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-6 flex gap-3">
+        <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
           <button
-            onClick={onClose}
-            className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+            onClick={() => step > 1 && setStep(step - 1)}
+            className={`px-6 py-2 font-bold text-slate-500 hover:text-slate-700 transition-colors ${
+              step === 1 ? 'opacity-0 pointer-events-none' : ''
+            }`}
           >
-            Cancel
+            Back
           </button>
-          <button
-            onClick={handleConfirm}
-            disabled={loading}
-            className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
-          >
-            {loading ? 'Checking in...' : 'Confirm Check-In'}
-          </button>
+          <div className="flex gap-3">
+            {step < 3 ? (
+              <button
+                onClick={() => setStep(step + 1)}
+                disabled={step === 1 && !canProceedStep1}
+                className="px-8 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black rounded-xl transition-all shadow-lg shadow-teal-600/20"
+              >
+                Continue
+              </button>
+            ) : (
+              <button
+                onClick={handleConfirm}
+                disabled={loading}
+                className="px-10 py-3 bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-black rounded-xl transition-all shadow-lg shadow-teal-600/20"
+              >
+                {loading ? 'Checking In...' : 'Complete Check-In'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

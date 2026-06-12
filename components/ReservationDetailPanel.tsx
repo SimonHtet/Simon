@@ -1,15 +1,45 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Reservation, Room, Charge, Trace, Company } from '@/types'
+import { prefetchFolios } from '@/lib/folio-prefetch'
+import { motion, AnimatePresence } from 'motion/react'
+import { Reservation, Room, Charge } from '@/types'
 import { ROOM_TYPES } from '@/lib/constants'
-import { getResStatusBadge, getResStatusLabel, formatDate, formatCurrency } from '@/lib/utils'
+import { RecordDepositModal } from './Modals'
 import {
-  X, LogIn, LogOut, Ban, AlertTriangle, ArrowRight, Clock, Plus,
-  CreditCard, MessageSquare, Edit3, Check, ChevronDown, ChevronUp,
-  BedDouble, User, Calendar, DollarSign, Tag, Phone, Mail, Globe,
-  Plane, Eye, Star, Car, Package, Receipt, FileText, CheckCircle,
-  Circle, Building2,
+  getResStatusBadge,
+  getResStatusLabel,
+  calculateNights,
+  formatDate,
+  formatCurrency,
+} from '@/lib/utils'
+import {
+  X,
+  Pencil,
+  UserCheck,
+  Sparkles,
+  CalendarCheck,
+  CreditCard,
+  MessageSquare,
+  Key,
+  Car,
+  Receipt,
+  MapPin,
+  Plus,
+  AlertCircle,
+  Settings,
+  ClipboardList,
+  History,
+  Package,
+  CheckCircle2,
+  ArrowLeft,
+  Save,
+  Printer,
+  FileText,
+  Check,
+  ArrowRightLeft,
+  Grid3X3,
+  Star,
 } from 'lucide-react'
 
 interface Props {
@@ -27,102 +57,37 @@ interface Props {
   onAddTrace: (res: Reservation) => void
   onResolveTrace: (reservationId: string, traceId: number) => Promise<void>
   onUpdateReservation: (id: string, data: Partial<Reservation>) => Promise<void>
+  initialCheckInMode?: boolean
 }
-
-type Tab = 'overview' | 'charges' | 'traces' | 'packages'
 
 const PACKAGE_DEFS = [
-  { id: 'PARKING', label: 'Parking', icon: Car },
-  { id: 'BREAKFAST', label: 'Breakfast', icon: Package },
-  { id: 'AIRPORT', label: 'Airport Transfer', icon: Plane },
-  { id: 'SPA', label: 'Spa Package', icon: Star },
+  { id: 'PARKING',   label: 'Parking (Car)',     Icon: Car },
+  { id: 'BREAKFAST', label: 'Daily Breakfast',   Icon: Receipt },
+  { id: 'AIRPORT',   label: 'Airport Transfer',  Icon: MapPin },
+  { id: 'EXTRABED',  label: 'Extra Bed',         Icon: Plus },
+  { id: 'LATE_CO',   label: 'Late Check-out',    Icon: CalendarCheck },
+  { id: 'EARLY_CI',  label: 'Early Check-in',    Icon: CalendarCheck },
+  { id: 'LAUNDRY',   label: 'Laundry Package',   Icon: Sparkles },
 ]
 
-function TabButton({ label, active, badge, onClick }: { label: string; active: boolean; badge?: number; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-        active ? 'border-sky-500 text-sky-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-      }`}
-    >
-      {label}
-      {badge !== undefined && badge > 0 && (
-        <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${active ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-500'}`}>
-          {badge}
-        </span>
-      )}
-    </button>
-  )
+const PACKAGE_RATES: Record<string, { amount: number; perNight: boolean }> = {
+  BREAKFAST: { amount: 150, perNight: true },
+  PARKING:   { amount: 200, perNight: false },
+  AIRPORT:   { amount: 500, perNight: false },
+  EXTRABED:  { amount: 300, perNight: true },
+  LATE_CO:   { amount: 500, perNight: false },
+  EARLY_CI:  { amount: 500, perNight: false },
+  LAUNDRY:   { amount: 200, perNight: true },
 }
 
-function InfoRow({ label, value, icon: Icon }: { label: string; value?: string | null; icon?: React.ElementType }) {
-  if (!value) return null
-  return (
-    <div className="flex items-start gap-2 text-sm">
-      {Icon && <Icon className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />}
-      <div>
-        <span className="text-gray-500">{label}: </span>
-        <span className="text-gray-900 font-medium">{value}</span>
-      </div>
-    </div>
-  )
-}
-
-function EditableField({
-  label,
-  value,
-  type = 'text',
-  onSave,
-  placeholder,
-}: {
-  label: string
-  value: string
-  type?: string
-  onSave: (v: string) => void
-  placeholder?: string
-}) {
-  const [editing, setEditing] = useState(false)
-  const [val, setVal] = useState(value)
-
-  function save() {
-    onSave(val)
-    setEditing(false)
-  }
-
-  return (
-    <div className="group">
-      {label && <p className="text-xs text-gray-500 mb-0.5">{label}</p>}
-      {editing ? (
-        <div className="flex items-center gap-1">
-          <input
-            autoFocus
-            type={type}
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') setEditing(false) }}
-            className="flex-1 border border-sky-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500"
-          />
-          <button onClick={save} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
-            <Check className="w-3.5 h-3.5" />
-          </button>
-          <button onClick={() => { setVal(value); setEditing(false) }} className="p-1 text-gray-400 hover:bg-gray-100 rounded">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-1">
-          <span className="text-sm text-gray-900 font-medium">{value || <span className="text-gray-400 italic">{placeholder || 'Not set'}</span>}</span>
-          <button
-            onClick={() => setEditing(true)}
-            className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-sky-500 hover:bg-sky-50 rounded transition-all"
-          >
-            <Edit3 className="w-3 h-3" />
-          </button>
-        </div>
-      )}
-    </div>
-  )
+function normalizeRes(r: Reservation): Reservation {
+  return {
+    ...r,
+    charges: r.charges ?? [],
+    packages: r.packages ?? [],
+    traces: r.traces ?? [],
+    folios: r.folios ?? [],
+  } as Reservation
 }
 
 export default function ReservationDetailPanel({
@@ -140,200 +105,1281 @@ export default function ReservationDetailPanel({
   onAddTrace,
   onResolveTrace,
   onUpdateReservation,
+  initialCheckInMode = false,
 }: Props) {
-  const [tab, setTab] = useState<Tab>('overview')
-  const [res] = useState(initialRes)
-  const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | null>(null)
+  const [localRes, setLocalRes] = useState(() => normalizeRes(initialRes))
+  const [editingField, setEditingField] = useState<string | null>(null)
+  const [checkInMode, setCheckInMode] = useState(initialCheckInMode)
+  const [activeTab, setActiveTab] = useState('charges')
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [successState, setSuccessState] = useState(false)
+  const [checkInTime, setCheckInTime] = useState<string | null>(null)
+  const [verification, setVerification] = useState({
+    idVerified: false,
+    roomReady: false,
+    rateConfirmed: false,
+    paymentConfirmed: false,
+    keysIssued: 0,
+    specialRequests: false,
+  })
+  const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | 'undo_checkout' | null>(null)
+  const [showDepositModal, setShowDepositModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [companiesLoaded, setCompaniesLoaded] = useState(false)
-  const [editingCompany, setEditingCompany] = useState(false)
-  const [selectedCompanyId, setSelectedCompanyId] = useState(initialRes.companyId || '')
+  const [linkNumber, setLinkNumber] = useState('')
+  const [linking, setLinking] = useState(false)
+  const [linkError, setLinkError] = useState('')
+  const [activePackages, setActivePackages] = useState<Set<string>>(() => {
+    const fromPackages = (initialRes.packages ?? []).filter((p) => p.active).map((p) => p.pkgId)
+    const fromCharges = (initialRes.charges ?? [])
+      .filter((c) => c.category && c.amount > 0)
+      .map((c) => c.category as string)
+    return new Set(fromPackages.concat(fromCharges))
+  })
+  const [pendingPackageCharges, setPendingPackageCharges] = useState<
+    Array<{ item: string; amount: number; date: string; category: string }>
+  >([])
+  const [showPackageManager, setShowPackageManager] = useState(false)
+  const [localPrefs, setLocalPrefs] = useState<Record<string, string>>(
+    () => ({
+      smoking: initialRes.preferences?.smoking ?? '',
+      bed: initialRes.preferences?.bed ?? '',
+      pillow: initialRes.preferences?.pillow ?? '',
+      floor: initialRes.preferences?.floor ?? '',
+      view: initialRes.preferences?.view ?? '',
+      temperature: initialRes.preferences?.temperature ?? '',
+      allergies: initialRes.preferences?.allergies ?? '',
+      amenities: initialRes.preferences?.amenities ?? '',
+      notes: initialRes.preferences?.notes ?? '',
+    })
+  )
 
-  async function loadCompanies() {
-    if (companiesLoaded) return
-    const data = await fetch('/api/companies').then((r) => r.json())
-    setCompanies(data)
-    setCompaniesLoaded(true)
+  const room = rooms.find((r) => r.id === localRes.roomId)
+  const roomTypeName = ROOM_TYPES[localRes.roomTypeId]?.name ?? localRes.roomTypeId
+  const nights = calculateNights(localRes.checkIn, localRes.checkOut)
+
+  // Charges actually displayed on the folio = saved charges + pending (pre-checkin) packages.
+  // Pending packages live in their own state so a parent refresh doesn't wipe them.
+  const displayCharges = [
+    ...localRes.charges,
+    ...pendingPackageCharges.map((c, i) => ({
+      id: -(i + 1),
+      reservationId: localRes.id,
+      createdAt: new Date().toISOString(),
+      ...c,
+    })),
+  ]
+
+  const totalRoomAndCharges =
+    localRes.rate * nights +
+    displayCharges.filter((c) => c.amount > 0).reduce((s, c) => s + c.amount, 0)
+  const totalPayments = Math.abs(
+    displayCharges.filter((c) => c.amount < 0).reduce((s, c) => s + c.amount, 0)
+  )
+  const balance = totalRoomAndCharges - totalPayments
+
+  const allVerified =
+    verification.idVerified &&
+    verification.roomReady &&
+    verification.rateConfirmed &&
+    verification.paymentConfirmed &&
+    verification.keysIssued > 0 &&
+    verification.specialRequests &&
+    !!localRes.passportNumber
+
+  useEffect(() => {
+    setLocalRes(normalizeRes(initialRes))
+  }, [initialRes])
+
+  // Warm up folios/init while the agent reads the panel so checkout modal opens instantly
+  useEffect(() => {
+    if (localRes.status === 'checked_in') prefetchFolios(localRes.id)
+  }, [localRes.id, localRes.status])
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F5') {
+        e.preventDefault()
+        if (localRes.status === 'confirmed') {
+          setCheckInMode(true)
+          setEditingField('passportNumber')
+        }
+      } else if (e.key === 'F6') {
+        e.preventDefault()
+        if (localRes.status === 'checked_in') onCheckOut(localRes)
+      } else if (e.key === 'F8') {
+        e.preventDefault()
+        if (localRes.status === 'checked_in') onMoveRoom(localRes)
+      } else if (e.key === 'Escape') {
+        if (confirmAction) setConfirmAction(null)
+        else if (checkInMode) setCheckInMode(false)
+        else onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [localRes, checkInMode, confirmAction, onClose, onCheckOut, onMoveRoom])
+
+  function handleFieldSave(field: string, value: any) {
+    const updated = { ...localRes, [field]: value }
+    setLocalRes(updated)
+    setEditingField(null)
+    onUpdateReservation(localRes.id, { [field]: value })
   }
 
-  async function saveCompany() {
-    const company = companies.find((c) => c.id === selectedCompanyId)
-    await onUpdateReservation(res.id, {
-      companyId: selectedCompanyId || null,
-      company: company?.name || '',
-    } as any)
-    setEditingCompany(false)
+  async function onConfirmCheckIn() {
+    await (onCheckIn(localRes) as unknown as Promise<void>)
+    // Flush any packages toggled on during check-in mode
+    if (pendingPackageCharges.length > 0) {
+      await Promise.all(
+        pendingPackageCharges.map((charge) =>
+          fetch(`/api/reservations/${localRes.id}/charges`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(charge),
+          })
+        )
+      )
+      setPendingPackageCharges([])
+    }
+    setSuccessState(true)
+    setCheckInTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+    setTimeout(() => {
+      setSuccessState(false)
+      setCheckInMode(false)
+    }, 3000)
   }
 
-  const totalCharges = res.charges.filter((c) => c.amount > 0).reduce((s, c) => s + c.amount, 0)
-  const totalPayments = Math.abs(res.charges.filter((c) => c.amount < 0).reduce((s, c) => s + c.amount, 0))
-  const balance = (totalCharges || res.totalAmount) - totalPayments
-  const pendingTraces = res.traces.filter((t) => t.status === 'pending').length
-
-  async function handleUpdate(field: string, value: any) {
-    await onUpdateReservation(res.id, { [field]: value })
+  async function refetchSelf() {
+    const r = await fetch(`/api/reservations/${localRes.id}`)
+    if (r.ok) setLocalRes(await r.json())
   }
 
-  const roomType = ROOM_TYPES[res.roomTypeId]
+  async function handleLinkMaster() {
+    if (!linkNumber.trim() || linking) return
+    setLinkError('')
+    setLinking(true)
+    try {
+      const r = await fetch(`/api/reservations/${localRes.id}/master`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ masterResNumber: linkNumber.trim() }),
+      })
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}))
+        setLinkError(data.error ?? 'Could not link reservation')
+        return
+      }
+      setLinkNumber('')
+      await refetchSelf()
+    } finally {
+      setLinking(false)
+    }
+  }
+
+  async function handleUnlinkMaster() {
+    if (linking) return
+    setLinkError('')
+    setLinking(true)
+    try {
+      const r = await fetch(`/api/reservations/${localRes.id}/master`, { method: 'DELETE' })
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}))
+        setLinkError(data.error ?? 'Could not unlink reservation')
+        return
+      }
+      await refetchSelf()
+    } finally {
+      setLinking(false)
+    }
+  }
+
+  async function togglePackage(pkgId: string) {
+    const isActive = activePackages.has(pkgId)
+
+    if (isActive) {
+      // Toggle OFF
+      setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })
+      const wasPending = pendingPackageCharges.some((c) => c.category === pkgId)
+      setPendingPackageCharges((prev) => prev.filter((c) => c.category !== pkgId))
+      // Optimistic remove from saved charges
+      setLocalRes((prev) => ({
+        ...prev,
+        charges: prev.charges.filter((c) => !(c.category === pkgId && c.amount > 0)),
+      }))
+      // Delete from DB only if it was already posted — optimistic update above already removed it from UI
+      if (!wasPending) {
+        await fetch(
+          `/api/reservations/${localRes.id}/charges/package?category=${pkgId}`,
+          { method: 'DELETE' }
+        )
+      }
+      return
+    }
+
+    // Toggle ON — skip if a positive charge for this package already exists
+    const alreadyCharged = localRes.charges.some(
+      (c) => c.category === pkgId && c.amount > 0
+    )
+    setActivePackages((prev) => new Set(Array.from(prev).concat(pkgId)))
+    if (alreadyCharged) return
+
+    const rate = PACKAGE_RATES[pkgId]
+    if (!rate || rate.amount === 0) return
+    const chargeAmount = rate.perNight ? rate.amount * nights : rate.amount
+    const today = new Date().toISOString().split('T')[0]
+    const def = PACKAGE_DEFS.find((p) => p.id === pkgId)
+    const chargeData = {
+      item: def?.label ?? pkgId,
+      amount: chargeAmount,
+      date: today,
+      category: pkgId,
+    }
+
+    if (localRes.status === 'confirmed') {
+      // Pre-checkin: queue, don't write yet. displayCharges renders these as overlay.
+      setPendingPackageCharges((prev) => [...prev, chargeData])
+    } else {
+      // Post-checkin: write to DB, then apply the returned charge directly — no full refetch needed
+      const r = await fetch(`/api/reservations/${localRes.id}/charges`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(chargeData),
+      })
+      if (r.ok) {
+        const charge = await r.json()
+        setLocalRes((prev) => ({ ...prev, charges: [...(prev.charges ?? []), charge] }))
+      } else {
+        // Roll back the active set if the POST failed
+        setActivePackages((prev) => { const s = new Set(prev); s.delete(pkgId); return s })
+      }
+    }
+  }
+
+  async function handlePreferenceSave(field: string, value: string) {
+    const updated = { ...localPrefs, [field]: value }
+    setLocalPrefs(updated)
+    await fetch(`/api/reservations/${localRes.id}/preferences`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    })
+  }
+
+  function EditableField({
+    label,
+    value,
+    field,
+    type = 'text',
+    className = '',
+  }: {
+    label: string
+    value: string | null | undefined
+    field: string
+    type?: string
+    className?: string
+  }) {
+    const isEditing = editingField === field
+    return (
+      <div
+        className={`group relative p-1.5 border border-transparent hover:border-slate-200 rounded transition-all cursor-pointer ${className}`}
+        onClick={() => !isEditing && setEditingField(field)}
+      >
+        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 leading-none">
+          {label}
+        </p>
+        {isEditing ? (
+          <input
+            autoFocus
+            type={type}
+            className="w-full text-[13px] font-medium text-slate-800 bg-teal-50 outline-none border-b border-teal-500 py-0.5"
+            value={(localRes as any)[field] || ''}
+            onChange={(e) => setLocalRes((prev) => ({ ...prev, [field]: e.target.value }))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleFieldSave(field, (localRes as any)[field])
+              if (e.key === 'Escape') {
+                setLocalRes(prev => ({ ...prev, [field]: (initialRes as any)[field] }))
+                setEditingField(null)
+              }
+            }}
+            onBlur={() => handleFieldSave(field, (localRes as any)[field])}
+          />
+        ) : (
+          <div className="flex items-center justify-between min-h-[1.25rem]">
+            <p className="text-[13px] font-medium text-slate-800 truncate">{value || '---'}</p>
+            <Pencil className="w-2.5 h-2.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="bg-white w-full max-w-5xl h-[90vh] max-h-[900px] shadow-2xl rounded-xl overflow-hidden flex flex-col border border-slate-200"
+      >
+        {/* HEADER */}
+        <div
+          className={`h-14 border-b px-6 flex items-center justify-between shrink-0 transition-colors duration-500 ${
+            successState
+              ? 'bg-emerald-600 border-emerald-700'
+              : checkInMode
+              ? 'bg-teal-600 border-teal-700'
+              : 'bg-slate-50 border-slate-200'
+          }`}
+        >
+          <div className="flex items-center gap-4">
+            <h2
+              className={`text-xl font-mono font-black tracking-tighter ${
+                checkInMode || successState ? 'text-white' : 'text-slate-900'
+              }`}
+            >
+              {successState
+                ? `✓ CHECKED IN AT ${checkInTime}`
+                : checkInMode
+                ? 'CHECK-IN VERIFICATION'
+                : localRes.reservationNumber}
+            </h2>
 
-      {/* Panel */}
-      <div className="relative w-full max-w-2xl bg-white shadow-2xl flex flex-col h-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-[#0F2044] text-white px-6 py-5 flex items-start justify-between flex-shrink-0">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getResStatusBadge(res.status)}`}>
-                {getResStatusLabel(res.status)}
-              </span>
-              {res.vipStatus && (
-                <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs rounded-full">
-                  <Star className="w-2.5 h-2.5" />
-                  {res.vipStatus}
+            {checkInMode && !successState && (
+              <div className="flex items-center gap-3 ml-4">
+                {[
+                  { step: 1, label: 'Verify ID' },
+                  { step: 2, label: 'Confirm Stay' },
+                  { step: 3, label: 'Issue Keys' },
+                ].map((s, i) => {
+                  const cur = !verification.idVerified
+                    ? 1
+                    : !verification.roomReady || !verification.rateConfirmed
+                    ? 2
+                    : 3
+                  return (
+                    <div key={i} className="flex items-center gap-2">
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          cur === s.step
+                            ? 'bg-white text-teal-600'
+                            : 'bg-teal-500/50 text-teal-100'
+                        }`}
+                      >
+                        {s.step}
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-wider ${
+                          cur === s.step ? 'text-white' : 'text-teal-200'
+                        }`}
+                      >
+                        {s.label}
+                      </span>
+                      {i < 2 && <div className="w-4 h-px bg-teal-500/50 mx-1" />}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {!checkInMode && !successState && (
+              <>
+                {localRes.traces.filter((t) => t.status === 'pending').length > 0 && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 border border-amber-200 rounded animate-pulse">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider">
+                      {localRes.traces.filter((t) => t.status === 'pending').length} Traces
+                    </span>
+                  </div>
+                )}
+                <span
+                  className={`px-2.5 py-0.5 rounded text-[10px] font-black border uppercase tracking-wider ${getResStatusBadge(localRes.status)}`}
+                >
+                  {getResStatusLabel(localRes.status)}
                 </span>
-              )}
-            </div>
-            <h2 className="text-xl font-bold">{res.guestName}</h2>
-            <p className="text-sky-300 text-sm mt-0.5">{res.reservationNumber}</p>
+                {localRes.vipStatus && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-400/30 text-amber-600 text-xs rounded">
+                    <Star className="w-2.5 h-2.5" /> {localRes.vipStatus}
+                  </span>
+                )}
+              </>
+            )}
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-              <X className="w-5 h-5" />
+
+          <div className="flex items-center gap-6">
+            {localRes.createdAt && (
+              <div className="text-right space-y-0.5">
+                <p className="text-[9px] font-bold text-slate-400 uppercase leading-none">Created</p>
+                <p className="text-[11px] font-medium text-slate-600">
+                  {new Date(localRes.createdAt).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className={`p-1.5 rounded-lg transition-colors ml-2 ${
+                checkInMode || successState ? 'hover:bg-white/10' : 'hover:bg-slate-200'
+              }`}
+            >
+              <X
+                className={`w-5 h-5 ${
+                  checkInMode || successState ? 'text-white' : 'text-slate-400'
+                }`}
+              />
             </button>
-            <div className="text-right space-y-0.5">
-              {res.createdAt && (
-                <p className="text-[10px] text-white/35 uppercase tracking-wider">
-                  Created {new Date(res.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+        </div>
+
+        {/* BODY: 40/60 SPLIT */}
+        <div className="flex-1 flex overflow-hidden min-h-0">
+          {/* LEFT: GUEST INFO */}
+          <div className="w-[40%] border-r border-slate-200 p-6 bg-white overflow-y-auto overscroll-contain">
+            <div className="mb-6 flex justify-between items-start">
+              <div>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                  Guest Name
                 </p>
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                  {localRes.guestName}
+                </h1>
+              </div>
+              {checkInMode && (
+                <div className="text-right">
+                  <p className="text-[9px] font-bold text-teal-600 uppercase tracking-widest mb-1">
+                    Check-in Time
+                  </p>
+                  <p className="text-lg font-mono font-bold text-teal-700 leading-none">
+                    {currentTime.toLocaleTimeString([], { hour12: false })}
+                  </p>
+                </div>
               )}
-              {res.updatedAt && (
-                <p className="text-[10px] text-white/35 uppercase tracking-wider">
-                  Updated {new Date(res.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <EditableField
+                label="Last Name"
+                value={localRes.guest?.lastName || localRes.guestName.split(' ').slice(1).join(' ')}
+                field="lastName"
+              />
+              <EditableField
+                label="First Name"
+                value={localRes.guest?.firstName || localRes.guestName.split(' ')[0]}
+                field="firstName"
+              />
+              <EditableField
+                label="Phone Number"
+                value={localRes.guest?.phone || ''}
+                field="phone"
+              />
+              <div className="p-1.5">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Company</p>
+                <p className="text-[13px] font-medium text-slate-800 truncate">
+                  {localRes.company ? (localRes.company as any).name : '---'}
                 </p>
-              )}
+              </div>
+              <EditableField label="Nationality" value={localRes.nationality} field="nationality" />
+              <EditableField label="Language" value={localRes.language ?? ''} field="language" />
+
+              {/* Passport — highlighted in check-in mode */}
+              <div
+                className={`col-span-2 transition-all duration-300 ${
+                  checkInMode
+                    ? 'ring-2 ring-teal-500 ring-offset-4 rounded-lg p-1 bg-teal-50/30'
+                    : ''
+                }`}
+              >
+                <div className="relative">
+                  <EditableField
+                    label="Passport / ID"
+                    value={localRes.passportNumber}
+                    field="passportNumber"
+                    className={
+                      checkInMode && !localRes.passportNumber ? 'border border-rose-400 bg-rose-50' : ''
+                    }
+                  />
+                  {checkInMode && (
+                    <div className="absolute -top-2 -right-2 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black rounded uppercase tracking-widest shadow-sm z-10">
+                      Verify
+                    </div>
+                  )}
+                  {checkInMode && !localRes.passportNumber && (
+                    <p className="text-[8px] font-bold text-rose-600 mt-1 pl-1">
+                      Required for check-in
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <EditableField
+                label="VIP Status"
+                value={localRes.vipStatus}
+                field="vipStatus"
+                className={localRes.vipStatus ? 'bg-indigo-50/50' : ''}
+              />
+              <EditableField label="Member No." value={''} field="memberNo" />
+              <EditableField
+                label="Email"
+                value={localRes.guest?.email || ''}
+                field="email"
+              />
+              <EditableField
+                label="Booking Source"
+                value={localRes.source}
+                field="source"
+              />
+            </div>
+
+            {/* STAY SUMMARY */}
+            <div className="mt-6">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="flex justify-between items-center mb-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Stay Summary
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {localRes.company && (
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-wider ${(localRes.company as any).type === 'AGENT' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-sky-50 text-sky-700 border-sky-200'}`}>
+                        {(localRes.company as any).name}
+                      </span>
+                    )}
+                    {localRes.source && (
+                      <span className="px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-wider bg-slate-100 text-slate-600 border-slate-200">
+                        {localRes.source}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase leading-none">
+                      Check-In
+                    </p>
+                    <p className="text-xs font-bold text-slate-700">{formatDate(localRes.checkIn)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase leading-none">
+                      Check-Out
+                    </p>
+                    <p className="text-xs font-bold text-slate-700">{formatDate(localRes.checkOut)}</p>
+                  </div>
+                </div>
+                <div className="flex items-end justify-between">
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase leading-none">
+                      Total Stay
+                    </p>
+                    <p className="text-sm font-black text-slate-900">{nights} Nights</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase leading-none mb-1">
+                      Total Amount
+                    </p>
+                    <p className="text-2xl font-mono font-black leading-none text-slate-900">
+                      ฿{formatCurrency(localRes.totalAmount)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: STAY / CHECK-IN ZONE */}
+          <div className="w-[60%] overflow-y-auto overscroll-contain bg-slate-50/30">
+            <div className="p-6 pb-0">
+              <AnimatePresence mode="wait">
+                {checkInMode ? (
+                  <motion.div
+                    key="checklist"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="space-y-4"
+                  >
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                      <div className="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                          Verification Checklist
+                        </p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">Step 2 of 3</p>
+                      </div>
+                      <div className="p-1">
+                        {[
+                          {
+                            id: 'idVerified',
+                            label: 'Guest ID verified (passport/national ID)',
+                            Icon: UserCheck,
+                          },
+                          {
+                            id: 'roomReady',
+                            label: 'Room is ready and clean',
+                            Icon: Sparkles,
+                          },
+                          {
+                            id: 'rateConfirmed',
+                            label: 'Rate and dates confirmed with guest',
+                            Icon: CalendarCheck,
+                          },
+                          {
+                            id: 'paymentConfirmed',
+                            label: 'Payment method confirmed',
+                            Icon: CreditCard,
+                          },
+                          {
+                            id: 'specialRequests',
+                            label: `Special requests noted: "${localRes.specials || 'None'}"`,
+                            Icon: MessageSquare,
+                          },
+                        ].map((item) => {
+                          const checked = (verification as any)[item.id]
+                          return (
+                            <label
+                              key={item.id}
+                              className={`flex items-center gap-3 px-4 h-9 rounded-lg cursor-pointer transition-all ${
+                                checked ? 'bg-emerald-50/50' : 'hover:bg-slate-50'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  setVerification((prev) => ({
+                                    ...prev,
+                                    [item.id]: !checked,
+                                  }))
+                                }
+                                className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+                              />
+                              <item.Icon
+                                className={`w-3.5 h-3.5 ${
+                                  checked ? 'text-emerald-600' : 'text-slate-400'
+                                }`}
+                              />
+                              <span
+                                className={`text-[11px] font-medium flex-1 ${
+                                  checked ? 'text-emerald-600' : 'text-slate-600'
+                                }`}
+                              >
+                                {item.label}
+                              </span>
+                              {checked && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                            </label>
+                          )
+                        })}
+
+                        {/* Keys Issued */}
+                        <div className="flex items-center h-9 px-3 border-t border-slate-100 bg-slate-50/50">
+                          <div className="flex items-center gap-2 flex-1">
+                            <Key className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                              Keys Issued
+                            </span>
+                          </div>
+                          <div className="flex gap-1">
+                            {[1, 2, 3].map((num) => (
+                              <button
+                                key={num}
+                                onClick={() =>
+                                  setVerification((prev) => ({ ...prev, keysIssued: num }))
+                                }
+                                className={`w-7 h-6 rounded flex items-center justify-center text-[11px] font-bold transition-all ${
+                                  verification.keysIssued === num
+                                    ? 'bg-teal-600 text-white shadow-sm'
+                                    : 'bg-white border border-slate-200 text-slate-400 hover:border-teal-300 hover:text-teal-600'
+                                }`}
+                              >
+                                {num}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="fields"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    className="grid grid-cols-3 gap-x-4 gap-y-3"
+                  >
+                    <EditableField
+                      label="Arrival Date"
+                      value={formatDate(localRes.checkIn)}
+                      field="checkIn"
+                    />
+                    <EditableField
+                      label="Departure Date"
+                      value={formatDate(localRes.checkOut)}
+                      field="checkOut"
+                    />
+                    <div className="p-1.5">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                        Nights
+                      </p>
+                      <p className="text-[13px] font-medium text-slate-800">{nights}</p>
+                    </div>
+
+                    <EditableField label="Room Number" value={localRes.roomId} field="roomId" />
+                    <div className="p-1.5">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                        Room Type
+                      </p>
+                      <p className="text-[13px] font-medium text-slate-800">{roomTypeName}</p>
+                    </div>
+                    <div className="p-1.5">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                        Floor
+                      </p>
+                      <p className="text-[13px] font-medium text-slate-800">{room?.floor ?? '—'}</p>
+                    </div>
+
+                    <div className="p-1.5">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                        Daily Rate
+                      </p>
+                      <p className="text-[13px] font-medium text-slate-800">
+                        ฿{formatCurrency(localRes.rate)}
+                      </p>
+                    </div>
+                    <EditableField
+                      label="Adults"
+                      value={String(localRes.adults)}
+                      field="adults"
+                    />
+                    <EditableField
+                      label="Children"
+                      value={String(localRes.children)}
+                      field="children"
+                    />
+
+                    <EditableField label="Source" value={localRes.source || ''} field="source" />
+                    <EditableField
+                      label="Booking Ref"
+                      value={localRes.bookingReference || ''}
+                      field="bookingReference"
+                    />
+                    <EditableField
+                      label="ETA"
+                      value={localRes.eta || ''}
+                      field="eta"
+                      type="time"
+                    />
+
+                    <div className="flex items-center gap-4 p-1.5 col-span-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={localRes.turndown}
+                          onChange={(e) => handleFieldSave('turndown', e.target.checked)}
+                          className="w-3.5 h-3.5 accent-teal-500"
+                        />
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">
+                          Turndown
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={localRes.dnm}
+                          onChange={(e) => handleFieldSave('dnm', e.target.checked)}
+                          className="w-3.5 h-3.5 accent-teal-500"
+                        />
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">
+                          Do Not Disturb
+                        </span>
+                      </label>
+                    </div>
+                    <EditableField
+                      label="Special Requests"
+                      value={localRes.specials || ''}
+                      field="specials"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* PACKAGES */}
+              <div className="mt-6 rounded-xl border border-slate-200 overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5" /> Packages &amp; Add-ons
+                  </p>
+                  <button
+                    onClick={() => setShowPackageManager((v) => !v)}
+                    className="text-[9px] font-black text-teal-600 uppercase tracking-wider hover:text-teal-700 transition-colors flex items-center gap-1"
+                  >
+                    {showPackageManager ? (
+                      <><X className="w-3 h-3" /> Close</>
+                    ) : (
+                      'Manage'
+                    )}
+                  </button>
+                </div>
+
+                {showPackageManager ? (
+                  /* EXPANDED MANAGER */
+                  <div className="p-3 bg-white space-y-1.5">
+                    {PACKAGE_DEFS.map(({ id, label, Icon }) => {
+                      const active = activePackages.has(id)
+                      const rate = PACKAGE_RATES[id]
+                      const priceLabel = !rate
+                        ? ''
+                        : rate.amount === 0
+                        ? 'Manual charge'
+                        : rate.perNight
+                        ? `฿${rate.amount} / night`
+                        : `฿${rate.amount} / stay`
+                      return (
+                        <div
+                          key={id}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-all ${
+                            active
+                              ? 'bg-teal-50 border-teal-300'
+                              : 'bg-slate-50 border-slate-200'
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-teal-600' : 'text-slate-400'}`} />
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[11px] font-black ${active ? 'text-teal-800' : 'text-slate-700'}`}>
+                              {label}
+                            </p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                              {priceLabel}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => togglePackage(id)}
+                            className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-wider transition-all ${
+                              active
+                                ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-sm'
+                                : 'bg-white border border-slate-200 text-slate-400 hover:border-teal-300 hover:text-teal-600'
+                            }`}
+                          >
+                            {active ? 'On' : 'Off'}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  /* COMPACT SUMMARY GRID */
+                  <div className="p-3 bg-white grid grid-cols-2 gap-2">
+                    {PACKAGE_DEFS.map(({ id, label, Icon }) => {
+                      const active = activePackages.has(id)
+                      const rate = PACKAGE_RATES[id]
+                      const badgeText = !rate
+                        ? ''
+                        : rate.amount === 0
+                        ? 'Manual'
+                        : rate.perNight
+                        ? `฿${rate.amount}/night`
+                        : `฿${rate.amount}/stay`
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => togglePackage(id)}
+                          className={`flex items-center justify-between p-2 rounded-lg border text-left transition-all ${
+                            active
+                              ? 'bg-teal-50 border-teal-400 text-teal-700 shadow-sm'
+                              : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300 hover:bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Icon className={`w-3.5 h-3.5 ${active ? 'text-teal-600' : 'text-slate-400'}`} />
+                            <span className="text-[10px] font-bold">{label}</span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className={`text-[9px] font-bold ${active ? 'text-teal-500' : 'text-slate-300'}`}>
+                              {badgeText}
+                            </span>
+                            {active && <CheckCircle2 className="w-3 h-3 text-teal-500 ml-0.5" />}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* TABS */}
+            <div className="mt-6 px-6 pb-6">
+              <div className="flex border-b border-slate-200 mb-4">
+                {[
+                  { id: 'charges', label: 'Charges', Icon: Receipt },
+                  { id: 'traces', label: 'Traces', Icon: AlertCircle },
+                  { id: 'preferences', label: 'Preferences', Icon: Settings },
+                  { id: 'linked', label: `Linked${localRes.linkedReservations?.length ? ` (${localRes.linkedReservations.length})` : ''}`, Icon: ArrowRightLeft },
+                  { id: 'notes', label: 'Notes', Icon: ClipboardList },
+                  { id: 'history', label: 'History', Icon: History },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-wider transition-all relative ${
+                      activeTab === tab.id ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <tab.Icon className="w-3.5 h-3.5" /> {tab.label}
+                    {activeTab === tab.id && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-teal-500"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 p-4 min-h-[200px]">
+                {/* CHARGES TAB */}
+                {activeTab === 'charges' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Current Folio
+                      </p>
+                      <div className="flex gap-2">
+                        {(localRes.status === 'confirmed' || localRes.status === 'checked_in') && (
+                          <button
+                            onClick={() => setShowDepositModal(true)}
+                            className="flex items-center gap-1.5 px-2 py-1 bg-violet-600 text-white rounded text-[10px] font-black uppercase hover:bg-violet-700 transition-all shadow-sm"
+                          >
+                            <CreditCard className="w-3 h-3" /> Record Deposit
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onPostPayment(localRes)}
+                          className="flex items-center gap-1.5 px-2 py-1 bg-teal-600 text-white rounded text-[10px] font-black uppercase hover:bg-teal-700 transition-all shadow-sm"
+                        >
+                          <CreditCard className="w-3 h-3" /> Post Payment
+                        </button>
+                        <button
+                          onClick={() => onAddCharge(localRes)}
+                          className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-black uppercase hover:bg-slate-200 transition-all"
+                        >
+                          <Plus className="w-3 h-3" /> Add Charge
+                        </button>
+                      </div>
+                    </div>
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200">
+                          {['Date', 'Description', 'Qty', 'Amount'].map((h) => (
+                            <th
+                              key={h}
+                              className={`py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ${
+                                h === 'Amount' ? 'text-right' : h === 'Qty' ? 'text-center' : ''
+                              }`}
+                            >
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="text-[11px]">
+                        <tr className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                          <td className="py-1.5 text-slate-500 font-medium">
+                            {formatDate(localRes.checkIn)}
+                          </td>
+                          <td className="py-1.5 font-black text-slate-700">
+                            Room Charge — {roomTypeName}
+                          </td>
+                          <td className="py-1.5 text-center font-bold">1</td>
+                          <td className="py-1.5 text-right font-black text-slate-900">
+                            ฿{formatCurrency(localRes.rate * nights)}
+                          </td>
+                        </tr>
+                        {displayCharges.map((c) => (
+                          <tr
+                            key={c.id}
+                            className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
+                          >
+                            <td className="py-1.5 text-slate-500 font-medium">{c.date}</td>
+                            <td className="py-1.5 font-black text-slate-700">{c.item}</td>
+                            <td className="py-1.5 text-center font-bold">1</td>
+                            <td
+                              className={`py-1.5 text-right font-black ${
+                                c.amount < 0 ? 'text-teal-600' : 'text-slate-900'
+                              }`}
+                            >
+                              {c.amount < 0
+                                ? `(฿${formatCurrency(Math.abs(c.amount))})`
+                                : `฿${formatCurrency(c.amount)}`}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="pt-4 flex justify-end">
+                      <div className="grid grid-cols-2 gap-x-8 gap-y-2 bg-slate-50 px-6 py-4 rounded-xl border border-slate-100">
+                        <div className="text-right">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Total Charges
+                          </p>
+                          <p className="text-sm font-bold text-slate-600">
+                            ฿{formatCurrency(totalRoomAndCharges)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Total Payments
+                          </p>
+                          <p className="text-sm font-bold text-teal-600">
+                            ฿{formatCurrency(totalPayments)}
+                          </p>
+                        </div>
+                        <div className="col-span-2 border-t border-slate-200 pt-2 text-right">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Balance Due
+                          </p>
+                          <p
+                            className={`text-2xl font-black ${
+                              balance > 0 ? 'text-rose-600' : 'text-teal-600'
+                            }`}
+                          >
+                            ฿{formatCurrency(balance)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TRACES TAB */}
+                {activeTab === 'traces' && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                        Inter-departmental Traces
+                      </p>
+                      <button
+                        onClick={() => onAddTrace(localRes)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-lg text-xs font-black uppercase hover:bg-amber-100 transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> New Trace
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {localRes.traces.length > 0 ? (
+                        localRes.traces.map((trace) => (
+                          <div
+                            key={trace.id}
+                            className="p-3 bg-amber-50/50 border border-amber-100 rounded-xl flex items-start gap-4 hover:bg-amber-100/50 transition-colors"
+                          >
+                            <div className="mt-1.5 w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                            <div className="flex-1">
+                              <p
+                                className={`text-sm font-bold text-slate-800 leading-relaxed ${
+                                  trace.status === 'resolved'
+                                    ? 'line-through text-slate-400'
+                                    : ''
+                                }`}
+                              >
+                                {trace.text}
+                              </p>
+                              <p className="text-[10px] text-slate-400 mt-2 uppercase font-black tracking-wider">
+                                {trace.date} · {trace.department} · {trace.status}
+                              </p>
+                            </div>
+                            {trace.status === 'pending' && (
+                              <button
+                                onClick={() => onResolveTrace(localRes.id, trace.id)}
+                                className="px-3 py-1 bg-white border border-amber-200 rounded-lg text-[10px] font-black text-amber-600 uppercase hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+                              >
+                                Resolve
+                              </button>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                          No active traces for this reservation
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* PREFERENCES TAB */}
+                {activeTab === 'preferences' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      {([
+                        { key: 'smoking',     label: 'Smoking', placeholder: 'Non-smoking' },
+                        { key: 'bed',         label: 'Bed Type', placeholder: 'King / Twin' },
+                        { key: 'pillow',      label: 'Pillow', placeholder: 'Feather / Foam' },
+                        { key: 'floor',       label: 'Floor', placeholder: 'High / Low' },
+                        { key: 'view',        label: 'View', placeholder: 'Ocean / Garden' },
+                        { key: 'temperature', label: 'Temperature', placeholder: '22°C' },
+                        { key: 'allergies',   label: 'Allergies', placeholder: 'None' },
+                        { key: 'amenities',   label: 'Amenities', placeholder: 'Extra towels' },
+                      ] as { key: string; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
+                        <div
+                          key={key}
+                          className="p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-teal-200 hover:bg-teal-50/30 transition-all"
+                        >
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                            {label}
+                          </p>
+                          <input
+                            type="text"
+                            className="w-full text-[12px] font-bold text-slate-700 bg-transparent outline-none border-b border-transparent focus:border-teal-400 transition-colors placeholder:text-slate-300"
+                            value={localPrefs[key] ?? ''}
+                            placeholder={placeholder}
+                            onChange={(e) => setLocalPrefs((p) => ({ ...p, [key]: e.target.value }))}
+                            onBlur={(e) => handlePreferenceSave(key, e.target.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                        Preference Notes
+                      </p>
+                      <textarea
+                        className="w-full p-3 text-sm font-medium text-slate-700 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 placeholder:text-slate-300"
+                        rows={3}
+                        placeholder="e.g. Always requests extra pillows, allergic to feathers, prefers high floor..."
+                        value={localPrefs.notes ?? ''}
+                        onChange={(e) => setLocalPrefs((p) => ({ ...p, notes: e.target.value }))}
+                        onBlur={(e) => handlePreferenceSave('notes', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                        Special Requests (This Stay)
+                      </p>
+                      <textarea
+                        className="w-full p-3 text-sm font-medium text-slate-700 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 placeholder:text-slate-300"
+                        rows={2}
+                        placeholder="Specific requests for this reservation..."
+                        defaultValue={localRes.specials || ''}
+                        onBlur={(e) => handleFieldSave('specials', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* LINKED TAB */}
+                {activeTab === 'linked' && (
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      {localRes.isMaster ? 'Master Reservation — Linked Rooms' : 'Linked Reservations'}
+                    </p>
+                    {localRes.masterResId ? (
+                      <div className="flex items-center gap-2 text-xs text-sky-700 bg-sky-50 border border-sky-200 rounded-xl px-3 py-2">
+                        <ArrowRightLeft className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="flex-1">This room is part of a group — its bill can be transferred to the master at check-out</span>
+                        <button
+                          onClick={handleUnlinkMaster}
+                          disabled={linking}
+                          className="px-2 py-1 bg-white border border-sky-200 rounded-lg text-[10px] font-bold text-sky-600 hover:bg-sky-100 disabled:opacity-50 whitespace-nowrap"
+                        >
+                          Unlink
+                        </button>
+                      </div>
+                    ) : !localRes.isMaster ? (
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                          Link under a master reservation (group booking)
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            value={linkNumber}
+                            onChange={(e) => setLinkNumber(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleLinkMaster() }}
+                            placeholder="Master res no. e.g. RES-AB12CD"
+                            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          />
+                          <button
+                            onClick={handleLinkMaster}
+                            disabled={linking || !linkNumber.trim()}
+                            className="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-lg disabled:opacity-50 whitespace-nowrap"
+                          >
+                            {linking ? '…' : 'Link'}
+                          </button>
+                        </div>
+                        {linkError && <p className="text-[10px] font-bold text-red-500 mt-1.5">{linkError}</p>}
+                      </div>
+                    ) : null}
+                    {localRes.linkedReservations && localRes.linkedReservations.length > 0 ? (
+                      <div className="space-y-2">
+                        {localRes.linkedReservations.map((lr: any) => (
+                          <div key={lr.id} className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-bold text-slate-800">{lr.guestName}</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5">{lr.reservationNumber} · Room {lr.roomId}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-[10px] text-slate-500">{lr.checkIn} → {lr.checkOut}</p>
+                                <span className={`px-2 py-0.5 rounded text-[9px] font-black border uppercase tracking-wider ${getResStatusBadge(lr.status)}`}>
+                                  {getResStatusLabel(lr.status)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                        No linked reservations
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* NOTES TAB */}
+                {activeTab === 'notes' && (
+                  <div className="text-center py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                    No notes yet
+                  </div>
+                )}
+
+                {/* HISTORY TAB */}
+                {activeTab === 'history' && (
+                  <div className="text-center py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                    No previous stays on record
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Quick info bar */}
-        <div className="bg-[#0F2044]/5 border-b border-gray-200 px-6 py-3 flex flex-wrap items-center gap-4 text-sm flex-shrink-0">
-          <div className="flex items-center gap-1.5 text-gray-700">
-            <BedDouble className="w-3.5 h-3.5 text-gray-400" />
-            <span className="font-semibold">Room {res.roomId}</span>
-            <span className="text-gray-400">·</span>
-            <span className="text-gray-500">{roomType?.name ?? res.roomTypeId}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-gray-700">
-            <Calendar className="w-3.5 h-3.5 text-gray-400" />
-            <span>{formatDate(res.checkIn)}</span>
-            <span className="text-gray-400">→</span>
-            <span>{formatDate(res.checkOut)}</span>
-            <span className="text-gray-400">·</span>
-            <span className="font-semibold">{res.totalNights}N</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-gray-700">
-            <DollarSign className="w-3.5 h-3.5 text-gray-400" />
-            <span className="font-semibold">฿{formatCurrency(res.rate)}/night</span>
-          </div>
-          {res.source && (
-            <span className="ml-auto px-2.5 py-0.5 bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
-              {res.source}
-            </span>
-          )}
-        </div>
-
-        {/* Action buttons */}
-        <div className="px-6 py-3 border-b border-gray-200 flex flex-wrap gap-2 flex-shrink-0">
-          {res.status === 'confirmed' && (
-            <>
-              <button
-                onClick={() => onCheckIn(res)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                Check In
-              </button>
-              <button
-                onClick={() => onMoveRoom(res)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg transition-colors"
-              >
-                <ArrowRight className="w-3.5 h-3.5" />
-                Move Room
-              </button>
-              <button
-                onClick={() => setConfirmAction('cancel')}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors border border-red-200"
-              >
-                <Ban className="w-3.5 h-3.5" />
-                Cancel
-              </button>
-              <button
-                onClick={() => setConfirmAction('noshow')}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-semibold rounded-lg transition-colors border border-orange-200"
-              >
-                <AlertTriangle className="w-3.5 h-3.5" />
-                No Show
-              </button>
-            </>
-          )}
-          {res.status === 'checked_in' && (
-            <>
-              <button
-                onClick={() => onCheckOut(res)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg transition-colors"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                Check Out
-              </button>
-              <button
-                onClick={() => onMoveRoom(res)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg transition-colors"
-              >
-                <ArrowRight className="w-3.5 h-3.5" />
-                Move Room
-              </button>
-              <button
-                onClick={() => onExtendStay(res)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-semibold rounded-lg transition-colors border border-teal-200"
-              >
-                <Clock className="w-3.5 h-3.5" />
-                Extend Stay
-              </button>
-              <button
-                onClick={() => onAddCharge(res)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-semibold rounded-lg transition-colors border border-orange-200"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Charge
-              </button>
-              <button
-                onClick={() => onPostPayment(res)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-semibold rounded-lg transition-colors border border-green-200"
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                Payment
-              </button>
-            </>
-          )}
-          <button
-            onClick={() => onAddTrace(res)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg transition-colors border border-purple-200"
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            Add Trace
-          </button>
-        </div>
-
-        {/* Cancel/NoShow confirmation */}
+        {/* CANCEL CONFIRM BAR */}
         {confirmAction && (
-          <div className={`px-6 py-3 border-b flex-shrink-0 ${confirmAction === 'cancel' ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
-            <p className={`text-sm font-semibold mb-2 ${confirmAction === 'cancel' ? 'text-red-700' : 'text-orange-700'}`}>
-              {confirmAction === 'cancel' ? 'Confirm Cancellation' : 'Confirm No Show'}
+          <div
+            className={`px-6 py-3 border-t shrink-0 ${
+              confirmAction === 'cancel'
+                ? 'bg-red-50 border-red-200'
+                : confirmAction === 'undo_checkout'
+                ? 'bg-amber-50 border-amber-200'
+                : 'bg-orange-50 border-orange-200'
+            }`}
+          >
+            <p
+              className={`text-sm font-semibold mb-2 ${
+                confirmAction === 'cancel' ? 'text-red-700'
+                : confirmAction === 'undo_checkout' ? 'text-amber-700'
+                : 'text-orange-700'
+              }`}
+            >
+              {confirmAction === 'cancel'
+                ? 'Confirm Cancellation?'
+                : confirmAction === 'undo_checkout'
+                ? 'Undo Check-Out? Reservation returns to In-House and room back to Occupied.'
+                : 'Mark as No Show?'}
             </p>
             {confirmAction === 'cancel' && (
               <input
@@ -341,25 +1387,39 @@ export default function ReservationDetailPanel({
                 placeholder="Cancellation reason (optional)"
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full border border-red-200 rounded-lg px-3 py-1.5 text-sm mb-2 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="w-full border border-red-200 rounded-lg px-3 py-1.5 text-sm mb-2 focus:outline-none"
               />
             )}
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  if (confirmAction === 'cancel') onCancel(res)
-                  else onNoShow(res)
-                  setConfirmAction(null)
+                onClick={async () => {
+                  if (confirmAction === 'cancel') {
+                    onCancel(localRes)
+                    setConfirmAction(null)
+                    onClose()
+                  } else if (confirmAction === 'noshow') {
+                    onNoShow(localRes)
+                    setConfirmAction(null)
+                    onClose()
+                  } else if (confirmAction === 'undo_checkout') {
+                    await fetch(`/api/reservations/${localRes.id}/undo-checkout`, { method: 'POST' })
+                    await refetchSelf()
+                    setConfirmAction(null)
+                  }
                 }}
-                className={`flex-1 py-1.5 text-white text-xs font-semibold rounded-lg transition-colors ${
-                  confirmAction === 'cancel' ? 'bg-red-500 hover:bg-red-600' : 'bg-orange-500 hover:bg-orange-600'
+                className={`flex-1 py-1.5 text-white text-xs font-semibold rounded-lg ${
+                  confirmAction === 'cancel'
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : confirmAction === 'undo_checkout'
+                    ? 'bg-amber-500 hover:bg-amber-600'
+                    : 'bg-orange-500 hover:bg-orange-600'
                 }`}
               >
-                {confirmAction === 'cancel' ? 'Yes, Cancel' : 'Yes, No Show'}
+                Confirm
               </button>
               <button
                 onClick={() => setConfirmAction(null)}
-                className="flex-1 py-1.5 bg-white text-gray-700 text-xs font-semibold rounded-lg border transition-colors hover:bg-gray-50"
+                className="flex-1 py-1.5 bg-white text-gray-700 text-xs font-semibold rounded-lg border hover:bg-gray-50"
               >
                 Back
               </button>
@@ -367,443 +1427,156 @@ export default function ReservationDetailPanel({
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200 flex px-6 overflow-x-auto flex-shrink-0 bg-white">
-          <TabButton label="Overview" active={tab === 'overview'} onClick={() => setTab('overview')} />
-          <TabButton label="Charges" active={tab === 'charges'} badge={res.charges.length} onClick={() => setTab('charges')} />
-          <TabButton label="Traces" active={tab === 'traces'} badge={pendingTraces} onClick={() => setTab('traces')} />
-          <TabButton label="Packages" active={tab === 'packages'} onClick={() => setTab('packages')} />
-        </div>
-
-        {/* Tab content */}
-        <div className="flex-1 overflow-y-auto">
-          {tab === 'overview' && (
-            <div className="p-6 space-y-6">
-              {/* Guest Information */}
-              <section>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <User className="w-3.5 h-3.5" />
-                  Guest Information
-                </h3>
-                <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-4">
-                  <EditableField
-                    label="Full Name"
-                    value={res.guestName}
-                    onSave={(v) => handleUpdate('guestName', v)}
-                  />
-                  <EditableField
-                    label="Nationality"
-                    value={res.nationality || ''}
-                    onSave={(v) => handleUpdate('nationality', v)}
-                    placeholder="Not provided"
-                  />
-                  {/* Passport with teal highlight + VERIFY badge */}
-                  <div className="col-span-2">
-                    <div className="ring-2 ring-teal-400 ring-offset-2 rounded-lg p-3 bg-white">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs text-gray-500">Passport / ID</p>
-                        <span className="px-2 py-0.5 bg-teal-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
-                          Verify
-                        </span>
-                      </div>
-                      <EditableField
-                        label=""
-                        value={res.passportNumber || ''}
-                        onSave={(v) => handleUpdate('passportNumber', v)}
-                        placeholder="Not provided"
-                      />
-                    </div>
-                  </div>
-                  <EditableField
-                    label="VIP Status"
-                    value={res.vipStatus || ''}
-                    onSave={(v) => handleUpdate('vipStatus', v)}
-                    placeholder="None"
-                  />
-                  <div className="group">
-                    <p className="text-xs text-gray-500 mb-0.5">Company</p>
-                    {editingCompany ? (
-                      <div className="flex items-center gap-1">
-                        <select
-                          autoFocus
-                          value={selectedCompanyId}
-                          onChange={(e) => setSelectedCompanyId(e.target.value)}
-                          className="flex-1 border border-sky-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white"
-                        >
-                          <option value="">None</option>
-                          {companies.map((c) => (
-                            <option key={c.id} value={c.id}>{c.name}</option>
-                          ))}
-                        </select>
-                        <button onClick={saveCompany} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
-                          <Check className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => { setEditingCompany(false); setSelectedCompanyId(initialRes.companyId || '') }} className="p-1 text-gray-400 hover:bg-gray-100 rounded">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm text-gray-900 font-medium flex items-center gap-1">
-                          {res.company
-                            ? <><Building2 className="w-3.5 h-3.5 text-gray-400" />{res.company}</>
-                            : <span className="text-gray-400 italic">None</span>}
-                        </span>
-                        <button
-                          onClick={() => { loadCompanies(); setEditingCompany(true) }}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-sky-500 hover:bg-sky-50 rounded transition-all"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
-
-              {/* Stay Details */}
-              <section>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Stay Details
-                </h3>
-                <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-gray-500">Room</p>
-                    <p className="text-sm font-semibold text-gray-900">Room {res.roomId}</p>
-                    <p className="text-xs text-gray-500">{roomType?.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Occupancy</p>
-                    <p className="text-sm font-semibold text-gray-900">{res.adults} Adult{res.adults !== 1 ? 's' : ''}{res.children > 0 ? `, ${res.children} Child${res.children !== 1 ? 'ren' : ''}` : ''}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Check In</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatDate(res.checkIn)}</p>
-                    {res.actualCheckIn && <p className="text-xs text-emerald-600">Actual: {new Date(res.actualCheckIn).toLocaleString()}</p>}
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Check Out</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatDate(res.checkOut)}</p>
-                    {res.actualCheckOut && <p className="text-xs text-amber-600">Actual: {new Date(res.actualCheckOut).toLocaleString()}</p>}
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Rate</p>
-                    <p className="text-sm font-semibold text-gray-900">฿{formatCurrency(res.rate)}/night</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Total</p>
-                    <p className="text-sm font-semibold text-gray-900">฿{formatCurrency(res.totalAmount)}</p>
-                    <p className="text-xs text-gray-500">{res.totalNights} nights</p>
-                  </div>
-                </div>
-              </section>
-
-              {/* Booking Info */}
-              <section>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <FileText className="w-3.5 h-3.5" />
-                  Booking Information
-                </h3>
-                <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-4">
-                  <EditableField
-                    label="Source"
-                    value={res.source || ''}
-                    onSave={(v) => handleUpdate('source', v)}
-                    placeholder="Not set"
-                  />
-                  <EditableField
-                    label="Booking Ref"
-                    value={res.bookingReference || ''}
-                    onSave={(v) => handleUpdate('bookingReference', v)}
-                    placeholder="None"
-                  />
-                  <EditableField
-                    label="ETA"
-                    value={res.eta || ''}
-                    type="time"
-                    onSave={(v) => handleUpdate('eta', v)}
-                    placeholder="Not set"
-                  />
-                  <EditableField
-                    label="Flight #"
-                    value={res.flightNumber || ''}
-                    onSave={(v) => handleUpdate('flightNumber', v)}
-                    placeholder="None"
-                  />
-                  <div className="col-span-2">
-                    <EditableField
-                      label="Special Requests"
-                      value={res.specials || ''}
-                      onSave={(v) => handleUpdate('specials', v)}
-                      placeholder="None"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <EditableField
-                      label="Visa Details"
-                      value={res.visaDetails || ''}
-                      onSave={(v) => handleUpdate('visaDetails', v)}
-                      placeholder="None"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              {/* Housekeeping preferences */}
-              <section>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <BedDouble className="w-3.5 h-3.5" />
-                  Housekeeping
-                </h3>
-                <div className="bg-gray-50 rounded-xl p-4 flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={res.turndown}
-                      onChange={(e) => handleUpdate('turndown', e.target.checked)}
-                      className="w-4 h-4 rounded accent-sky-500"
-                    />
-                    <span className="text-sm text-gray-700">Turndown Service</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={res.dnm}
-                      onChange={(e) => handleUpdate('dnm', e.target.checked)}
-                      className="w-4 h-4 rounded accent-red-500"
-                    />
-                    <span className="text-sm text-gray-700">Do Not Disturb</span>
-                  </label>
-                </div>
-              </section>
-
-              {/* Cancellation info */}
-              {res.status === 'cancelled' && res.cancelledAt && (
-                <section>
-                  <h3 className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-3">Cancellation Details</h3>
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm">
-                    <p><span className="text-gray-500">Cancelled: </span><span className="font-medium text-gray-900">{new Date(res.cancelledAt).toLocaleString()}</span></p>
-                    {res.cancellationReason && <p className="mt-1"><span className="text-gray-500">Reason: </span><span className="font-medium text-gray-900">{res.cancellationReason}</span></p>}
-                  </div>
-                </section>
-              )}
-            </div>
-          )}
-
-          {tab === 'charges' && (
-            <div className="p-6">
-              {/* Summary */}
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 mb-1">Total Charges</p>
-                  <p className="text-base font-bold text-gray-900">฿{formatCurrency(totalCharges || res.totalAmount)}</p>
-                </div>
-                <div className="bg-green-50 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 mb-1">Payments</p>
-                  <p className="text-base font-bold text-green-700">฿{formatCurrency(totalPayments)}</p>
-                </div>
-                <div className={`rounded-xl p-3 text-center ${balance > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
-                  <p className="text-xs text-gray-500 mb-1">Balance</p>
-                  <p className={`text-base font-bold ${balance > 0 ? 'text-red-700' : 'text-emerald-700'}`}>
-                    ฿{formatCurrency(Math.abs(balance))}
+        {/* ACTION BAR */}
+        <div className="h-16 bg-slate-100 border-t border-slate-200 px-6 flex items-center justify-between shrink-0">
+          {checkInMode ? (
+            <>
+              <button
+                onClick={() => setCheckInMode(false)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Reservation
+              </button>
+              <div className="flex items-center gap-4">
+                {!allVerified && (
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    All items must be verified
                   </p>
-                </div>
-              </div>
-
-              {/* Charges list */}
-              {res.charges.length === 0 ? (
-                <div className="text-center py-10 text-gray-400">
-                  <Receipt className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No charges posted yet</p>
-                  <div className="mt-4 bg-gray-50 rounded-xl p-4 text-left">
-                    <p className="text-xs text-gray-500 mb-2">Room Charge (from rate)</p>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-700">Room {res.roomId} × {res.totalNights}N @ ฿{formatCurrency(res.rate)}</span>
-                      <span className="font-bold text-gray-900">฿{formatCurrency(res.totalAmount)}</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="border border-gray-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2.5 text-left text-xs text-gray-500 font-semibold uppercase">Description</th>
-                        <th className="px-4 py-2.5 text-left text-xs text-gray-500 font-semibold uppercase">Cat.</th>
-                        <th className="px-4 py-2.5 text-left text-xs text-gray-500 font-semibold uppercase">Date</th>
-                        <th className="px-4 py-2.5 text-center text-xs text-gray-500 font-semibold uppercase">Staff</th>
-                        <th className="px-4 py-2.5 text-right text-xs text-gray-500 font-semibold uppercase">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {res.charges.map((c) => (
-                        <tr key={c.id} className={c.amount < 0 ? 'bg-green-50/50' : ''}>
-                          <td className="px-4 py-2.5 text-gray-800">{c.item}</td>
-                          <td className="px-4 py-2.5 text-gray-500">
-                            {c.category && (
-                              <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">{c.category}</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2.5 text-gray-500 text-xs">{c.date}</td>
-                          <td className="px-4 py-2.5 text-center">
-                            <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-semibold uppercase tracking-wide">
-                              SYS
-                            </span>
-                          </td>
-                          <td className={`px-4 py-2.5 text-right font-semibold ${c.amount < 0 ? 'text-green-700' : 'text-gray-900'}`}>
-                            {c.amount < 0 ? '-' : ''}฿{formatCurrency(Math.abs(c.amount))}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {/* Folio total */}
-                  <div className="flex items-center justify-end gap-3 px-4 py-3 bg-teal-50 border-t border-teal-100">
-                    <span className="text-xs font-bold text-teal-600 uppercase tracking-widest">Folio Total</span>
-                    <span className="text-base font-bold text-teal-700">฿{formatCurrency(balance > 0 ? balance : 0)}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex gap-3 mt-4">
+                )}
                 <button
-                  onClick={() => onAddCharge(res)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-700 text-sm font-semibold rounded-xl transition-colors"
+                  disabled={!allVerified || successState}
+                  onClick={onConfirmCheckIn}
+                  className={`flex items-center gap-3 px-8 py-2.5 font-black rounded-lg transition-all shadow-lg ${
+                    allVerified
+                      ? 'bg-teal-600 text-white hover:bg-teal-700 shadow-teal-600/20 active:scale-95'
+                      : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  }`}
                 >
-                  <Plus className="w-4 h-4" />
-                  Add Charge
+                  Confirm Check-In
+                  <span className="opacity-50 text-[10px] font-bold">Enter ↵</span>
                 </button>
-                {res.status === 'checked_in' && (
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                  <Save className="w-4 h-4" /> Save Changes
+                </button>
+                <button
+                  onClick={() => window.open(`/print/${localRes.id}`, '_blank')}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all"
+                >
+                  <Printer className="w-4 h-4" /> Print Folio
+                </button>
+                {(localRes.status === 'confirmed' || localRes.status === 'checked_in') && (
                   <button
-                    onClick={() => onPostPayment(res)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-green-200 bg-green-50 hover:bg-green-100 text-green-700 text-sm font-semibold rounded-xl transition-colors"
+                    onClick={() => window.open(`/print/confirmation/${localRes.id}`, '_blank')}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-violet-200 rounded-lg text-xs font-bold text-violet-600 hover:bg-violet-50 transition-all"
                   >
-                    <CreditCard className="w-4 h-4" />
-                    Post Payment
+                    <MessageSquare className="w-4 h-4" /> Confirmation
                   </button>
                 )}
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                  <FileText className="w-4 h-4" /> Reg Card
+                </button>
               </div>
-            </div>
-          )}
 
-          {tab === 'traces' && (
-            <div className="p-6">
-              {res.traces.length === 0 ? (
-                <div className="text-center py-10 text-gray-400">
-                  <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No traces added yet</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {res.traces.map((trace) => (
-                    <div
-                      key={trace.id}
-                      className={`rounded-xl border p-4 ${
-                        trace.status === 'resolved'
-                          ? 'bg-gray-50 border-gray-200 opacity-70'
-                          : 'bg-white border-purple-200'
-                      }`}
+              <div className="flex items-center gap-3">
+                {localRes.status === 'confirmed' && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setCheckInMode(true)
+                        setEditingField('passportNumber')
+                      }}
+                      className="flex items-center gap-2 px-6 py-2 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition-all shadow-lg shadow-teal-600/20"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                              trace.status === 'resolved' ? 'bg-gray-400' : 'bg-purple-500'
-                            }`} />
-                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                              {trace.department}
-                            </span>
-                            <span className="text-xs text-gray-400">·</span>
-                            <span className="text-xs text-gray-400">{trace.date}</span>
-                          </div>
-                          <p className={`text-sm ${trace.status === 'resolved' ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
-                            {trace.text}
-                          </p>
-                        </div>
-                        {trace.status === 'pending' && (
-                          <button
-                            onClick={() => onResolveTrace(res.id, trace.id)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-600 text-xs font-semibold rounded-lg transition-colors border border-purple-200 flex-shrink-0"
-                          >
-                            <CheckCircle className="w-3 h-3" />
-                            Resolve
-                          </button>
-                        )}
-                        {trace.status === 'resolved' && (
-                          <span className="flex items-center gap-1 text-xs text-gray-400">
-                            <CheckCircle className="w-3.5 h-3.5" />
-                            Done
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <button
-                onClick={() => onAddTrace(res)}
-                className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 text-sm font-semibold rounded-xl transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Trace
-              </button>
-            </div>
-          )}
-
-          {tab === 'packages' && (
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Packages & Add-ons</p>
-                <span className="text-xs text-gray-400">{res.packages.filter(p => p.active).length} active</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                {PACKAGE_DEFS.map((pkg) => {
-                  const existing = res.packages.find((p) => p.pkgId === pkg.id)
-                  const Icon = pkg.icon
-                  const active = existing?.active ?? false
-                  return (
-                    <div
-                      key={pkg.id}
-                      className={`flex flex-col items-center gap-2.5 p-5 rounded-xl border-2 transition-colors ${
-                        active ? 'bg-sky-50 border-sky-300' : 'bg-white border-gray-200'
-                      }`}
+                      Check In{' '}
+                      <span className="text-[10px] opacity-60 font-mono bg-white/20 px-1 rounded">
+                        F5
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setConfirmAction('cancel')}
+                      className="flex items-center gap-2 px-4 py-2 bg-white border border-rose-200 text-rose-600 font-bold rounded-lg hover:bg-rose-50 transition-all"
                     >
-                      <div className={`p-3 rounded-xl ${active ? 'bg-sky-100' : 'bg-gray-100'}`}>
-                        <Icon className={`w-5 h-5 ${active ? 'text-sky-600' : 'text-gray-400'}`} />
-                      </div>
-                      <p className={`text-xs font-semibold text-center ${active ? 'text-sky-700' : 'text-gray-500'}`}>
-                        {pkg.label}
-                      </p>
-                      {active ? (
-                        <span className="flex items-center gap-1 text-[10px] text-sky-600 font-semibold uppercase tracking-wide">
-                          <CheckCircle className="w-3 h-3" /> Active
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-300 font-medium uppercase tracking-wide">—</span>
-                      )}
-                    </div>
-                  )
-                })}
+                      Cancel <X className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        onNoShow(localRes)
+                        onClose()
+                      }}
+                      className="px-4 py-2 bg-slate-200 text-slate-600 font-bold rounded-lg hover:bg-slate-300 transition-all"
+                    >
+                      No Show
+                    </button>
+                  </>
+                )}
+                {localRes.status === 'checked_in' && (
+                  <>
+                    <button
+                      onClick={() => onCheckOut(localRes)}
+                      className="flex items-center gap-2 px-6 py-2 bg-amber-500 text-white font-bold rounded-lg hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20"
+                    >
+                      Check Out{' '}
+                      <span className="text-[10px] opacity-60 font-mono bg-white/20 px-1 rounded">
+                        F6
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => onMoveRoom(localRes)}
+                      className="flex items-center gap-2 px-4 py-2 bg-white border border-indigo-200 text-indigo-600 font-bold rounded-lg hover:bg-indigo-50 transition-all"
+                    >
+                      Move Room{' '}
+                      <span className="text-[10px] opacity-60 font-mono bg-indigo-100 px-1 rounded">
+                        F8
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => onExtendStay(localRes)}
+                      className="px-4 py-2 bg-slate-200 text-slate-600 font-bold rounded-lg hover:bg-slate-300 transition-all"
+                    >
+                      Extend Stay
+                    </button>
+                  </>
+                )}
+                {(localRes.status === 'checked_out' ||
+                  localRes.status === 'cancelled' ||
+                  localRes.status === 'no_show') && (
+                  <>
+                    <button
+                      disabled
+                      className="px-6 py-2 bg-slate-200 text-slate-400 font-bold rounded-lg cursor-not-allowed"
+                    >
+                      {getResStatusLabel(localRes.status)}
+                    </button>
+                    {localRes.status === 'checked_out' && (
+                      <button
+                        onClick={() => setConfirmAction('undo_checkout')}
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-600 font-bold rounded-lg hover:bg-slate-50 transition-all"
+                      >
+                        Undo Check-Out
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
-              {/* Parking details if active */}
-              {res.packages.find(p => p.pkgId === 'PARKING' && p.active) && (
-                <div className="bg-gray-50 rounded-xl p-4 text-sm">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Parking Details</p>
-                  {res.packages.find(p => p.pkgId === 'PARKING')?.licensePlate && (
-                    <p className="text-gray-700">Plate: <span className="font-semibold">{res.packages.find(p => p.pkgId === 'PARKING')?.licensePlate}</span></p>
-                  )}
-                  {res.packages.find(p => p.pkgId === 'PARKING')?.carModel && (
-                    <p className="text-gray-700 mt-0.5">Vehicle: <span className="font-semibold">{res.packages.find(p => p.pkgId === 'PARKING')?.carModel}</span></p>
-                  )}
-                </div>
-              )}
-            </div>
+            </>
           )}
         </div>
-      </div>
+      </motion.div>
+
+      {showDepositModal && (
+        <RecordDepositModal
+          reservation={localRes}
+          onSaved={(charge) =>
+            setLocalRes((prev) => ({ ...prev, charges: [...prev.charges, charge as Charge] }))
+          }
+          onClose={() => setShowDepositModal(false)}
+        />
+      )}
     </div>
   )
 }

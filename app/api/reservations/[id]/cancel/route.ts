@@ -14,42 +14,48 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden — insufficient permissions' }, { status: 403 })
   }
 
-  const reservation = await prisma.reservation.findUnique({
-    where: { id: params.id },
-  })
-
-  if (!reservation) {
-    return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
-  }
-
-  if (reservation.hotelId !== hotelId) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
-
-  const body = await req.json().catch(() => ({}))
-  const { reason } = body
-
-  const [updated] = await prisma.$transaction([
-    prisma.reservation.update({
+  try {
+    const reservation = await prisma.reservation.findUnique({
       where: { id: params.id },
-      data: {
-        status: 'cancelled',
-        cancelledAt: new Date(),
-        cancellationReason: reason || null,
-      },
-      include: {
-        guest: true,
-        room: true,
-        charges: { orderBy: { createdAt: 'asc' } },
-        traces: { orderBy: { createdAt: 'asc' } },
-        packages: true,
-      },
-    }),
-    prisma.room.update({
-      where: { id: reservation.roomId },
-      data: { status: 'available', resId: null },
-    }),
-  ])
+    })
 
-  return NextResponse.json(updated)
+    if (!reservation) {
+      return NextResponse.json({ error: 'Reservation not found' }, { status: 404 })
+    }
+
+    if (reservation.hotelId !== hotelId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const body = await req.json().catch(() => ({}))
+    const { reason } = body
+
+    const [updated] = await prisma.$transaction([
+      prisma.reservation.update({
+        where: { id: params.id },
+        data: {
+          status: 'cancelled',
+          cancelledAt: new Date(),
+          cancellationReason: reason || null,
+        },
+        include: {
+          guest: true,
+          room: true,
+          charges: { orderBy: { createdAt: 'asc' } },
+          traces: { orderBy: { createdAt: 'asc' } },
+          packages: true,
+          preferences: true,
+        },
+      }),
+      prisma.room.update({
+        where: { id: reservation.roomId },
+        data: { status: 'available', resId: null },
+      }),
+    ])
+
+    return NextResponse.json(updated)
+  } catch (err) {
+    console.error('[POST /api/reservations/[id]/cancel] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
 }

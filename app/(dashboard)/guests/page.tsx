@@ -11,19 +11,35 @@ export default function GuestsPage() {
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const fetchDetail = useCallback(async (id: string): Promise<Reservation | null> => {
+    const res = await fetch(`/api/reservations/${id}`)
+    if (!res.ok) return null
+    return res.json()
+  }, [])
+
   const refreshData = useCallback(async () => {
+    // Refresh selected reservation detail in parallel with the list fetches
+    const detailPromise = selectedRes ? fetchDetail(selectedRes.id) : null
     const [roomsRes, resRes] = await Promise.all([
       fetch('/api/rooms'),
-      fetch('/api/reservations'),
+      fetch('/api/reservations?includeAll=1'),
     ])
     const [roomsData, resData] = await Promise.all([roomsRes.json(), resRes.json()])
     setRooms(roomsData)
     setReservations(resData)
-    if (selectedRes) {
-      const updated = resData.find((r: Reservation) => r.id === selectedRes.id)
+    if (detailPromise) {
+      const updated = await detailPromise
       if (updated) setSelectedRes(updated)
     }
-  }, [selectedRes?.id])
+  }, [selectedRes?.id, fetchDetail])
+
+  // Open the panel immediately with the list data, hydrate full detail in background
+  const handleSelectReservation = useCallback((res: Reservation) => {
+    setSelectedRes(res)
+    fetchDetail(res.id).then((detail) => {
+      if (detail) setSelectedRes((prev) => (prev?.id === res.id ? detail : prev))
+    })
+  }, [fetchDetail])
 
   useEffect(() => {
     refreshData().finally(() => setLoading(false))
@@ -59,7 +75,7 @@ export default function GuestsPage() {
     <>
       <GuestHistoryView
         reservations={reservations}
-        onSelectReservation={setSelectedRes}
+        onSelectReservation={handleSelectReservation}
       />
 
       {selectedRes && (

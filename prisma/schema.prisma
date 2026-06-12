@@ -16,6 +16,8 @@ model User {
   role      String   @default("front_desk")
   hotelId   String   @default("HOTEL-001")
   createdAt DateTime @default(now())
+
+  @@index([hotelId])
 }
 
 model Hotel {
@@ -29,104 +31,210 @@ model Room {
   id           String        @id
   floor        Int
   type         String
+  rate         Float         @default(0)
   status       String        @default("available")
   resId        String?
   hotelId      String        @default("HOTEL-001")
   updatedAt    DateTime      @updatedAt
   reservations Reservation[]
+
+  @@index([hotelId])
+  @@index([hotelId, status])
 }
 
 model Guest {
-  id             String        @id @default(cuid())
-  name           String
-  firstName      String?
-  lastName       String?
-  nationality    String?
-  email          String?
-  phone          String?
-  passportNumber String?
-  vipStatus      String?
-  company        String?
-  hotelId        String        @default("HOTEL-001")
-  createdAt      DateTime      @default(now())
-  reservations   Reservation[]
+  id              String        @id @default(cuid())
+  name            String
+  firstName       String?
+  lastName        String?
+  preferredName   String?
+  birthday        String?
+  nationality     String?
+  email           String?
+  phone           String?
+  passportNumber  String?
+  passportExpiry  String?
+  language        String?
+  memberNumber    String?
+  vipStatus       String?
+  company         String?
+  city            String?
+  country         String?
+  hotelId         String        @default("HOTEL-001")
+  preferenceNotes String?
+  specialRequests String?
+  smokingPref     String?
+  bedPref         String?
+  pillowPref      String?
+  floorPref       String?
+  viewPref        String?
+  temperaturePref String?
+  allergiesPref   String?
+  createdAt       DateTime      @default(now())
+  reservations    Reservation[]
+
+  @@index([hotelId])
+  @@index([hotelId, name])
+  @@index([hotelId, passportNumber])
+  @@index([hotelId, email])
+  @@index([hotelId, phone])
+}
+
+model ChargeCode {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  category    String
+  description String
+  price       Float
+  active      Boolean  @default(true)
+  hotelId     String   @default("HOTEL-001")
+  parentCode  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([hotelId])
+  @@index([hotelId, active])
 }
 
 model Company {
-  id            String        @id @default(cuid())
-  name          String
-  contactName   String?
-  contactEmail  String?
-  contactPhone  String?
-  hotelId       String        @default("HOTEL-001")
-  contractRates CompanyRate[]
-  reservations  Reservation[]
-  createdAt     DateTime      @default(now())
-}
+  id                 String              @id @default(cuid())
+  hotelId            String              @default("HOTEL-001")
+  name               String
+  contactName        String?
+  contactEmail       String?
+  contactPhone       String?
+  address            String?
+  taxId              String?
+  notes              String?
+  type               String              @default("COMPANY")
+  contractRates      Json                @default("{}")
+  blackoutStart      String?
+  blackoutEnd        String?
+  active             Boolean             @default(true)
+  creditLimit        Float               @default(0)
+  creditUsed         Float               @default(0)
+  creditResetDay     Int                 @default(1)
+  lastCreditReset    String?
+  bankName           String?
+  bankAccountName    String?
+  bankAccountNumber  String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  reservations       Reservation[]
+  creditTransactions CreditTransaction[]
+  taxInvoices        TaxInvoice[]
 
-model CompanyRate {
-  id           Int     @id @default(autoincrement())
-  companyId    String
-  company      Company @relation(fields: [companyId], references: [id])
-  roomType     String
-  contractRate Float
+  @@index([hotelId])
+  @@index([hotelId, type])
+  @@index([hotelId, active])
 }
 
 model Reservation {
-  id                 String    @id @default(cuid())
-  reservationNumber  String    @unique
-  hotelId            String    @default("HOTEL-001")
+  id                 String        @id @default(cuid())
+  reservationNumber  String        @unique
+  hotelId            String        @default("HOTEL-001")
   guestId            String
-  guest              Guest     @relation(fields: [guestId], references: [id])
+  guest              Guest         @relation(fields: [guestId], references: [id])
   guestName          String
   nationality        String?
   roomId             String
-  room               Room      @relation(fields: [roomId], references: [id])
+  room               Room          @relation(fields: [roomId], references: [id])
   roomTypeId         String
-  status             String    @default("confirmed")
+  status             String        @default("confirmed")
   checkIn            String
   checkOut           String
   rate               Float
   totalNights        Int
   totalAmount        Float
-  adults             Int       @default(1)
-  children           Int       @default(0)
+  adults             Int           @default(1)
+  children           Int           @default(0)
   source             String?
   bookingReference   String?
   vipStatus          String?
   passportNumber     String?
-  company            String?
   companyId          String?
-  companyAccount     Company?  @relation(fields: [companyId], references: [id])
+  company            Company?      @relation(fields: [companyId], references: [id])
   specials           String?
   eta                String?
   flightNumber       String?
   visaDetails        String?
-  turndown           Boolean   @default(false)
-  dnm                Boolean   @default(false)
+  turndown           Boolean       @default(false)
+  dnm                Boolean       @default(false)
   actualCheckIn      DateTime?
   actualCheckOut     DateTime?
   cancelledAt        DateTime?
   cancellationReason String?
   moveReason         String?
-  isMaster           Boolean   @default(false)
+  isMaster           Boolean       @default(false)
   masterResId        String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  masterReservation  Reservation?  @relation("MasterLinked", fields: [masterResId], references: [id])
+  linkedReservations Reservation[] @relation("MasterLinked")
+  preferredName      String?
+  birthday           String?
+  passportExpiry     String?
+  language           String?
+  memberNumber       String?
+  city               String?
+  country            String?
+  createdBy          String?
+  notes              String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
   charges            Charge[]
   traces             Trace[]
   packages           Package[]
+  preferences        Preferences?
+  folios             Folio[]
+
+  @@index([hotelId])
+  @@index([hotelId, status])
+  @@index([hotelId, checkIn])
+  @@index([hotelId, checkOut])
+  @@index([hotelId, status, checkIn])
+  @@index([hotelId, status, checkOut])
+  @@index([roomId])
+  @@index([guestId])
+  @@index([companyId])
+  @@index([masterResId])
 }
 
 model Charge {
-  id            Int         @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   reservationId String
-  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  reservation   Reservation  @relation(fields: [reservationId], references: [id])
   item          String
   amount        Float
   date          String
   category      String?
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime     @default(now())
+  folioCharge   FolioCharge?
+
+  @@index([reservationId])
+  @@index([date])
+}
+
+model Folio {
+  id            Int           @id @default(autoincrement())
+  reservationId String
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+  name          String
+  paymentMethod String?
+  status        String        @default("open")
+  settledAt     DateTime?
+  createdAt     DateTime      @default(now())
+  charges       FolioCharge[]
+
+  @@index([reservationId])
+}
+
+model FolioCharge {
+  id       Int    @id @default(autoincrement())
+  folioId  Int
+  folio    Folio  @relation(fields: [folioId], references: [id])
+  chargeId Int    @unique
+  charge   Charge @relation(fields: [chargeId], references: [id])
+
+  @@index([folioId])
 }
 
 model Trace {
@@ -138,6 +246,10 @@ model Trace {
   status        String      @default("pending")
   department    String      @default("FRONT OFFICE")
   createdAt     DateTime    @default(now())
+
+  @@index([reservationId])
+  @@index([status])
+  @@index([reservationId, status])
 }
 
 model Package {
@@ -148,4 +260,109 @@ model Package {
   active        Boolean     @default(false)
   licensePlate  String?
   carModel      String?
+
+  @@index([reservationId])
+}
+
+model CreditTransaction {
+  id            Int       @id @default(autoincrement())
+  companyId     String
+  company       Company   @relation(fields: [companyId], references: [id])
+  hotelId       String    @default("HOTEL-001")
+  reservationId String?
+  folioId       Int?
+  amount        Float
+  description   String
+  type          String    @default("company_credit")
+  status        String    @default("unpaid")
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([companyId])
+  @@index([hotelId])
+  @@index([reservationId])
+  @@index([companyId, status])
+}
+
+model TaxInvoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String    @unique
+  hotelId       String    @default("HOTEL-001")
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id])
+  reservationId String?
+  billTo        String
+  billTaxId     String?
+  billAddress   String?
+  lineItems     Json      @default("[]")
+  subtotal      Float
+  vatRate       Float     @default(7)
+  vatAmount     Float
+  totalAmount   Float
+  status        String    @default("draft")
+  issuedAt      DateTime?
+  dueDate       String?
+  notes         String?
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([hotelId])
+  @@index([companyId])
+  @@index([hotelId, status])
+}
+
+model NightAudit {
+  id            Int      @id @default(autoincrement())
+  hotelId       String
+  businessDate  String
+  chargesPosted Int
+  totalAmount   Float
+  runBy         String
+  createdAt     DateTime @default(now())
+
+  @@unique([hotelId, businessDate])
+}
+
+model HotelSetting {
+  id           String   @id // hotelId
+  baseCurrency String   @default("THB")
+  altCurrency  String   @default("USD")
+  fxRate       Float    @default(36) // 1 unit of altCurrency = fxRate units of baseCurrency
+  fxRates      Json     @default("{}") // { CODE: units of baseCurrency per 1 CODE } — reference table
+  updatedAt    DateTime @updatedAt
+}
+
+model Shift {
+  id           Int       @id @default(autoincrement())
+  hotelId      String    @default("HOTEL-001")
+  openedBy     String
+  openedAt     DateTime  @default(now())
+  closedBy     String?
+  closedAt     DateTime?
+  status       String    @default("open")
+  openingFloat Float     @default(0)
+  expectedCash Float?
+  countedCash  Float?
+  variance     Float?
+  notes        String?
+
+  @@index([hotelId, status])
+  @@index([hotelId, openedAt])
+}
+
+model Preferences {
+  id            Int         @id @default(autoincrement())
+  reservationId String      @unique
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  smoking       String?
+  bed           String?
+  pillow        String?
+  floor         String?
+  view          String?
+  temperature   String?
+  allergies     String?
+  amenities     String?
+  notes         String?
+  updatedAt     DateTime    @updatedAt
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Reservation, Guest } from '@/types'
 import { getResStatusBadge, getResStatusLabel, formatDate } from '@/lib/utils'
-import { Search, Star, User, Phone, Mail, Globe } from 'lucide-react'
+import { Search, Star, User, Phone, Mail, Globe, ChevronDown, ChevronUp, BedDouble, History } from 'lucide-react'
 
 interface Props {
   reservations: Reservation[]
@@ -51,6 +51,228 @@ function deriveGuests(reservations: Reservation[]): GuestSummary[] {
   return Array.from(map.values()).sort((a, b) => b.totalStays - a.totalStays)
 }
 
+
+const PREF_FIELDS = [
+  { key: 'smokingPref', label: 'Smoking' },
+  { key: 'bedPref', label: 'Bed Type' },
+  { key: 'pillowPref', label: 'Pillow' },
+  { key: 'floorPref', label: 'Floor' },
+  { key: 'viewPref', label: 'View' },
+  { key: 'temperaturePref', label: 'Temperature' },
+  { key: 'allergiesPref', label: 'Allergies' },
+] as const
+
+type PrefKey = typeof PREF_FIELDS[number]['key']
+
+function EditablePrefField({
+  label,
+  fieldKey,
+  guestId,
+  initial,
+}: {
+  label: string
+  fieldKey: PrefKey
+  guestId: string
+  initial: string | null | undefined
+}) {
+  const [value, setValue] = useState(initial ?? '')
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    setEditing(false)
+    if (value === (initial ?? '')) return
+    setSaving(true)
+    await fetch(`/api/guests/${guestId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [fieldKey]: value || null }),
+    })
+    setSaving(false)
+  }
+
+  return (
+    <div className="p-2 bg-slate-50 rounded-lg border border-slate-100 group">
+      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+      {editing ? (
+        <input
+          autoFocus
+          className="w-full text-[11px] font-semibold text-slate-700 bg-white border border-teal-300 rounded px-1 py-0.5 outline-none"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setValue(initial ?? ''); setEditing(false) } }}
+        />
+      ) : (
+        <button
+          className="w-full text-left"
+          onClick={() => setEditing(true)}
+        >
+          {saving ? (
+            <span className="text-[10px] text-teal-500 font-bold">Saving…</span>
+          ) : value ? (
+            <span className="text-[11px] font-bold text-slate-700">{value}</span>
+          ) : (
+            <span className="text-[11px] text-slate-300 italic">—</span>
+          )}
+        </button>
+      )}
+    </div>
+  )
+}
+
+function RoomHistorySection({ reservations }: { reservations: Reservation[] }) {
+  const sorted = [...reservations].sort((a, b) => (b.checkIn > a.checkIn ? 1 : -1))
+
+  // Find most frequent room type
+  const typeCounts: Record<string, number> = {}
+  for (const res of reservations) {
+    if (res.roomTypeId) typeCounts[res.roomTypeId] = (typeCounts[res.roomTypeId] ?? 0) + 1
+  }
+  const topType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+
+  return (
+    <div className="mt-4">
+      <div className="flex items-center gap-2 mb-3">
+        <History className="w-3.5 h-3.5 text-slate-400" />
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Room History</p>
+        {topType && (
+          <span className="ml-auto text-[9px] font-black text-teal-600 bg-teal-50 border border-teal-100 rounded-full px-2 py-0.5 uppercase">
+            Prefers {topType.replace('_', ' ')}
+          </span>
+        )}
+      </div>
+      <div className="space-y-1.5">
+        {sorted.map((res) => {
+          const isTopType = res.roomTypeId === topType
+          return (
+            <div
+              key={res.id}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg border text-xs ${
+                isTopType
+                  ? 'bg-teal-50 border-teal-200'
+                  : 'bg-white border-slate-100'
+              }`}
+            >
+              <div className="flex items-center gap-1.5 shrink-0">
+                <BedDouble className={`w-3.5 h-3.5 ${isTopType ? 'text-teal-500' : 'text-slate-300'}`} />
+                <span className="font-black text-slate-800">Rm {res.roomId}</span>
+              </div>
+              <span className="text-slate-400">·</span>
+              <span className="text-slate-500">{res.roomTypeId?.replace('_', ' ')}</span>
+              {res.room?.floor && <><span className="text-slate-400">·</span><span className="text-slate-400">Fl {res.room.floor}</span></>}
+              <span className="text-slate-400">·</span>
+              <span className="text-slate-500">{formatDate(res.checkIn)} → {formatDate(res.checkOut)}</span>
+              <span className="text-slate-400">·</span>
+              <span className="font-semibold text-slate-700">฿{res.rate.toLocaleString()}/n</span>
+              <span className={`ml-auto px-1.5 py-0.5 rounded-full text-[9px] font-black ${getResStatusBadge(res.status)}`}>
+                {getResStatusLabel(res.status)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function GuestProfileSection({
+  entry,
+}: {
+  entry: GuestSummary
+}) {
+  const g = entry.guest
+  const [prefNotes, setPrefNotes] = useState(g.preferenceNotes ?? '')
+  const [saving, setSaving] = useState(false)
+
+  const uniqueSpecials = Array.from(
+    new Set(
+      entry.reservations
+        .map((r) => r.specials?.trim())
+        .filter((s): s is string => !!s)
+    )
+  )
+
+  async function savePrefNotes() {
+    setSaving(true)
+    await fetch(`/api/guests/${g.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preferenceNotes: prefNotes }),
+    })
+    setSaving(false)
+  }
+
+  return (
+    <div className="mb-4 p-4 bg-white border border-slate-200 rounded-xl space-y-4">
+      <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest">
+        Guest Profile
+      </p>
+
+      {/* Editable guest-level preferences */}
+      <div>
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">
+          Preferences <span className="font-normal normal-case text-slate-300">(click to edit)</span>
+        </p>
+        <div className="grid grid-cols-4 gap-2">
+          {PREF_FIELDS.map(({ key, label }) => (
+            <EditablePrefField
+              key={key}
+              label={label}
+              fieldKey={key}
+              guestId={g.id}
+              initial={(g as any)[key]}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Preference notes (editable) */}
+      <div>
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">
+          Staff Notes
+        </p>
+        <textarea
+          className="w-full p-3 text-sm text-slate-700 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-teal-400 bg-slate-50 resize-none placeholder:text-slate-300"
+          rows={2}
+          placeholder="e.g. Always requests high floor, allergic to feather pillows, prefers quiet rooms..."
+          value={prefNotes}
+          onChange={(e) => setPrefNotes(e.target.value)}
+          onBlur={savePrefNotes}
+        />
+        {saving && (
+          <p className="text-[9px] text-teal-500 font-bold mt-0.5">Saving…</p>
+        )}
+      </div>
+
+      {/* Unique specials from past stays */}
+      {uniqueSpecials.length > 0 && (
+        <div>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">
+            Typical Special Requests
+          </p>
+          <div className="space-y-1">
+            {uniqueSpecials.map((s, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2 px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg"
+              >
+                <span className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <p className="text-xs text-slate-600">{s}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Room History */}
+      {entry.reservations.length > 0 && (
+        <RoomHistorySection reservations={entry.reservations} />
+      )}
+    </div>
+  )
+}
+
 export default function GuestHistoryView({ reservations, onSelectReservation }: Props) {
   const [search, setSearch] = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -76,7 +298,7 @@ export default function GuestHistoryView({ reservations, onSelectReservation }: 
           placeholder="Search guests by name, email, nationality..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+          className="w-full max-w-md pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         />
       </div>
 
@@ -90,7 +312,7 @@ export default function GuestHistoryView({ reservations, onSelectReservation }: 
           return (
             <div
               key={g.id}
-              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-sky-200 transition-colors"
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-teal-200 transition-colors"
             >
               {/* Guest header */}
               <button
@@ -98,15 +320,15 @@ export default function GuestHistoryView({ reservations, onSelectReservation }: 
                 onClick={() => setExpanded(isExpanded ? null : g.id)}
               >
                 {/* Avatar */}
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-black text-sm">
                   {g.name.charAt(0).toUpperCase()}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-gray-900">{g.name}</span>
+                    <span className="font-black text-slate-900">{g.name}</span>
                     {g.vipStatus && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-medium border border-amber-200">
+                      <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full font-black border border-amber-200">
                         <Star className="w-3 h-3" />
                         {g.vipStatus}
                       </span>
@@ -134,16 +356,29 @@ export default function GuestHistoryView({ reservations, onSelectReservation }: 
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 text-right">
-                  <p className="text-sm font-semibold text-gray-900">{entry.totalStays} stay{entry.totalStays !== 1 ? 's' : ''}</p>
-                  <p className="text-xs text-gray-500">฿{entry.totalSpend.toLocaleString()}</p>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="text-right">
+                    <p className="text-sm font-black text-slate-900">
+                      {entry.totalStays} stay{entry.totalStays !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-xs text-gray-500">฿{entry.totalSpend.toLocaleString()}</p>
+                  </div>
+                  {isExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-slate-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  )}
                 </div>
               </button>
 
-              {/* Expanded reservations */}
+              {/* Expanded section */}
               {isExpanded && (
                 <div className="border-t border-gray-100 bg-gray-50 p-4">
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  {/* Guest Profile */}
+                  <GuestProfileSection entry={entry} />
+
+                  {/* Reservation History */}
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
                     Reservation History
                   </h4>
                   <div className="space-y-2">
@@ -153,17 +388,19 @@ export default function GuestHistoryView({ reservations, onSelectReservation }: 
                         <button
                           key={res.id}
                           onClick={() => onSelectReservation?.(res)}
-                          className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-sky-300 hover:bg-sky-50 transition-colors text-left"
+                          className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-teal-300 hover:bg-teal-50 transition-colors text-left"
                         >
                           <div>
-                            <p className="text-sm font-medium text-gray-800">
+                            <p className="text-sm font-bold text-gray-800">
                               {res.reservationNumber} · Room {res.roomId}
                             </p>
                             <p className="text-xs text-gray-500">
                               {formatDate(res.checkIn)} → {formatDate(res.checkOut)} ({res.totalNights}N)
                             </p>
                           </div>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getResStatusBadge(res.status)}`}>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs font-black ${getResStatusBadge(res.status)}`}
+                          >
                             {getResStatusLabel(res.status)}
                           </span>
                         </button>

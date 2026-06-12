@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import {
   LayoutDashboard,
@@ -13,24 +13,53 @@ import {
   LogOut,
   Radio,
   ChevronRight,
-  Building2,
   BarChart3,
+  Building2,
+  Settings2,
+  Play,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Receipt,
+  Sparkles,
+  Search,
+  Wallet,
+  FileBarChart,
 } from 'lucide-react'
+import { hasPermission } from '@/lib/rbac'
 import { HOTEL_NAME, LOCATION } from '@/lib/constants'
+import { getResStatusBadge, getResStatusLabel } from '@/lib/utils'
+import Toaster from '@/components/Toaster'
 
-const NAV_ITEMS = [
+type NavItem = {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  roles?: string[]
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/reservations', label: 'Reservations', icon: CalendarDays },
-  { href: '/companies', label: 'Companies', icon: Building2 },
   { href: '/timeline', label: 'Timeline', icon: Clock },
   { href: '/rooms', label: 'Room Grid', icon: Grid3X3 },
+  { href: '/housekeeping', label: 'Housekeeping', icon: Sparkles },
   { href: '/guests', label: 'Guest History', icon: Users },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/companies', label: 'Companies', icon: Building2 },
+  { href: '/shift', label: 'Shift / Cash', icon: Wallet, roles: ['admin', 'manager', 'front_desk'] },
+  { href: '/reports', label: 'Reports', icon: FileBarChart, roles: ['admin', 'manager', 'front_desk'] },
+  { href: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
+  { href: '/accounting', label: 'Accounting', icon: Receipt, roles: ['admin', 'manager'] },
+  { href: '/settings', label: 'Settings', icon: Settings2, roles: ['admin', 'manager'] },
 ]
 
-function NightAuditClock() {
+function NightAuditClock({ canRun }: { canRun: boolean }) {
   const [timeLeft, setTimeLeft] = useState('')
   const [currentTime, setCurrentTime] = useState('')
+  const [auditRan, setAuditRan] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [running, setRunning] = useState(false)
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null)
 
   useEffect(() => {
     function tick() {
@@ -38,23 +67,45 @@ function NightAuditClock() {
       const midnight = new Date(now)
       midnight.setHours(24, 0, 0, 0)
       const diff = midnight.getTime() - now.getTime()
-
       const h = Math.floor(diff / 3600000)
       const m = Math.floor((diff % 3600000) / 60000)
       const s = Math.floor((diff % 60000) / 1000)
-
-      setTimeLeft(
-        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-      )
-      setCurrentTime(
-        now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
-      )
+      setTimeLeft(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
+      setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }))
     }
-
     tick()
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [])
+
+  const checkAuditStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/night-audit')
+      const data = await res.json()
+      setAuditRan(data.ran)
+    } catch { }
+  }, [])
+
+  useEffect(() => { checkAuditStatus() }, [checkAuditStatus])
+
+  async function runAudit() {
+    setRunning(true)
+    setConfirming(false)
+    setResult(null)
+    try {
+      const res = await fetch('/api/night-audit', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setAuditRan(true)
+        setResult({ ok: true, msg: `${data.chargesPosted} charge${data.chargesPosted !== 1 ? 's' : ''} posted · ฿${data.totalAmount.toLocaleString()}` })
+      } else {
+        setResult({ ok: false, msg: data.error ?? 'Failed' })
+      }
+    } catch {
+      setResult({ ok: false, msg: 'Network error' })
+    }
+    setRunning(false)
+  }
 
   return (
     <div className="px-4 py-3 mx-2 mb-2 rounded-xl bg-white/5 border border-white/10">
@@ -63,6 +114,150 @@ function NightAuditClock() {
       </p>
       <p className="text-lg font-mono font-bold text-white">{timeLeft}</p>
       <p className="text-xs text-white/40 mt-0.5">{currentTime}</p>
+
+      {canRun && (
+        <div className="mt-2">
+          {auditRan ? (
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <CheckCircle className="w-3 h-3" />
+              <span className="text-[10px] font-semibold">Audit complete</span>
+            </div>
+          ) : confirming ? (
+            <div className="space-y-1.5">
+              <p className="text-[10px] text-amber-300 font-semibold">Post room charges for all in-house guests?</p>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={runAudit}
+                  className="flex-1 py-1 bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-black rounded transition-colors"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setConfirming(false)}
+                  className="flex-1 py-1 bg-white/10 hover:bg-white/20 text-white/70 text-[10px] font-bold rounded transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : running ? (
+            <div className="flex items-center gap-1.5 text-white/50">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span className="text-[10px]">Running...</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirming(true)}
+              className="flex items-center gap-1.5 text-[10px] font-bold text-sky-300 hover:text-sky-200 transition-colors"
+            >
+              <Play className="w-3 h-3" /> Run Audit
+            </button>
+          )}
+
+          {result && (
+            <div className={`mt-1.5 flex items-start gap-1 ${result.ok ? 'text-emerald-400' : 'text-red-400'}`}>
+              {result.ok
+                ? <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                : <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />}
+              <span className="text-[10px] leading-tight">{result.msg}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type SearchResult = {
+  id: string
+  reservationNumber: string
+  guestName: string
+  roomId: string
+  status: string
+  checkIn: string
+  checkOut: string
+}
+
+function GlobalSearch() {
+  const router = useRouter()
+  const [q, setQ] = useState('')
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [open, setOpen] = useState(false)
+  const boxRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [])
+
+  function onChange(value: string) {
+    setQ(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (value.trim().length < 2) {
+      setResults([])
+      setOpen(false)
+      return
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/search?q=${encodeURIComponent(value.trim())}`)
+        const data = await r.json()
+        setResults(Array.isArray(data) ? data : [])
+        setOpen(true)
+      } catch {
+        setResults([])
+      }
+    }, 250)
+  }
+
+  function select(res: SearchResult) {
+    setQ('')
+    setResults([])
+    setOpen(false)
+    router.push(`/reservations?focus=${res.id}`)
+  }
+
+  return (
+    <div ref={boxRef} className="relative w-72">
+      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-sky-400 focus-within:border-transparent transition-all">
+        <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+        <input
+          value={q}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => { if (results.length > 0) setOpen(true) }}
+          placeholder="Search guest, reservation, room…"
+          className="flex-1 bg-transparent text-xs text-gray-800 placeholder-gray-400 focus:outline-none"
+        />
+      </div>
+      {open && (
+        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
+          {results.length === 0 ? (
+            <p className="px-3 py-3 text-xs text-gray-400 text-center">No matches</p>
+          ) : (
+            results.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => select(r)}
+                className="w-full text-left px-3 py-2 hover:bg-sky-50 border-b border-gray-100 last:border-0"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-gray-800 truncate">{r.guestName}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${getResStatusBadge(r.status as any)}`}>
+                    {getResStatusLabel(r.status as any)}
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {r.reservationNumber} · Room {r.roomId} · {r.checkIn} → {r.checkOut}
+                </p>
+              </button>
+            ))
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -70,6 +265,8 @@ function NightAuditClock() {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role ?? ''
+  const visibleNavItems = NAV_ITEMS.filter((n) => !n.roles || n.roles.includes(userRole))
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -106,11 +303,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Night audit */}
-        <NightAuditClock />
+        <NightAuditClock canRun={hasPermission((session?.user as any)?.role ?? '', 'POST_PAYMENT')} />
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
-          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+          {visibleNavItems.map(({ href, label, icon: Icon }) => {
             const active = isActive(href)
             return (
               <Link
@@ -163,7 +360,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </h2>
             <p className="text-xs text-gray-400">{HOTEL_NAME} · {LOCATION}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <GlobalSearch />
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-semibold text-emerald-700">
               <Radio className="w-2.5 h-2.5 animate-pulse" />
               System Live
@@ -176,6 +374,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      <Toaster />
     </div>
   )
 }

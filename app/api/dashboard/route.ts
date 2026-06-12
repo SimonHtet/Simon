@@ -8,46 +8,51 @@ export async function GET() {
 
   const today = new Date().toISOString().split('T')[0]
 
-  const [
-    todayArrivalsCount,
-    todayDeparturesCount,
-    inHouseCount,
-    availableRoomsCount,
-    totalRoomsCount,
-    pendingTracesCount,
-  ] = await Promise.all([
-    prisma.reservation.count({
-      where: { hotelId: hotelId!, checkIn: today, status: 'confirmed' },
-    }),
-    prisma.reservation.count({
-      where: { hotelId: hotelId!, checkOut: today, status: 'checked_in' },
-    }),
-    prisma.reservation.count({
-      where: { hotelId: hotelId!, status: 'checked_in' },
-    }),
-    prisma.room.count({
-      where: { hotelId: hotelId!, status: 'available' },
-    }),
-    prisma.room.count({
-      where: { hotelId: hotelId! },
-    }),
-    prisma.trace.count({
-      where: { status: 'pending', reservation: { hotelId: hotelId! } },
-    }),
-  ])
+  try {
+    const [
+      todayArrivalsCount,
+      todayDeparturesCount,
+      inHouseCount,
+      availableRoomsCount,
+      totalRoomsCount,
+      pendingTracesCount,
+    ] = await Promise.all([
+      prisma.reservation.count({
+        where: { hotelId: hotelId!, checkIn: today, status: 'confirmed' },
+      }),
+      prisma.reservation.count({
+        where: { hotelId: hotelId!, checkOut: today, status: 'checked_in' },
+      }),
+      prisma.reservation.count({
+        where: { hotelId: hotelId!, status: 'checked_in' },
+      }),
+      prisma.room.count({
+        where: { hotelId: hotelId!, status: 'available' },
+      }),
+      prisma.room.count({
+        where: { hotelId: hotelId! },
+      }),
+      prisma.trace.count({
+        where: { status: 'pending', reservation: { hotelId: hotelId! } },
+      }),
+    ])
 
-  const occupancyRate =
-    totalRoomsCount > 0
-      ? Math.round((inHouseCount / totalRoomsCount) * 100)
-      : 0
+    const occupancyRate =
+      totalRoomsCount > 0
+        ? Math.round((inHouseCount / totalRoomsCount) * 100)
+        : 0
 
-  return NextResponse.json({
-    todayArrivals: todayArrivalsCount,
-    todayDepartures: todayDeparturesCount,
-    inHouse: inHouseCount,
-    availableRooms: availableRoomsCount,
-    totalRooms: totalRoomsCount,
-    occupancyRate,
-    pendingTraces: pendingTracesCount,
-  })
+    return NextResponse.json({
+      todayArrivals: todayArrivalsCount,
+      todayDepartures: todayDeparturesCount,
+      inHouse: inHouseCount,
+      availableRooms: availableRoomsCount,
+      totalRooms: totalRoomsCount,
+      occupancyRate,
+      pendingTraces: pendingTracesCount,
+    })
+  } catch (err) {
+    console.error('[/api/dashboard] DB error:', err)
+    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+  }
 }
