@@ -118,11 +118,18 @@ export default function SettingsPage() {
   }
 
   // --- Currency state ---
-  const [currencyForm, setCurrencyForm] = useState({ baseCurrency: 'THB', altCurrency: 'USD', fxRate: '' })
+  const [currencyForm, setCurrencyForm] = useState<{ baseCurrency: string; altCurrency: string; rates: Record<string, string> }>({
+    baseCurrency: 'THB', altCurrency: 'USD', rates: {},
+  })
   const [currencyLoading, setCurrencyLoading] = useState(true)
   const [currencySaving, setCurrencySaving] = useState(false)
   const [currencyError, setCurrencyError] = useState('')
   const [currencySaved, setCurrencySaved] = useState(false)
+
+  // Currencies the hotel deals with day-to-day; rates are entered against base
+  const RATE_CURRENCIES = ['THB', 'USD', 'MMK']
+  const rateInputCurrencies = Array.from(new Set([...RATE_CURRENCIES, currencyForm.altCurrency]))
+    .filter((c) => c !== currencyForm.baseCurrency)
 
   async function loadCurrency() {
     setCurrencyLoading(true)
@@ -130,7 +137,12 @@ export default function SettingsPage() {
       const res = await fetch('/api/settings')
       const data = await res.json()
       if (res.ok) {
-        setCurrencyForm({ baseCurrency: data.baseCurrency, altCurrency: data.altCurrency, fxRate: String(data.fxRate) })
+        const stored: Record<string, number> = (data.fxRates && typeof data.fxRates === 'object') ? data.fxRates : {}
+        const rates: Record<string, string> = {}
+        for (const [code, v] of Object.entries(stored)) rates[code] = String(v)
+        // Seed the alt-currency rate from the legacy single rate if the table is empty
+        if (rates[data.altCurrency] === undefined && data.fxRate) rates[data.altCurrency] = String(data.fxRate)
+        setCurrencyForm({ baseCurrency: data.baseCurrency, altCurrency: data.altCurrency, rates })
       }
     } catch { }
     setCurrencyLoading(false)
@@ -139,19 +151,54 @@ export default function SettingsPage() {
   async function handleSaveCurrency() {
     setCurrencyError('')
     setCurrencySaved(false)
-    const rate = parseFloat(currencyForm.fxRate)
-    if (isNaN(rate) || rate <= 0) { setCurrencyError('Enter a valid exchange rate'); return }
+    const fxRates: Record<string, number> = {}
+    for (const code of rateInputCurrencies) {
+      const raw = (currencyForm.rates[code] ?? '').trim()
+      if (raw === '') continue
+      const r = parseFloat(raw)
+      if (isNaN(r) || r <= 0) { setCurrencyError(`Enter a valid rate for ${code}`); return }
+      fxRates[code] = r
+    }
+    if (fxRates[currencyForm.altCurrency] === undefined) {
+      setCurrencyError(`A rate for ${currencyForm.altCurrency} (the alternate currency) is required`)
+      return
+    }
     setCurrencySaving(true)
     const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...currencyForm, fxRate: rate }),
+      body: JSON.stringify({ baseCurrency: currencyForm.baseCurrency, altCurrency: currencyForm.altCurrency, fxRates }),
     })
     setCurrencySaving(false)
     if (!res.ok) { const d = await res.json(); setCurrencyError(d.error || 'Failed'); return }
     setCurrencySaved(true)
     setTimeout(() => setCurrencySaved(false), 2500)
   }
+
+  // Cross rates derived from the table (base = 1). Returns null when unknown.
+  function crossRate(from: string, to: string): number | null {
+    const toBase = (code: string): number | null => {
+      if (code === currencyForm.baseCurrency) return 1
+      const r = parseFloat(currencyForm.rates[code] ?? '')
+      return isNaN(r) || r <= 0 ? null : r
+    }
+    const f = toBase(from)
+    const t = toBase(to)
+    if (f === null || t === null) return null
+    return f / t
+  }
+
+  function fmtRate(r: number): string {
+    if (r >= 100) return r.toLocaleString(undefined, { maximumFractionDigits: 0 })
+    if (r >= 1) return r.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    return r.toLocaleString(undefined, { maximumFractionDigits: 5 })
+  }
+
+  const CROSS_PAIRS: [string, string][] = [
+    ['USD', 'THB'],
+    ['USD', 'MMK'],
+    ['THB', 'MMK'],
+  ]
 
   // --- Charge code state ---
   const [codes, setCodes] = useState<ChargeCode[]>([])
@@ -529,29 +576,54 @@ export default function SettingsPage() {
                     {['USD', 'THB', 'MMK', 'EUR', 'SGD', 'CNY'].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">
-                    House Rate (1 {currencyForm.altCurrency} = ? {currencyForm.baseCurrency})
-                  </label>
-                  <input
-                    type="number" min={0} step={0.01}
-                    value={currencyForm.fxRate}
-                    onChange={(e) => setCurrencyForm(p => ({ ...p, fxRate: e.target.value }))}
-                    className={`${inputCls} w-36`}
-                    placeholder="e.g. 36.50"
-                  />
-                </div>
+                {rateInputCurrencies.map((code) => (
+                  <div key={code}>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                      1 {code} = ? {currencyForm.baseCurrency}
+                      {code === currencyForm.altCurrency && <span className="text-teal-600 ml-1">*</span>}
+                    </label>
+                    <input
+                      type="number" min={0} step="any"
+                      value={currencyForm.rates[code] ?? ''}
+                      onChange={(e) => setCurrencyForm(p => ({ ...p, rates: { ...p.rates, [code]: e.target.value } }))}
+                      className={`${inputCls} w-32`}
+                      placeholder={code === 'MMK' ? 'e.g. 0.0174' : 'e.g. 36.50'}
+                    />
+                  </div>
+                ))}
                 <button
                   onClick={handleSaveCurrency}
                   disabled={currencySaving}
                   className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
                 >
-                  {currencySaving ? 'Saving…' : currencySaved ? '✓ Saved' : 'Save Rate'}
+                  {currencySaving ? 'Saving…' : currencySaved ? '✓ Saved' : 'Save Rates'}
                 </button>
               </div>
               {currencyError && <p className="text-xs text-red-600 mt-2">{currencyError}</p>}
+
+              {/* Cross-rate reference table */}
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                {CROSS_PAIRS.map(([from, to]) => {
+                  const fwd = crossRate(from, to)
+                  const rev = crossRate(to, from)
+                  return (
+                    <div key={`${from}${to}`} className="border border-slate-200 rounded-xl px-4 py-3 bg-slate-50">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{from} / {to}</p>
+                      {fwd === null ? (
+                        <p className="text-xs text-slate-400 italic">Enter both rates above</p>
+                      ) : (
+                        <>
+                          <p className="text-sm font-bold text-slate-800">1 {from} = {fmtRate(fwd)} {to}</p>
+                          <p className="text-xs text-slate-500">1 {to} = {fmtRate(rev!)} {from}</p>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
               <p className="text-xs text-slate-400 mt-3">
-                Payments and deposits entered in {currencyForm.altCurrency} are converted to {currencyForm.baseCurrency} at this rate and recorded with the original amount noted.
+                Payments and deposits entered in {currencyForm.altCurrency} convert to {currencyForm.baseCurrency} at the {currencyForm.altCurrency} rate (marked *) — the other rates are for front-desk reference. Cross rates are derived through {currencyForm.baseCurrency}.
               </p>
             </div>
           )}

@@ -840,7 +840,7 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
                 <select
                   value={activeCurrency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className={`${selectCls} w-24 flex-shrink-0`}
+                  className="w-24 flex-shrink-0 border border-gray-200 rounded-lg px-2 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
                   <option value={setting.baseCurrency}>{setting.baseCurrency}</option>
                   <option value={setting.altCurrency}>{setting.altCurrency}</option>
@@ -951,7 +951,7 @@ export function RecordDepositModal({ reservation: res, onSaved, onClose }: Recor
                 <select
                   value={activeCurrency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className={`${selectCls} w-24 flex-shrink-0`}
+                  className="w-24 flex-shrink-0 border border-gray-200 rounded-lg px-2 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
                   <option value={setting.baseCurrency}>{setting.baseCurrency}</option>
                   <option value={setting.altCurrency}>{setting.altCurrency}</option>

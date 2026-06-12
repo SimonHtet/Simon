@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json().catch(() => ({}))
-  const { baseCurrency, altCurrency, fxRate } = body
+  const { baseCurrency, altCurrency, fxRate, fxRates } = body
 
   if (baseCurrency !== undefined && !CURRENCIES.includes(baseCurrency)) {
     return NextResponse.json({ error: 'Invalid base currency' }, { status: 400 })
@@ -46,19 +46,43 @@ export async function PUT(req: NextRequest) {
     }
   }
 
+  // Rate table: { CODE: units of baseCurrency per 1 CODE }
+  let parsedRates: Record<string, number> | undefined
+  if (fxRates !== undefined) {
+    if (typeof fxRates !== 'object' || fxRates === null || Array.isArray(fxRates)) {
+      return NextResponse.json({ error: 'fxRates must be an object of currency: rate' }, { status: 400 })
+    }
+    parsedRates = {}
+    for (const [code, value] of Object.entries(fxRates)) {
+      if (!CURRENCIES.includes(code)) {
+        return NextResponse.json({ error: `Invalid currency in rates: ${code}` }, { status: 400 })
+      }
+      const r = parseFloat(value as string)
+      if (isNaN(r) || r <= 0 || r > 10000000) {
+        return NextResponse.json({ error: `Rate for ${code} must be a positive number` }, { status: 400 })
+      }
+      parsedRates[code] = r
+    }
+  }
+
+  // Keep the operative pair rate in sync with the table: payments and deposits
+  // convert via fxRate, which must always equal the alt currency's table entry
+  const current = await prisma.hotelSetting.findUnique({ where: { id: hotelId! } })
+  const effectiveAlt = altCurrency ?? current?.altCurrency ?? 'USD'
+  if (parsedRates && parsedRates[effectiveAlt] !== undefined) {
+    parsedRate = parsedRates[effectiveAlt]
+  }
+
+  const data = {
+    ...(baseCurrency !== undefined && { baseCurrency }),
+    ...(altCurrency !== undefined && { altCurrency }),
+    ...(parsedRate !== undefined && { fxRate: parsedRate }),
+    ...(parsedRates !== undefined && { fxRates: parsedRates }),
+  }
   const setting = await prisma.hotelSetting.upsert({
     where: { id: hotelId! },
-    update: {
-      ...(baseCurrency !== undefined && { baseCurrency }),
-      ...(altCurrency !== undefined && { altCurrency }),
-      ...(parsedRate !== undefined && { fxRate: parsedRate }),
-    },
-    create: {
-      id: hotelId!,
-      ...(baseCurrency !== undefined && { baseCurrency }),
-      ...(altCurrency !== undefined && { altCurrency }),
-      ...(parsedRate !== undefined && { fxRate: parsedRate }),
-    },
+    update: data,
+    create: { id: hotelId!, ...data },
   })
   return NextResponse.json(setting)
 }

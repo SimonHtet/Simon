@@ -329,6 +329,7 @@ model HotelSetting {
   baseCurrency String   @default("THB")
   altCurrency  String   @default("USD")
   fxRate       Float    @default(36) // 1 unit of altCurrency = fxRate units of baseCurrency
+  fxRates      Json     @default("{}") // { CODE: units of baseCurrency per 1 CODE } — reference table
   updatedAt    DateTime @updatedAt
 }
 
