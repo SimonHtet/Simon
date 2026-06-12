@@ -4,10 +4,26 @@ import { useState, useEffect } from 'react'
 import { Room, Reservation, Company, ChargeCode } from '@/types'
 import { ROOM_TYPES, BOOKING_SOURCES, CHARGE_CATEGORIES, PAYMENT_TYPES, DEPARTMENTS } from '@/lib/constants'
 import { calculateNights } from '@/lib/utils'
+import { formatMoney, altToBase, type HotelSetting } from '@/lib/currency'
 import {
   X, Plus, ArrowRight, Clock, Plane, Home, User, Calendar, DollarSign,
   CreditCard, MessageSquare, BedDouble, Hotel, ChevronRight, AlertTriangle,
+  Banknote,
 } from 'lucide-react'
+
+// Fetches the hotel currency setting; null until loaded (modals fall back to base-only)
+function useHotelSetting(): HotelSetting | null {
+  const [setting, setSetting] = useState<HotelSetting | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/settings')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && d) setSetting(d) })
+      .catch(() => { })
+    return () => { cancelled = true }
+  }, [])
+  return setting
+}
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
 
@@ -723,7 +739,7 @@ export function AddChargeModal({ reservation: res, onConfirm, onClose }: AddChar
 
 interface PostPaymentModalProps {
   reservation: Reservation
-  onConfirm: (data: { item: string; amount: number; date: string; paymentMethod?: string }) => Promise<void>
+  onConfirm: (data: { item: string; amount: number; date: string; paymentMethod?: string; currency?: string }) => Promise<void>
   onClose: () => void
 }
 
@@ -734,6 +750,10 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
   const [date, setDate] = useState(today)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const setting = useHotelSetting()
+  const [currency, setCurrency] = useState<string | null>(null)
+  const activeCurrency = currency ?? setting?.baseCurrency ?? 'THB'
+  const isAlt = setting != null && activeCurrency === setting.altCurrency
 
   const hasCompany = !!(res.companyId && res.company)
   const isCityLedger = paymentType === 'City Ledger'
@@ -745,7 +765,13 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
     setError('')
     setLoading(true)
     try {
-      await onConfirm({ item: `Payment — ${paymentType}`, amount: parseFloat(amount), date, paymentMethod: paymentType })
+      await onConfirm({
+        item: `Payment — ${paymentType}`,
+        amount: parseFloat(amount),
+        date,
+        paymentMethod: paymentType,
+        ...(isAlt && { currency: activeCurrency }),
+      })
     } catch (e: any) {
       setError(e.message || 'Failed to post payment')
     } finally {
@@ -807,19 +833,159 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <FormField label="Amount (฿)" required>
-            <input type="number" min={0} step={0.01} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} />
+          <FormField label={`Amount (${activeCurrency})`} required>
+            <div className="flex gap-2">
+              <input type="number" min={0} step={0.01} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} />
+              {setting && (
+                <select
+                  value={activeCurrency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className={`${selectCls} w-24 flex-shrink-0`}
+                >
+                  <option value={setting.baseCurrency}>{setting.baseCurrency}</option>
+                  <option value={setting.altCurrency}>{setting.altCurrency}</option>
+                </select>
+              )}
+            </div>
           </FormField>
           <FormField label="Date">
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
           </FormField>
         </div>
+        {isAlt && setting && amount && parseFloat(amount) > 0 && (
+          <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            Converts to <span className="font-bold">{formatMoney(altToBase(parseFloat(amount), setting.fxRate), setting.baseCurrency)}</span> at house rate {setting.fxRate} {setting.baseCurrency}/{setting.altCurrency}
+          </p>
+        )}
         {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">{error}</p>}
       </div>
       <div className="px-6 pb-6 flex gap-3 border-t border-gray-100 pt-4">
         <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
         <button onClick={handleConfirm} disabled={loading || noCityLedgerCompany} className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60">
           {loading ? 'Posting...' : 'Post Payment'}
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+// ─── Record Deposit Modal ──────────────────────────────────────────────────────
+
+const DEPOSIT_METHODS = ['Bank Transfer', 'Cash', 'Credit Card', 'PromptPay', 'Mobile Pay']
+
+interface RecordDepositModalProps {
+  reservation: Reservation
+  onSaved: (charge: { id: number; item: string; amount: number; date: string; category?: string | null }) => void
+  onClose: () => void
+}
+
+export function RecordDepositModal({ reservation: res, onSaved, onClose }: RecordDepositModalProps) {
+  const today = new Date().toISOString().split('T')[0]
+  const [method, setMethod] = useState('Bank Transfer')
+  const [amount, setAmount] = useState('')
+  const [reference, setReference] = useState('')
+  const [date, setDate] = useState(today)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const setting = useHotelSetting()
+  const [currency, setCurrency] = useState<string | null>(null)
+  const activeCurrency = currency ?? setting?.baseCurrency ?? 'THB'
+  const isAlt = setting != null && activeCurrency === setting.altCurrency
+
+  const depositsPaid = (res.charges ?? [])
+    .filter((c) => c.category === 'DEPOSIT')
+    .reduce((s, c) => s + Math.abs(c.amount), 0)
+
+  async function handleConfirm() {
+    const parsed = parseFloat(amount)
+    if (!amount || isNaN(parsed) || parsed <= 0) { setError('Amount must be greater than 0'); return }
+    setError('')
+    setLoading(true)
+    try {
+      const r = await fetch(`/api/reservations/${res.id}/deposit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: parsed,
+          method,
+          date,
+          reference: reference.trim() || undefined,
+          ...(isAlt && { currency: activeCurrency }),
+        }),
+      })
+      const data = await r.json()
+      if (!r.ok) { setError(data.error ?? 'Failed to record deposit'); setLoading(false); return }
+      onSaved(data)
+      onClose()
+    } catch {
+      setError('Network error')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <ModalShell title="Record Deposit" subtitle={res.guestName} icon={Banknote} iconBg="bg-violet-600" onClose={onClose}>
+      <div className="p-6 space-y-4">
+        <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 text-sm space-y-1">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Reservation Total</span>
+            <span className="font-bold text-slate-800">฿{res.totalAmount.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Deposits Received</span>
+            <span className="font-bold text-violet-700">฿{depositsPaid.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <FormField label="Method" required>
+          <select value={method} onChange={(e) => setMethod(e.target.value)} className={selectCls}>
+            {DEPOSIT_METHODS.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </FormField>
+
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label={`Amount (${activeCurrency})`} required>
+            <div className="flex gap-2">
+              <input type="number" min={0} step={0.01} placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} />
+              {setting && (
+                <select
+                  value={activeCurrency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className={`${selectCls} w-24 flex-shrink-0`}
+                >
+                  <option value={setting.baseCurrency}>{setting.baseCurrency}</option>
+                  <option value={setting.altCurrency}>{setting.altCurrency}</option>
+                </select>
+              )}
+            </div>
+          </FormField>
+          <FormField label="Date">
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
+          </FormField>
+        </div>
+
+        {isAlt && setting && amount && parseFloat(amount) > 0 && (
+          <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            Converts to <span className="font-bold">{formatMoney(altToBase(parseFloat(amount), setting.fxRate), setting.baseCurrency)}</span> at house rate {setting.fxRate} {setting.baseCurrency}/{setting.altCurrency}
+          </p>
+        )}
+
+        <FormField label="Reference (slip / transaction no.)">
+          <input
+            type="text"
+            placeholder="e.g. KBZ-20260612-0142"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            className={inputCls}
+          />
+        </FormField>
+
+        {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">{error}</p>}
+      </div>
+      <div className="px-6 pb-6 flex gap-3 border-t border-gray-100 pt-4">
+        <button onClick={onClose} className="flex-1 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
+        <button onClick={handleConfirm} disabled={loading} className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60">
+          {loading ? 'Saving...' : 'Record Deposit'}
         </button>
       </div>
     </ModalShell>

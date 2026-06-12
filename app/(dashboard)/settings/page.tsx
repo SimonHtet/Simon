@@ -117,6 +117,42 @@ export default function SettingsPage() {
     loadRooms()
   }
 
+  // --- Currency state ---
+  const [currencyForm, setCurrencyForm] = useState({ baseCurrency: 'THB', altCurrency: 'USD', fxRate: '' })
+  const [currencyLoading, setCurrencyLoading] = useState(true)
+  const [currencySaving, setCurrencySaving] = useState(false)
+  const [currencyError, setCurrencyError] = useState('')
+  const [currencySaved, setCurrencySaved] = useState(false)
+
+  async function loadCurrency() {
+    setCurrencyLoading(true)
+    try {
+      const res = await fetch('/api/settings')
+      const data = await res.json()
+      if (res.ok) {
+        setCurrencyForm({ baseCurrency: data.baseCurrency, altCurrency: data.altCurrency, fxRate: String(data.fxRate) })
+      }
+    } catch { }
+    setCurrencyLoading(false)
+  }
+
+  async function handleSaveCurrency() {
+    setCurrencyError('')
+    setCurrencySaved(false)
+    const rate = parseFloat(currencyForm.fxRate)
+    if (isNaN(rate) || rate <= 0) { setCurrencyError('Enter a valid exchange rate'); return }
+    setCurrencySaving(true)
+    const res = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...currencyForm, fxRate: rate }),
+    })
+    setCurrencySaving(false)
+    if (!res.ok) { const d = await res.json(); setCurrencyError(d.error || 'Failed'); return }
+    setCurrencySaved(true)
+    setTimeout(() => setCurrencySaved(false), 2500)
+  }
+
   // --- Charge code state ---
   const [codes, setCodes] = useState<ChargeCode[]>([])
   const [loading, setLoading] = useState(true)
@@ -138,7 +174,7 @@ export default function SettingsPage() {
   }
 
   useEffect(() => { if (isAdmin) loadUsers() }, [isAdmin])
-  useEffect(() => { if (canEditRates) loadRooms() }, [canEditRates])
+  useEffect(() => { if (canEditRates) { loadRooms(); loadCurrency() } }, [canEditRates])
   useEffect(() => { load() }, [])
 
   // Sort: sub-codes appear directly after their parent
@@ -455,6 +491,69 @@ export default function SettingsPage() {
                 )}
               </tbody>
             </table>
+          )}
+        </div>
+      )}
+
+      {/* Currency Section — admin/manager only */}
+      {canEditRates && (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h2 className="font-semibold text-gray-900">Currency &amp; Exchange Rate</h2>
+            <p className="text-xs text-gray-500 mt-0.5">House rate used when guests pay in the alternate currency</p>
+          </div>
+          {currencyLoading ? (
+            <div className="flex items-center justify-center h-24">
+              <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="px-6 py-4">
+              <div className="flex items-end gap-4 flex-wrap">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Base Currency</label>
+                  <select
+                    value={currencyForm.baseCurrency}
+                    onChange={(e) => setCurrencyForm(p => ({ ...p, baseCurrency: e.target.value }))}
+                    className={`${inputCls} bg-white w-28`}
+                  >
+                    {['THB', 'MMK', 'USD'].map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">Alternate Currency</label>
+                  <select
+                    value={currencyForm.altCurrency}
+                    onChange={(e) => setCurrencyForm(p => ({ ...p, altCurrency: e.target.value }))}
+                    className={`${inputCls} bg-white w-28`}
+                  >
+                    {['USD', 'THB', 'MMK', 'EUR', 'SGD', 'CNY'].map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1">
+                    House Rate (1 {currencyForm.altCurrency} = ? {currencyForm.baseCurrency})
+                  </label>
+                  <input
+                    type="number" min={0} step={0.01}
+                    value={currencyForm.fxRate}
+                    onChange={(e) => setCurrencyForm(p => ({ ...p, fxRate: e.target.value }))}
+                    className={`${inputCls} w-36`}
+                    placeholder="e.g. 36.50"
+                  />
+                </div>
+                <button
+                  onClick={handleSaveCurrency}
+                  disabled={currencySaving}
+                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
+                >
+                  {currencySaving ? 'Saving…' : currencySaved ? '✓ Saved' : 'Save Rate'}
+                </button>
+              </div>
+              {currencyError && <p className="text-xs text-red-600 mt-2">{currencyError}</p>}
+              <p className="text-xs text-slate-400 mt-3">
+                Payments and deposits entered in {currencyForm.altCurrency} are converted to {currencyForm.baseCurrency} at this rate and recorded with the original amount noted.
+              </p>
+            </div>
           )}
         </div>
       )}

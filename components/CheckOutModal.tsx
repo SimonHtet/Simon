@@ -7,6 +7,7 @@ import { formatCurrency, formatDate, calculateNights } from '@/lib/utils'
 import { X, Printer, Plus, Check, ArrowRight, ArrowRightLeft } from 'lucide-react'
 import { getFoliosPromise, prefetchFolios } from '@/lib/folio-prefetch'
 import { toast } from '@/lib/toast'
+import { formatMoney, baseToAlt, type HotelSetting } from '@/lib/currency'
 
 interface Props {
   reservation: Reservation
@@ -57,6 +58,16 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const [creditError, setCreditError] = useState('')
   const [managerOverride, setManagerOverride] = useState(false)
   const [billingToMaster, setBillingToMaster] = useState(false)
+  const [hotelSetting, setHotelSetting] = useState<HotelSetting | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/settings')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && d) setHotelSetting(d) })
+      .catch(() => { })
+    return () => { cancelled = true }
+  }, [])
 
   // Payment detail fields (recording only — not sent to API)
   const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvv: '' })
@@ -485,6 +496,11 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                         <p className={`text-3xl font-mono font-black leading-none ${activeBalance <= 0 ? 'text-teal-600' : 'text-slate-900'}`}>
                           ฿{formatCurrency(activeBalance)}
                         </p>
+                        {hotelSetting && hotelSetting.fxRate > 0 && activeBalance > 0 && (
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            ≈ {formatMoney(baseToAlt(activeBalance, hotelSetting.fxRate), hotelSetting.altCurrency)} @ {hotelSetting.fxRate}
+                          </p>
+                        )}
                         {activeFolio.status === 'settled' && (
                           <div className="flex items-center gap-1.5 mt-2">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-[10px] font-black uppercase tracking-wide">

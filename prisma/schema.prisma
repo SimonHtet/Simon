@@ -324,6 +324,32 @@ model NightAudit {
   @@unique([hotelId, businessDate])
 }
 
+model HotelSetting {
+  id           String   @id // hotelId
+  baseCurrency String   @default("THB")
+  altCurrency  String   @default("USD")
+  fxRate       Float    @default(36) // 1 unit of altCurrency = fxRate units of baseCurrency
+  updatedAt    DateTime @updatedAt
+}
+
+model Shift {
+  id           Int       @id @default(autoincrement())
+  hotelId      String    @default("HOTEL-001")
+  openedBy     String
+  openedAt     DateTime  @default(now())
+  closedBy     String?
+  closedAt     DateTime?
+  status       String    @default("open")
+  openingFloat Float     @default(0)
+  expectedCash Float?
+  countedCash  Float?
+  variance     Float?
+  notes        String?
+
+  @@index([hotelId, status])
+  @@index([hotelId, openedAt])
+}
+
 model Preferences {
   id            Int         @id @default(autoincrement())
   reservationId String      @unique

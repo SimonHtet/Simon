@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
+import { altToBase } from '@/lib/currency'
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 
@@ -17,21 +18,38 @@ export async function POST(
   }
 
   const body = await req.json()
-  const { item, amount, date, paymentMethod } = body
+  const { item, amount, date, paymentMethod, currency } = body
 
   if (!item || amount === undefined || !date) {
     return NextResponse.json({ error: 'item, amount, and date are required' }, { status: 400 })
   }
 
-  const parsedAmount = parseFloat(amount)
+  let parsedAmount = parseFloat(amount)
   if (isNaN(parsedAmount)) {
     return NextResponse.json({ error: 'Amount must be a valid number' }, { status: 400 })
   }
   if (parsedAmount <= 0) {
     return NextResponse.json({ error: 'Amount must be greater than 0' }, { status: 400 })
   }
+
+  // Convert alt-currency payments at the house rate server-side
+  let fxNote = ''
+  if (currency) {
+    const setting = await prisma.hotelSetting.upsert({
+      where: { id: hotelId! },
+      update: {},
+      create: { id: hotelId! },
+    })
+    if (currency === setting.altCurrency) {
+      fxNote = ` (${setting.altCurrency} ${parsedAmount.toLocaleString()} @ ${setting.fxRate})`
+      parsedAmount = altToBase(parsedAmount, setting.fxRate)
+    } else if (currency !== setting.baseCurrency) {
+      return NextResponse.json({ error: `Currency must be ${setting.baseCurrency} or ${setting.altCurrency}` }, { status: 400 })
+    }
+  }
+
   if (parsedAmount > 500000) {
-    return NextResponse.json({ error: 'Amount exceeds maximum allowed (฿500,000)' }, { status: 400 })
+    return NextResponse.json({ error: 'Amount exceeds maximum allowed (500,000)' }, { status: 400 })
   }
 
   if (!DATE_REGEX.test(date)) {
@@ -53,7 +71,7 @@ export async function POST(
     const charge = await db.charge.create({
       data: {
         reservationId: params.id,
-        item,
+        item: `${item}${fxNote}`,
         amount: -Math.abs(parsedAmount),
         date,
         category: 'PAYMENT',

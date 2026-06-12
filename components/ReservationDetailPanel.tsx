@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { prefetchFolios } from '@/lib/folio-prefetch'
 import { motion, AnimatePresence } from 'motion/react'
-import { Reservation, Room } from '@/types'
+import { Reservation, Room, Charge } from '@/types'
 import { ROOM_TYPES } from '@/lib/constants'
+import { RecordDepositModal } from './Modals'
 import {
   getResStatusBadge,
   getResStatusLabel,
@@ -122,6 +123,7 @@ export default function ReservationDetailPanel({
     specialRequests: false,
   })
   const [confirmAction, setConfirmAction] = useState<'cancel' | 'noshow' | 'undo_checkout' | null>(null)
+  const [showDepositModal, setShowDepositModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [linkNumber, setLinkNumber] = useState('')
   const [linking, setLinking] = useState(false)
@@ -1047,6 +1049,14 @@ export default function ReservationDetailPanel({
                         Current Folio
                       </p>
                       <div className="flex gap-2">
+                        {(localRes.status === 'confirmed' || localRes.status === 'checked_in') && (
+                          <button
+                            onClick={() => setShowDepositModal(true)}
+                            className="flex items-center gap-1.5 px-2 py-1 bg-violet-600 text-white rounded text-[10px] font-black uppercase hover:bg-violet-700 transition-all shadow-sm"
+                          >
+                            <CreditCard className="w-3 h-3" /> Record Deposit
+                          </button>
+                        )}
                         <button
                           onClick={() => onPostPayment(localRes)}
                           className="flex items-center gap-1.5 px-2 py-1 bg-teal-600 text-white rounded text-[10px] font-black uppercase hover:bg-teal-700 transition-all shadow-sm"
@@ -1459,6 +1469,14 @@ export default function ReservationDetailPanel({
                 >
                   <Printer className="w-4 h-4" /> Print Folio
                 </button>
+                {(localRes.status === 'confirmed' || localRes.status === 'checked_in') && (
+                  <button
+                    onClick={() => window.open(`/print/confirmation/${localRes.id}`, '_blank')}
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-violet-200 rounded-lg text-xs font-bold text-violet-600 hover:bg-violet-50 transition-all"
+                  >
+                    <MessageSquare className="w-4 h-4" /> Confirmation
+                  </button>
+                )}
                 <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-all">
                   <FileText className="w-4 h-4" /> Reg Card
                 </button>
@@ -1549,6 +1567,16 @@ export default function ReservationDetailPanel({
           )}
         </div>
       </motion.div>
+
+      {showDepositModal && (
+        <RecordDepositModal
+          reservation={localRes}
+          onSaved={(charge) =>
+            setLocalRes((prev) => ({ ...prev, charges: [...prev.charges, charge as Charge] }))
+          }
+          onClose={() => setShowDepositModal(false)}
+        />
+      )}
     </div>
   )
 }

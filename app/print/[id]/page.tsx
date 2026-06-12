@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { formatMoney, baseToAlt } from '@/lib/currency'
 import PrintControls from './PrintControls'
 
 function fmt(dateStr: string) {
@@ -27,7 +28,7 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
 
   const hotelId = (session.user as any).hotelId ?? 'HOTEL-001'
 
-  const [reservation, hotel] = await Promise.all([
+  const [reservation, hotel, setting] = await Promise.all([
     prisma.reservation.findUnique({
       where: { id: params.id },
       include: {
@@ -43,6 +44,7 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
       },
     }),
     prisma.hotel.findUnique({ where: { id: hotelId } }),
+    prisma.hotelSetting.findUnique({ where: { id: hotelId } }),
   ])
 
   if (!reservation || reservation.hotelId !== hotelId) redirect('/reservations')
@@ -142,6 +144,11 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
             <div className="text-right">
               <span className="text-xs uppercase tracking-widest text-slate-500 mr-6">Grand Total</span>
               <span className="text-xl font-black text-slate-900">฿{fmtCurrency(grandTotal)}</span>
+              {setting && setting.fxRate > 0 && grandTotal > 0 && (
+                <p className="text-xs text-slate-400 mt-0.5">
+                  ≈ {formatMoney(baseToAlt(grandTotal, setting.fxRate), setting.altCurrency)} at {setting.fxRate} {setting.baseCurrency}/{setting.altCurrency}
+                </p>
+              )}
             </div>
           </div>
         )}
