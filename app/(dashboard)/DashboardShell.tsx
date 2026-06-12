@@ -23,6 +23,8 @@ import {
   Receipt,
   Sparkles,
   Search,
+  Wallet,
+  FileBarChart,
 } from 'lucide-react'
 import { hasPermission } from '@/lib/rbac'
 import { HOTEL_NAME, LOCATION } from '@/lib/constants'
@@ -44,6 +46,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/housekeeping', label: 'Housekeeping', icon: Sparkles },
   { href: '/guests', label: 'Guest History', icon: Users },
   { href: '/companies', label: 'Companies', icon: Building2 },
+  { href: '/shift', label: 'Shift / Cash', icon: Wallet, roles: ['admin', 'manager', 'front_desk'] },
+  { href: '/reports', label: 'Reports', icon: FileBarChart, roles: ['admin', 'manager', 'front_desk'] },
   { href: '/analytics', label: 'Analytics', icon: BarChart3, roles: ['admin', 'manager'] },
   { href: '/accounting', label: 'Accounting', icon: Receipt, roles: ['admin', 'manager'] },
   { href: '/settings', label: 'Settings', icon: Settings2, roles: ['admin', 'manager'] },
