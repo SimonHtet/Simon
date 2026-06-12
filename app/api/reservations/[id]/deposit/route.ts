@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
-import { altToBase } from '@/lib/currency'
+import { altToBase, rateFor } from '@/lib/currency'
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 const DEPOSIT_METHODS = ['Cash', 'Bank Transfer', 'Credit Card', 'PromptPay', 'Mobile Pay']
@@ -59,11 +59,15 @@ export async function POST(
 
   let baseAmount = parsedAmount
   let fxNote = ''
-  if (currency && currency === setting.altCurrency) {
-    baseAmount = altToBase(parsedAmount, setting.fxRate)
-    fxNote = ` (${setting.altCurrency} ${parsedAmount.toLocaleString()} @ ${setting.fxRate})`
-  } else if (currency && currency !== setting.baseCurrency) {
-    return NextResponse.json({ error: `Currency must be ${setting.baseCurrency} or ${setting.altCurrency}` }, { status: 400 })
+  if (currency) {
+    const rate = rateFor(setting, currency)
+    if (rate === null) {
+      return NextResponse.json({ error: `No exchange rate configured for ${currency} — set it in Settings first` }, { status: 400 })
+    }
+    if (rate !== 1) {
+      baseAmount = altToBase(parsedAmount, rate)
+      fxNote = ` (${currency} ${parsedAmount.toLocaleString()} @ ${rate})`
+    }
   }
 
   if (baseAmount > 500000) {

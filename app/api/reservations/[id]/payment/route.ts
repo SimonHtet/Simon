@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionOrUnauthorized } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
-import { altToBase } from '@/lib/currency'
+import { altToBase, rateFor } from '@/lib/currency'
 
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 
@@ -32,7 +32,7 @@ export async function POST(
     return NextResponse.json({ error: 'Amount must be greater than 0' }, { status: 400 })
   }
 
-  // Convert alt-currency payments at the house rate server-side
+  // Convert foreign-currency payments at the house rate server-side
   let fxNote = ''
   if (currency) {
     const setting = await prisma.hotelSetting.upsert({
@@ -40,11 +40,13 @@ export async function POST(
       update: {},
       create: { id: hotelId! },
     })
-    if (currency === setting.altCurrency) {
-      fxNote = ` (${setting.altCurrency} ${parsedAmount.toLocaleString()} @ ${setting.fxRate})`
-      parsedAmount = altToBase(parsedAmount, setting.fxRate)
-    } else if (currency !== setting.baseCurrency) {
-      return NextResponse.json({ error: `Currency must be ${setting.baseCurrency} or ${setting.altCurrency}` }, { status: 400 })
+    const rate = rateFor(setting, currency)
+    if (rate === null) {
+      return NextResponse.json({ error: `No exchange rate configured for ${currency} — set it in Settings first` }, { status: 400 })
+    }
+    if (rate !== 1) {
+      fxNote = ` (${currency} ${parsedAmount.toLocaleString()} @ ${rate})`
+      parsedAmount = altToBase(parsedAmount, rate)
     }
   }
 

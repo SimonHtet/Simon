@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Room, Reservation, Company, ChargeCode } from '@/types'
 import { ROOM_TYPES, BOOKING_SOURCES, CHARGE_CATEGORIES, PAYMENT_TYPES, DEPARTMENTS } from '@/lib/constants'
 import { calculateNights } from '@/lib/utils'
-import { formatMoney, altToBase, type HotelSetting } from '@/lib/currency'
+import { formatMoney, altToBase, rateFor, payableCurrencies, type HotelSetting } from '@/lib/currency'
 import {
   X, Plus, ArrowRight, Clock, Plane, Home, User, Calendar, DollarSign,
   CreditCard, MessageSquare, BedDouble, Hotel, ChevronRight, AlertTriangle,
@@ -753,7 +753,8 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
   const setting = useHotelSetting()
   const [currency, setCurrency] = useState<string | null>(null)
   const activeCurrency = currency ?? setting?.baseCurrency ?? 'THB'
-  const isAlt = setting != null && activeCurrency === setting.altCurrency
+  const activeRate = setting ? rateFor(setting, activeCurrency) : 1
+  const isForeign = setting != null && activeRate !== null && activeRate !== 1
 
   const hasCompany = !!(res.companyId && res.company)
   const isCityLedger = paymentType === 'City Ledger'
@@ -770,7 +771,7 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
         amount: parseFloat(amount),
         date,
         paymentMethod: paymentType,
-        ...(isAlt && { currency: activeCurrency }),
+        ...(isForeign && { currency: activeCurrency }),
       })
     } catch (e: any) {
       setError(e.message || 'Failed to post payment')
@@ -842,8 +843,9 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
                   onChange={(e) => setCurrency(e.target.value)}
                   className="w-24 flex-shrink-0 border border-gray-200 rounded-lg px-2 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
-                  <option value={setting.baseCurrency}>{setting.baseCurrency}</option>
-                  <option value={setting.altCurrency}>{setting.altCurrency}</option>
+                  {payableCurrencies(setting).map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               )}
             </div>
@@ -852,9 +854,9 @@ export function PostPaymentModal({ reservation: res, onConfirm, onClose }: PostP
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
           </FormField>
         </div>
-        {isAlt && setting && amount && parseFloat(amount) > 0 && (
+        {isForeign && setting && activeRate !== null && amount && parseFloat(amount) > 0 && (
           <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-            Converts to <span className="font-bold">{formatMoney(altToBase(parseFloat(amount), setting.fxRate), setting.baseCurrency)}</span> at house rate {setting.fxRate} {setting.baseCurrency}/{setting.altCurrency}
+            Converts to <span className="font-bold">{formatMoney(altToBase(parseFloat(amount), activeRate), setting.baseCurrency)}</span> at house rate {activeRate} {setting.baseCurrency}/{activeCurrency}
           </p>
         )}
         {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg p-3">{error}</p>}
@@ -890,7 +892,8 @@ export function RecordDepositModal({ reservation: res, onSaved, onClose }: Recor
   const setting = useHotelSetting()
   const [currency, setCurrency] = useState<string | null>(null)
   const activeCurrency = currency ?? setting?.baseCurrency ?? 'THB'
-  const isAlt = setting != null && activeCurrency === setting.altCurrency
+  const activeRate = setting ? rateFor(setting, activeCurrency) : 1
+  const isForeign = setting != null && activeRate !== null && activeRate !== 1
 
   const depositsPaid = (res.charges ?? [])
     .filter((c) => c.category === 'DEPOSIT')
@@ -910,7 +913,7 @@ export function RecordDepositModal({ reservation: res, onSaved, onClose }: Recor
           method,
           date,
           reference: reference.trim() || undefined,
-          ...(isAlt && { currency: activeCurrency }),
+          ...(isForeign && { currency: activeCurrency }),
         }),
       })
       const data = await r.json()
@@ -953,8 +956,9 @@ export function RecordDepositModal({ reservation: res, onSaved, onClose }: Recor
                   onChange={(e) => setCurrency(e.target.value)}
                   className="w-24 flex-shrink-0 border border-gray-200 rounded-lg px-2 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                 >
-                  <option value={setting.baseCurrency}>{setting.baseCurrency}</option>
-                  <option value={setting.altCurrency}>{setting.altCurrency}</option>
+                  {payableCurrencies(setting).map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               )}
             </div>
@@ -964,9 +968,9 @@ export function RecordDepositModal({ reservation: res, onSaved, onClose }: Recor
           </FormField>
         </div>
 
-        {isAlt && setting && amount && parseFloat(amount) > 0 && (
+        {isForeign && setting && activeRate !== null && amount && parseFloat(amount) > 0 && (
           <p className="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-            Converts to <span className="font-bold">{formatMoney(altToBase(parseFloat(amount), setting.fxRate), setting.baseCurrency)}</span> at house rate {setting.fxRate} {setting.baseCurrency}/{setting.altCurrency}
+            Converts to <span className="font-bold">{formatMoney(altToBase(parseFloat(amount), activeRate), setting.baseCurrency)}</span> at house rate {activeRate} {setting.baseCurrency}/{activeCurrency}
           </p>
         )}
 
