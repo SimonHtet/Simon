@@ -55,16 +55,27 @@ For production: `npm run build && npm start`.
 ### Billing & Folios
 - Multiple folios per reservation; move charges between folios
 - Charges, payments, and packages (breakfast, parking, transfers…)
+- **Advance deposits** — record a pre-arrival deposit (bank transfer, cash, card…) with a slip reference; it nets out of the folio automatically at check-out
+- **Multi-currency** — house exchange-rate table (THB / USD / MMK…) with a cross-rate reference grid in Settings; payments and deposits can be tendered in any configured currency, converted server-side at the house rate with the original amount noted on the charge line
 - Settlement by cash (tendered-amount enforced), card, transfer, PromptPay, company credit, or city ledger
 - **Check-out is blocked until every folio is settled and every charge is assigned** — enforced by the API, not just the UI
+- **City ledger integrity** — posting a folio to a company account is idempotent (re-posting updates the existing receivable instead of duplicating it), and settling requires the posted amount to match the folio balance exactly
+- **Early departure** — one-click "shorten stay to today" at check-out so the guest is billed for nights actually stayed
 - **Group billing**: link rooms under a master reservation (Linked tab), then "Bill to Master Room" at check-out transfers a linked room's entire balance to the master's folio — the tour leader / company pays once for the whole group
 - Company credit accounts with limits, monthly reset, manager override (receivable always recorded), and city ledger AR
 - Tax invoices with VAT, printable folios / invoices / company statements
+- Printed folio always shows the projected room charge, even before night audit posts the nightly lines
 
 ### Operations
 - **Night audit** — posts nightly room charges to in-house folios (idempotent per business date); folio balances account for posted nights so the room is never double-counted
+- **Shift close / cash drop** — one cash drawer per hotel; open a shift with a float, close with a blind count (expected cash is revealed only after the clerk submits), variance logged with a full breakdown and shift history
 - **Housekeeping board** — rooms grouped by status with one-tap "Mark Clean"; housekeeping role can only mark rooms clean, and occupied rooms can't be flipped
 - Traces (inter-department notes) with resolution tracking
+
+### Reports & Guest Communication
+- **Manager flash report** — printable end-of-day A4: occupancy, room revenue, ADR, RevPAR, collections by payment method, deposits taken, AR outstanding, arrivals/departures and night-audit status
+- **Foreign guest registration** — printable immigration report of foreign arrivals per date (full passport numbers, A4 landscape)
+- **Booking confirmation** — printable confirmation page with one-tap "Copy for Viber / WhatsApp" plain-text share (includes deposit received / balance due)
 
 ### Management
 - Analytics — revenue, occupancy, ADR/RevPAR, source & company breakdowns, year comparison
@@ -88,13 +99,16 @@ For production: `npm run build && npm start`.
 app/
   (auth)/login/      ← Animated login page
   (dashboard)/       ← Protected pages (dashboard, reservations, timeline,
-                        rooms, housekeeping, guests, companies, analytics,
-                        accounting, settings)
-  api/               ← REST API routes (auth, reservations, folios, rooms,
-                        companies, credit, tax-invoices, reports, search…)
-  print/             ← Printable folio / invoice / company statement
+                        rooms, housekeeping, guests, companies, shift,
+                        reports, analytics, accounting, settings)
+  api/               ← REST API routes (auth, reservations, folios, deposits,
+                        rooms, companies, credit, shifts, settings,
+                        tax-invoices, reports, search…)
+  print/             ← Printable folio / confirmation / flash report /
+                        foreigner registration / invoice / company statement
 components/          ← UI components (views, modals, panels, toaster)
-lib/                 ← Prisma, auth, RBAC, rate limit, toast bus, utils
+lib/                 ← Prisma, auth, RBAC, rate limit, currency, toast bus, utils
 types/               ← TypeScript interfaces
 prisma/              ← Schema + today-relative demo seed
+scripts/             ← One-off data fixes (city ledger backfill / reconcile)
 ```
