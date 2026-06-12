@@ -75,12 +75,22 @@ export async function POST(
     })
     if (!company) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    if (company.creditLimit > 0) {
+    // A folio is settled against ONE posting — re-posting the same folio
+    // (e.g. after the balance changed) updates the existing transaction
+    // instead of stacking a duplicate receivable on the company.
+    const existing = folioId
+      ? await prisma.creditTransaction.findFirst({
+          where: { companyId: params.id, folioId, status: 'unpaid' },
+        })
+      : null
+    const delta = amount - (existing?.amount ?? 0)
+
+    if (company.creditLimit > 0 && delta > 0) {
       const creditAvailable = Math.max(0, company.creditLimit - company.creditUsed)
       // Managers can override the limit; the transaction is still recorded so
       // the receivable is never lost.
       const managerOverride = override === true && (role === 'admin' || role === 'manager')
-      if (creditAvailable < amount && !managerOverride) {
+      if (creditAvailable < delta && !managerOverride) {
         return NextResponse.json(
           { error: `Insufficient credit — ฿${creditAvailable.toLocaleString()} available` },
           { status: 400 }
@@ -89,26 +99,36 @@ export async function POST(
     }
 
     const tx = await prisma.$transaction(async (db) => {
-      const created = await db.creditTransaction.create({
-        data: {
-          companyId: params.id,
-          hotelId: hotelId!,
-          amount,
-          description: description.trim(),
-          reservationId: reservationId ?? null,
-          folioId: folioId ?? null,
-          type,
-          status: 'unpaid',
-        },
-      })
-      await db.company.update({
-        where: { id: params.id },
-        data: { creditUsed: { increment: amount } },
-      })
-      return created
+      let result
+      if (existing) {
+        result = await db.creditTransaction.update({
+          where: { id: existing.id },
+          data: { amount, description: description.trim(), type },
+        })
+      } else {
+        result = await db.creditTransaction.create({
+          data: {
+            companyId: params.id,
+            hotelId: hotelId!,
+            amount,
+            description: description.trim(),
+            reservationId: reservationId ?? null,
+            folioId: folioId ?? null,
+            type,
+            status: 'unpaid',
+          },
+        })
+      }
+      if (delta !== 0) {
+        await db.company.update({
+          where: { id: params.id },
+          data: { creditUsed: { increment: delta } },
+        })
+      }
+      return result
     })
 
-    return NextResponse.json(tx, { status: 201 })
+    return NextResponse.json(tx, { status: existing ? 200 : 201 })
   } catch (err) {
     console.error('[POST /companies/[id]/credit]', err)
     return NextResponse.json({ error: 'Database error' }, { status: 500 })

@@ -22,6 +22,20 @@ function folioTotal(folio: { charges: { charge: { amount: number } }[] }) {
   return folio.charges.reduce((sum, fc) => sum + fc.charge.amount, 0)
 }
 
+// Same formula as the check-out modal: Main carries the projected room cost
+// minus any nightly room charges already posted by night audit — otherwise a
+// stay where the audit never ran prints with no room fees at all.
+function roomProjection(
+  folio: { name: string; charges: { charge: { amount: number; category: string | null; item: string } }[] },
+  reservation: { rate: number; checkIn: string; checkOut: string }
+) {
+  if (folio.name.toLowerCase() !== 'main') return 0
+  const roomPosted = folio.charges
+    .filter((fc) => fc.charge.category === 'ROOM' && fc.charge.item.startsWith('Room Charge —'))
+    .reduce((s, fc) => s + fc.charge.amount, 0)
+  return Math.max(0, reservation.rate * nights(reservation.checkIn, reservation.checkOut) - roomPosted)
+}
+
 export default async function FolioPrintPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
   if (!session) redirect('/login')
@@ -50,7 +64,7 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
   if (!reservation || reservation.hotelId !== hotelId) redirect('/reservations')
 
   const n = nights(reservation.checkIn, reservation.checkOut)
-  const grandTotal = reservation.folios.reduce((sum, f) => sum + folioTotal(f), 0)
+  const grandTotal = reservation.folios.reduce((sum, f) => sum + folioTotal(f) + roomProjection(f, reservation), 0)
   const printedAt = new Date().toLocaleString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
@@ -115,6 +129,17 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
                   </tr>
                 </thead>
                 <tbody>
+                  {roomProjection(folio, reservation) > 0 && (
+                    <tr className="border-b border-slate-100">
+                      <td className="py-1.5 px-2 text-slate-400 text-xs">{reservation.checkIn}</td>
+                      <td className="py-1.5 px-2 text-slate-700">
+                        Room Charge — {reservation.roomTypeId} ({nights(reservation.checkIn, reservation.checkOut)} night{nights(reservation.checkIn, reservation.checkOut) !== 1 ? 's' : ''} × ฿{fmtCurrency(reservation.rate)})
+                      </td>
+                      <td className="py-1.5 px-2 text-right font-medium text-slate-800">
+                        ฿{fmtCurrency(roomProjection(folio, reservation))}
+                      </td>
+                    </tr>
+                  )}
                   {folio.charges.map((fc) => (
                     <tr key={fc.id} className="border-b border-slate-100">
                       <td className="py-1.5 px-2 text-slate-400 text-xs">{fc.charge.date}</td>
@@ -130,7 +155,7 @@ export default async function FolioPrintPage({ params }: { params: { id: string 
                 <tfoot>
                   <tr className="border-t-2 border-slate-300">
                     <td colSpan={2} className="pt-2 px-2 font-black text-slate-700 text-sm">Folio Total</td>
-                    <td className="pt-2 px-2 text-right font-black text-slate-900">฿{fmtCurrency(folioTotal(folio))}</td>
+                    <td className="pt-2 px-2 text-right font-black text-slate-900">฿{fmtCurrency(folioTotal(folio) + roomProjection(folio, reservation))}</td>
                   </tr>
                 </tfoot>
               </table>

@@ -60,13 +60,21 @@ export async function PUT(
           }
         }
         if (pm === 'company_credit' || pm === 'city_ledger') {
-          // The balance must already be posted to the company account
-          const tx = await prisma.creditTransaction.findFirst({
-            where: { folioId, reservationId: params.id, amount: { gt: 0 } },
+          // The exact balance must be posted to the company account — a stale
+          // posting from an earlier balance would over- or under-bill the company
+          const txs = await prisma.creditTransaction.findMany({
+            where: { folioId, reservationId: params.id, status: 'unpaid', amount: { gt: 0 } },
           })
-          if (!tx) {
+          const posted = txs.reduce((s, t) => s + t.amount, 0)
+          if (posted <= 0) {
             return NextResponse.json(
               { error: 'Post the balance to the company account before settling to credit / city ledger' },
+              { status: 400 }
+            )
+          }
+          if (Math.abs(posted - balance) > 0.01) {
+            return NextResponse.json(
+              { error: `Posted company amount (฿${posted.toLocaleString()}) doesn't match the folio balance (฿${balance.toLocaleString()}) — re-post the balance before settling` },
               { status: 400 }
             )
           }

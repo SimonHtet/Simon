@@ -59,6 +59,9 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const [managerOverride, setManagerOverride] = useState(false)
   const [billingToMaster, setBillingToMaster] = useState(false)
   const [hotelSetting, setHotelSetting] = useState<HotelSetting | null>(null)
+  // Early departure — checkOut may be pulled forward to today during this session
+  const [localCheckOut, setLocalCheckOut] = useState(res.checkOut)
+  const [shortening, setShortening] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -78,7 +81,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const initCalledRef = useRef(false)
   const moveMenuRef = useRef<HTMLDivElement>(null)
 
-  const nights = calculateNights(res.checkIn, res.checkOut)
+  const nights = calculateNights(res.checkIn, localCheckOut)
 
   // Credit account derived from reservation.company (already in RESERVATION_INCLUDE)
   const creditLimit = res.company?.creditLimit ?? 0
@@ -159,9 +162,37 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   const assignedChargeIds = new Set(folios.flatMap((f) => f.charges.map((fc) => fc.chargeId)))
   const unassignedCharges = (res.charges ?? []).filter((c) => !assignedChargeIds.has(c.id))
 
+  // Balance math uses the (possibly shortened) check-out date
+  const effRes = localCheckOut === res.checkOut ? res : { ...res, checkOut: localCheckOut }
+  const todayStr = new Date().toISOString().split('T')[0]
+  const isEarlyDeparture = res.status === 'checked_in' && todayStr > res.checkIn && todayStr < localCheckOut
+  const earlyNightsSaved = isEarlyDeparture ? calculateNights(todayStr, localCheckOut) : 0
+
   const activePm = activeFolio ? (paymentMethods[activeFolio.id] ?? 'credit_card') : 'credit_card'
-  const activeBalance = activeFolio ? folioBalance(activeFolio, res) : 0
+  const activeBalance = activeFolio ? folioBalance(activeFolio, effRes) : 0
   const cashChange = cashTendered.trim() ? Math.max(0, parseFloat(cashTendered) - activeBalance) : 0
+
+  async function handleShortenToToday() {
+    setShortening(true)
+    setCreditError('')
+    try {
+      const r = await fetch(`/api/reservations/${res.id}/shorten`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newCheckOut: todayStr }),
+      })
+      const data = await r.json().catch(() => ({}))
+      if (!r.ok) {
+        setCreditError(data.error ?? 'Could not shorten the stay')
+        return
+      }
+      setLocalCheckOut(todayStr)
+      toast(`Stay shortened to today — billing for ${calculateNights(res.checkIn, todayStr)} night(s)`)
+      await refreshFolios()
+    } finally {
+      setShortening(false)
+    }
+  }
 
   async function handleAssignCharge(chargeId: number, toFolioId: number) {
     setMovingChargeId(null)
@@ -183,7 +214,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
       const pm = paymentMethods[folioId] ?? 'credit_card'
 
       if ((pm === 'company_credit' || pm === 'city_ledger') && res.companyId) {
-        const balance = folioBalance(folio, res)
+        const balance = folioBalance(folio, effRes)
         if (balance > 0) {
           const creditRes = await fetch(`/api/companies/${res.companyId}/credit`, {
             method: 'POST',
@@ -282,7 +313,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
   }
 
   const allSettled = folios.length > 0 && folios.every((f) => f.status === 'settled')
-  const totalBalance = folios.reduce((s, f) => s + folioBalance(f, res), 0)
+  const totalBalance = folios.reduce((s, f) => s + folioBalance(f, effRes), 0)
   const cashShort = activePm === 'cash' && activeBalance > 0
     && (!cashTendered.trim() || parseFloat(cashTendered) < activeBalance)
 
@@ -305,13 +336,30 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
               </p>
               <h2 className="text-lg font-black text-slate-900 tracking-tight">{res.guestName}</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Room {res.roomId} · {res.reservationNumber} · {formatDate(res.checkIn)} → {formatDate(res.checkOut)} ({nights}N)
+                Room {res.roomId} · {res.reservationNumber} · {formatDate(res.checkIn)} → {formatDate(localCheckOut)} ({nights}N)
               </p>
             </div>
             <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors mt-0.5">
               <X className="w-4 h-4 text-slate-400" />
             </button>
           </div>
+
+          {/* Early departure — billing still covers the full booked stay */}
+          {isEarlyDeparture && (
+            <div className="px-6 py-2.5 bg-amber-50 border-b border-amber-200 flex items-center justify-between gap-4 shrink-0">
+              <p className="text-xs text-amber-800">
+                <strong>Early departure:</strong> booked until {formatDate(localCheckOut)} — checking out today leaves{' '}
+                {earlyNightsSaved} unused night{earlyNightsSaved !== 1 ? 's' : ''} that the balance below still bills.
+              </p>
+              <button
+                onClick={handleShortenToToday}
+                disabled={shortening}
+                className="shrink-0 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60"
+              >
+                {shortening ? 'Updating…' : 'Shorten stay to today'}
+              </button>
+            </div>
+          )}
 
           {loadingFolios ? (
             <div className="flex items-center justify-center h-64">
@@ -446,7 +494,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                                 Total
                               </td>
                               <td className="pt-3 text-right text-sm font-black text-slate-900">
-                                ฿{formatCurrency(folioBalance(activeFolio, res))}
+                                ฿{formatCurrency(folioBalance(activeFolio, effRes))}
                               </td>
                               {folios.length > 1 && activeFolio.status !== 'settled' && <td />}
                             </tr>
@@ -780,7 +828,7 @@ export default function CheckOutModal({ reservation: res, onConfirm, onClose }: 
                               <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 rounded text-[9px] font-bold">Open</span>
                             )}
                           </span>
-                          <span className="font-bold text-slate-800">฿{formatCurrency(folioBalance(f, res))}</span>
+                          <span className="font-bold text-slate-800">฿{formatCurrency(folioBalance(f, effRes))}</span>
                         </div>
                       ))}
                       <div className="flex justify-between text-xs font-black text-slate-900 border-t border-slate-200 mt-2 pt-2">
